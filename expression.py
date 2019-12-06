@@ -54,11 +54,6 @@ class _ExpressionReducer(Transformer):
         return args[0].children[0]
 
 
-def init(string):
-    tree = _expression_parser.parse(string)
-    return _ExpressionReducer().transform(tree)
-
-
 class Expression:
 
     def __init__(self, expstring):
@@ -71,35 +66,20 @@ class Expression:
         tree = _expression_parser.parse(expstring)
         self.re = _ExpressionReducer().transform(tree)
 
-    def match(self, text):
-        if self._compiled is None:
-            self._compiled = regex.compile(self.re)
-        match = self._compiled.match(text + ' ')
+    def match(self, text, vars=None):
+        expression = self.re
+        compilation = self._compiled
+        if vars:
+            for var, val in vars.items():
+                expression.replace('$'+var, val)
+            compilation = regex.compile(expression)
+        elif compilation is None:
+            self._compiled = regex.compile(expression)
+            compilation = self._compiled
+        match = compilation.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:
-            return None
-        return match
-
-    def express(self, collection):
-        collection = list(collection)
-        for i, c in enumerate(collection):
-            if not isinstance(c, Expression):
-                negated = False
-                if isinstance(c, list) and c[0] is False:
-                    c = c[1:]
-                    negated = True
-                if isinstance(c, set) and False in c:
-                    c.remove(False)
-                    negated = True
-                if isinstance(c, tuple) and c[0] is False:
-                    c = tuple(c[1:])
-                    negated = True
-                if not negated:
-                    collection[i] = str(Expression(c))
-                else:
-                    collection[i] = str(Expression(False, c))
-            else:
-                collection[i] = str(c)
-        return collection
+            return None, {}
+        return match, match.groupdict()
 
     def __str__(self):
         return self.re
