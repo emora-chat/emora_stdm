@@ -1,24 +1,61 @@
 
 import regex
 from structpy import I
+from lark import Lark, Transformer
 
+_expression_grammar = """
+root: expression
+expression: literal | (term | literal term | literal "," literal | literal "," literal "," literal 
+                    | literal term literal | term literal)+
+term: (flex_seq | sequence | conjunction | disjunction | negation | regex)
+flex_seq: "(" expression ")" 
+sequence: "[" expression "]"
+conjunction: "<" expression ">"
+disjunction: "{" expression "}"
+negation: "-" term | "-" literal
+regex: "/" REGEX "/"
+REGEX: /[a-z A-Z0-9_(+*)\-\\\^?!={}\[\]:;<>#]+/
+literal: LITERAL
+LITERAL: /[a-z A-Z$*=]+/
+"""
+
+_expression_parser = Lark(_expression_grammar, start='root')
+
+class _ExpressionReducer(Transformer):
+    def flex_seq(self, args):
+        (exp,) = args
+        return '.*' + '.*'.join(exp.children)
+    def sequence(self, args):
+        (exp,) = args
+        return r'\W*'.join(exp.children)
+    def conjunction(self, args):
+        (exp,) = args
+        return ''.join(['(?=.*{})'.format(term) + '.*' for term in exp.children])
+    def disjunction(self, args):
+        (exp,) = args
+        return '(?:{})'.format('|'.join(['.*' + x for x in exp.children]))
+    def term(self, args):
+        (exp,) = args
+        return exp
+    def literal(self, args):
+        (exp,) = args
+        return exp.strip()
+    def regex(self, args):
+        (exp,) = args
+        return exp
+    def root(self, args):
+        return self.flex_seq(args)
+
+
+def init(string):
+    tree = _expression_parser.parse(string)
+    return _ExpressionReducer().transform(tree)
 
 class Expression:
-    """
-    1. disjunction of expressions
-    2. negation of disjunction of expressions
 
-    Expressions:
-        - string literal
-        - ontology class
-        - expression sequence
-        - conjunction of expressions
-        - disjunction of expressions
-        - negation of disjunction of expressions
-    """
+    def __init__(self, *args):
 
-    def __init__(self, *args, name=None):
-
+        self._expression = None
         self._compiled = None
 
         negated = False
@@ -29,10 +66,7 @@ class Expression:
         # expression literal
         if len(args) == 1 and isinstance(args[0], str):
             literal = args[0]
-            if name is not None:
-                formatter = '(?P<{}>{{}})'.format(name)
-            else:
-                formatter = '{}'
+            formatter = '{}'
             if '*' == literal[0] and '*' == literal[-1]:
                 self.re = ' *{} *'.format(formatter.format(literal[1:-1]))
             elif '*' == literal[0]:
@@ -46,39 +80,24 @@ class Expression:
         elif len(args) == 1 and isinstance(args[0], set):
             self.re = ''
             conjunction = self.express(args[0])
-            if name is not None:
-                for term in conjunction[:-1]:
-                    self.re += '(?=.*{})'.format(term)
-                self.re += '(?=(?P<{}>.*{}))'.format(name, conjunction[-1])
-            else:
-                for term in conjunction:
-                    self.re += '(?=.*{})'.format(term)
+            for term in conjunction:
+                self.re += '(?=.*{})'.format(term)
             self.re += '.*'
 
         # expression disjunction
         elif len(args) > 1:
             disjunction = self.express(args)
-            if name is not None:
-                self.re = '(?:{})'.format('|'.join(['.*' + r'(?P<{}>{})'.format(name, x)
-                                    for x in disjunction]))
-            else:
-                self.re = '(?:{})'.format('|'.join(['.*' + x for x in disjunction]))
+            self.re = '(?:{})'.format('|'.join(['.*' + x for x in disjunction]))
 
         # expression sequence (inflexible)
         elif len(args) == 1 and isinstance(args[0], list):
             seq = self.express(args[0])
-            if name is not None:
-                self.re = r'(?P<{}>{})'.format(name, r'\W*'.join(seq))
-            else:
-                self.re = r'\W*'.join(seq)
+            self.re = r'\W*'.join(seq)
 
         # expression sequence (flexible)
         elif len(args) == 1 and isinstance(args[0], tuple):
             seq = self.express(args[0])
-            if name is not None:
-                self.re = r'.*(?P<{}>{}).*'.format(name, '.*'.join(seq))
-            else:
-                self.re = '.*' + '.*'.join(seq) + '.*'
+            self.re = '.*' + '.*'.join(seq) + '.*'
 
         # expression negation
         if negated:
