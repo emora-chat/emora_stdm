@@ -57,6 +57,13 @@ def test_negation():
     assert not e.match('oh hello there you')
 
 
+def test_assign():
+    e = E('hello there %first={jon, sarah} morning')
+    print(e)
+    assert e.match('hello there jon morning').group('first') == 'jon'
+    assert e.match('hello there sarah morning').group('first') == 'sarah'
+
+
 def test_compound():
     #e = E(('hey', E('hey', 'hello'), {'you', 'are'}, ['good', 'today', {False, 'right'}]))
     e = E('hey {hey, hello} <you, are> [-right, good, today]')

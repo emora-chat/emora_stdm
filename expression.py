@@ -7,7 +7,7 @@ _expression_grammar = """
 root: expression
 expression: literal | (term | literal term | (literal ",")+ literal
                     | literal term literal | term literal)+
-term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex) ","? " "*
+term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex | assign) ","? " "*
 flex_seq: "(" expression ")" 
 sequence: "[" expression "]"
 conjunction: "<" expression ">"
@@ -16,12 +16,17 @@ negation: "-" term | "-" literal
 regex: "/" REGEX "/"
 REGEX: /[a-z A-Z0-9_(+*)\-\\\^?!={}\[\]:;<>#]+/
 literal: " "* (WORD " ")* WORD ","? " "*
-WORD: /[a-zA-Z$*=_]+/
+WORD: /[a-zA-Z0-9$]+/
+assign: "%" VAR "=" (term | literal)
+VAR: /[a-zA-Z0-9_]+/
 """
 
 _expression_parser = Lark(_expression_grammar, start='root')
 
 class _ExpressionReducer(Transformer):
+    def assign(self, args):
+        varname = args[0]
+        return r'(?P<{}>{})'.format(varname, args[1])
     def flex_seq(self, args):
         (exp,) = args
         return '.*' + '.*'.join(exp.children)
