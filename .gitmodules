@@ -1,0 +1,3 @@
+[submodule "structpy"]
+	path = structpy
+	url = https://github.com/jdfinch/structpy.git
