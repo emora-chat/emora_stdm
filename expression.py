@@ -5,9 +5,9 @@ from lark import Lark, Transformer
 
 _expression_grammar = """
 root: expression
-expression: literal | (term | literal term | literal "," literal | literal "," literal "," literal 
+expression: literal | (term | literal term | (literal ",")+ literal
                     | literal term literal | term literal)+
-term: (flex_seq | sequence | conjunction | disjunction | negation | regex)
+term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex) ","? " "*
 flex_seq: "(" expression ")" 
 sequence: "[" expression "]"
 conjunction: "<" expression ">"
@@ -15,8 +15,8 @@ disjunction: "{" expression "}"
 negation: "-" term | "-" literal
 regex: "/" REGEX "/"
 REGEX: /[a-z A-Z0-9_(+*)\-\\\^?!={}\[\]:;<>#]+/
-literal: LITERAL
-LITERAL: /[a-z A-Z$*=]+/
+literal: " "* (WORD " ")* WORD ","? " "*
+WORD: /[a-zA-Z$*=_]+/
 """
 
 _expression_parser = Lark(_expression_grammar, start='root')
@@ -34,74 +34,37 @@ class _ExpressionReducer(Transformer):
     def disjunction(self, args):
         (exp,) = args
         return '(?:{})'.format('|'.join(['.*' + x for x in exp.children]))
+    def negation(self, args):
+        exp = args[0]
+        return '(?:(?:(?!.*{}.*$).)+)'.format(exp)
     def term(self, args):
         (exp,) = args
         return exp
     def literal(self, args):
-        (exp,) = args
-        return exp.strip()
+        return ' '.join([r'\b{}\b'.format(x.strip()) for x in args]).strip()
     def regex(self, args):
         (exp,) = args
         return exp
     def root(self, args):
-        return self.flex_seq(args)
+        return args[0].children[0]
 
 
 def init(string):
     tree = _expression_parser.parse(string)
     return _ExpressionReducer().transform(tree)
 
+
 class Expression:
 
-    def __init__(self, *args):
+    def __init__(self, expstring):
 
-        self._expression = None
+        self.re = None
         self._compiled = None
 
-        negated = False
-        if args[0] is False:
-            args = args[1:]
-            negated = True
-
-        # expression literal
-        if len(args) == 1 and isinstance(args[0], str):
-            literal = args[0]
-            formatter = '{}'
-            if '*' == literal[0] and '*' == literal[-1]:
-                self.re = ' *{} *'.format(formatter.format(literal[1:-1]))
-            elif '*' == literal[0]:
-                self.re = r' *{}\b'.format(formatter.format(literal[1:]))
-            elif '*' == literal[-1]:
-                self.re = r' *\b{} *'.format(formatter.format(literal[:-1]))
-            else:
-                self.re = r' *\b{}\b *'.format(formatter.format(literal))
-
-        # expression conjunction
-        elif len(args) == 1 and isinstance(args[0], set):
-            self.re = ''
-            conjunction = self.express(args[0])
-            for term in conjunction:
-                self.re += '(?=.*{})'.format(term)
-            self.re += '.*'
-
-        # expression disjunction
-        elif len(args) > 1:
-            disjunction = self.express(args)
-            self.re = '(?:{})'.format('|'.join(['.*' + x for x in disjunction]))
-
-        # expression sequence (inflexible)
-        elif len(args) == 1 and isinstance(args[0], list):
-            seq = self.express(args[0])
-            self.re = r'\W*'.join(seq)
-
-        # expression sequence (flexible)
-        elif len(args) == 1 and isinstance(args[0], tuple):
-            seq = self.express(args[0])
-            self.re = '.*' + '.*'.join(seq) + '.*'
-
-        # expression negation
-        if negated:
-            self.re = '(?:(?:(?!.*{}.*$).)+)'.format(self.re)
+        if expstring[0] not in '-[{<':
+            expstring = '({})'.format(expstring)
+        tree = _expression_parser.parse(expstring)
+        self.re = _ExpressionReducer().transform(tree)
 
     def match(self, text):
         if self._compiled is None:
