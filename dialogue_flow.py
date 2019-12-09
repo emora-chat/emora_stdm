@@ -8,9 +8,9 @@ from enum import Enum
 
 
 _macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
+_nlu_macro_cap = r'(\|[^|=%]+\|)'
 
-
-def get_kb_rings(macro, vars):
+def get_kb_rings(re, macro, vars):
     var = None
     if macro[0] == '%':
         var = macro[1:macro.find('=')]
@@ -74,7 +74,7 @@ class DialogueTransition:
         choices = []
         for choice in self.nlg:
             for macro in regex.findall(_macro_cap, choice):
-                rings, var = get_kb_rings(macro, vars)
+                rings, var = get_kb_rings(_macro_cap, macro, vars)
                 result = self.knowledge_base.attribute(rings)
                 if result:
                     e = random.choice(list(result))
@@ -100,7 +100,7 @@ class DialogueTransition:
             virtuals[ont_var] = lambda item, _: \
                 ont_entry[1:] if ont_entry[1:] in knowledge_base.types(item) else False
         i = 0
-        for kb_entry in regex.findall(_macro_cap, exp):
+        for kb_entry in regex.findall(_nlu_macro_cap, exp):
             kb_var = r'_K{}_'.format(str(i))
             exp = exp.replace(kb_entry, kb_var)
 
@@ -111,7 +111,7 @@ class DialogueTransition:
                     kb_entry = str(self.kb_entry)
                     for k, v in vars.items():
                         kb_entry = kb_entry.replace('$'+k, v)
-                    rings, _ = get_kb_rings(kb_entry, {})
+                    rings, _ = get_kb_rings(_nlu_macro_cap, kb_entry, {})
                     return knowledge_base.valid_attribute(item, rings)
 
             virtuals[kb_var] = kb_virtual(kb_entry)

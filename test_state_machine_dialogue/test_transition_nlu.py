@@ -70,15 +70,17 @@ def test_kb_nlu():
             ('bird', 'animal', 'type'),
             ('dog', 'animal', 'type')
         ]), 'x', 'y',
-        'this $animal has, |$animal:has|',
+        'this $animal has, %adapt=|$animal:has|',
         ['this thing is cool']
     )
     print(t.expression)
     vars = {'animal': 'bird'}
     score, vars = t.user_transition_check('this bird has wings', vars)
     assert score
+    assert vars['adapt'] == 'wings'
     vars = {'animal': 'dog'}
     score, vars = t.user_transition_check('this dog has a tail', vars)
     assert score
+    assert vars['adapt'] == 'tail'
     score, vars = t.user_transition_check('this dog has wings', vars)
     assert not score
