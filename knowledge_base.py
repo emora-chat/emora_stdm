@@ -5,7 +5,8 @@ from structpy.graph.traversal import preset as traversal
 
 Graph = Database(MapMultidigraph)
 
-_type = 'typ'
+_type = 'type'
+_attr = 'attr'
 
 
 class KnowledgeBase(Graph):
@@ -15,6 +16,11 @@ class KnowledgeBase(Graph):
 
     def add_type(self, subtype, type):
         self.add(subtype, type, _type)
+
+    def add_attr(self, type, attribute):
+        if _attr not in self.data(type):
+            self.data(type)[_attr] = set()
+        self.data(type)[_attr].add(attribute)
 
     def types(self, node):
         if self.has_node(node):
@@ -33,8 +39,7 @@ class KnowledgeBase(Graph):
         :param rings: dict<str: node,
                            tuple<
                                  bool: negated,
-                                 bool: reverse,
-                                 list<relation>: attribute chain
+                                 list<tuple<bool: reversed, str: relation>>
                                 >
                           >
         :return: set<str: node>

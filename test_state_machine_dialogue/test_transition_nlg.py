@@ -33,7 +33,7 @@ def test_kb_nlg():
             ('avengers', 'chris evans', 'stars')
         ]), 'x', 'y', None,
         [
-            'it has <$movie:stars> in it'
+            'it has |$movie:stars| in it'
         ]
     )
     assert t.response({'movie': 'avengers'}) == 'it has chris evans in it'
@@ -48,7 +48,7 @@ def test_kb_nlg_query():
             ('scarlett johansson', 'black widow', 'plays')
         ]), 'x', 'y', None,
         [
-            '%actor=<$movie:stars, $role:/plays> plays $role'
+            '%actor=|$movie:stars, $role:/plays| plays $role'
         ]
     )
     vars = {'role': 'black widow', 'movie': 'avengers'}
@@ -68,7 +68,7 @@ def test_nlg_preprocessing():
             ('scarlett johansson', 'black widow', 'plays')
         ]), 'x', 'y', None,
         [
-            '%actor=<$movie:stars, $role:/plays> plays $role that $actor'
+            '%actor=|$movie:stars, $role:/plays| plays $role that $actor'
         ]
     )
     vars = {'role': 'black widow', 'movie': 'avengers', 'actor': 'bob'}

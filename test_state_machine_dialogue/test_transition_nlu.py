@@ -46,8 +46,8 @@ def test_var_setting_nlu():
 def test_virtual_nlu():
     t = DialogueTransition(
         KnowledgeBase([
-            ('bird', 'animal', 'typ'),
-            ('dog', 'animal', 'typ')
+            ('bird', 'animal', 'type'),
+            ('dog', 'animal', 'type')
         ]), 'x', 'y',
         'this (&animal) is cool',
         ['this thing is cool']
@@ -58,4 +58,23 @@ def test_virtual_nlu():
     score, vars = t.user_transition_check('this dog is cool')
     assert score
     score, vars = t.user_transition_check('this cat is cool')
+    assert not score
+
+
+def test_kb_nlu():
+    t = DialogueTransition(
+        KnowledgeBase([
+            ('bird', 'wings', 'has'),
+            ('bird', 'tail', 'has'),
+            ('dog', 'tail', 'has')
+        ]), 'x', 'y',
+        'this %a=(&animal) has, a:has',
+        ['this thing is cool']
+    )
+    print(t.expression)
+    score, vars = t.user_transition_check('this bird has wings')
+    assert score
+    score, vars = t.user_transition_check('this dog has tail')
+    assert score
+    score, vars = t.user_transition_check('this dog has wings')
     assert not score

@@ -7,6 +7,9 @@ from expression import VirtualExpression
 from enum import Enum
 
 
+
+
+
 class DialogueTransition:
 
     def __init__(self, knowledge_base, source, target, nlu, nlg, settings='', nlg_vars=None):
@@ -49,12 +52,12 @@ class DialogueTransition:
             vars = {}
         choices = []
         for choice in self.nlg:
-            macro_cap = r'(<[^<>=%]+>|%[^<>%=]*=<[^<>=%]+>)'
+            macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
             for macro in regex.findall(macro_cap, choice):
                 var = None
                 if macro[0] == '%':
                     var = macro[1:macro.find('=')]
-                val = macro[macro.find('<')+1:macro.find('>')]
+                val = macro[macro.find('|')+1:-1]
                 for x, y in vars.items():
                     val = val.replace('$' + x, y)
                 travs = val.split(',')
@@ -76,7 +79,7 @@ class DialogueTransition:
                         vars[var] = e
             for x, y in vars.items():
                 choice = choice.replace('$'+x, y)
-            if '<' not in choice and '$' not in choice:
+            if '|' not in choice and '$' not in choice:
                 choices.append(choice)
         return random.choice(choices)
 
