@@ -7,7 +7,28 @@ from expression import VirtualExpression
 from enum import Enum
 
 
+_macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
 
+
+def get_kb_rings(macro, vars):
+    var = None
+    if macro[0] == '%':
+        var = macro[1:macro.find('=')]
+    val = macro[macro.find('|') + 1:-1]
+    for x, y in vars.items():
+        val = val.replace('$' + x, y)
+    travs = val.split(',')
+    rings = {}
+    for trav in travs:
+        negated = '-' in trav
+        chain = trav.split(':')
+        node = chain[0]
+        rings[node] = (negated, [])
+        for link in chain[1:]:
+            reversed = '/' in link
+            link = link.replace('/', '').replace('-', '')
+            rings[node][1].append((reversed, link))
+    return rings, var
 
 
 class DialogueTransition:
@@ -52,25 +73,8 @@ class DialogueTransition:
             vars = {}
         choices = []
         for choice in self.nlg:
-            macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
-            for macro in regex.findall(macro_cap, choice):
-                var = None
-                if macro[0] == '%':
-                    var = macro[1:macro.find('=')]
-                val = macro[macro.find('|')+1:-1]
-                for x, y in vars.items():
-                    val = val.replace('$' + x, y)
-                travs = val.split(',')
-                rings = {}
-                for trav in travs:
-                    negated = '-' in trav
-                    chain = trav.split(':')
-                    node = chain[0]
-                    rings[node] = (negated, [])
-                    for link in chain[1:]:
-                        reversed = '/' in link
-                        link = link.replace('/', '').replace('-', '')
-                        rings[node][1].append((reversed, link))
+            for macro in regex.findall(_macro_cap, choice):
+                rings, var = get_kb_rings(macro, vars)
                 result = self.knowledge_base.attribute(rings)
                 if result:
                     e = random.choice(list(result))
@@ -93,16 +97,24 @@ class DialogueTransition:
             ont_var = r'_O{}_{}'.format(str(i), ont_entry[1:])
             i += 1
             exp = exp.replace(ont_entry, ont_var)
-            virtuals[ont_var] = lambda item: ont_entry[1:] in knowledge_base.types(item)
-        '''
+            virtuals[ont_var] = lambda item, _: \
+                ont_entry[1:] if ont_entry[1:] in knowledge_base.types(item) else False
         i = 0
-        kno_regex = r'(?:[^:]*[\[\]()<>{},]((?:[^(){}<>\[\],:]+):(?:[^(){}<>\[\],:]+)))'
-        for kno_entry in regex.findall(kno_regex, exp):
-            macros[kno_entry] = r'(?P<_K_{}>{})'.format(kno_entry, r'/[a-zA-Z _0-9]+/')
-        for macro, ex in macros:
-            exp.replace(macro, ex)
-        self.macros = macros
-        '''
+        for kb_entry in regex.findall(_macro_cap, exp):
+            kb_var = r'_K{}_'.format(str(i))
+            exp = exp.replace(kb_entry, kb_var)
+
+            class kb_virtual:
+                def __init__(self, kb_entry):
+                    self.kb_entry = kb_entry
+                def __call__(self, item, vars):
+                    kb_entry = str(self.kb_entry)
+                    for k, v in vars.items():
+                        kb_entry = kb_entry.replace('$'+k, v)
+                    rings, _ = get_kb_rings(kb_entry, {})
+                    return knowledge_base.valid_attribute(item, rings)
+
+            virtuals[kb_var] = kb_virtual(kb_entry)
         return exp, virtuals
 
 

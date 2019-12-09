@@ -24,7 +24,8 @@ class KnowledgeBase(Graph):
 
     def types(self, node):
         if self.has_node(node):
-            return set(traversal.BreadthFirstOnArcs(self, node, _type)) - {node}
+            s = set(traversal.BreadthFirstOnArcs(self, node, _type)) - {node}
+            return s
         else:
             return set()
 
@@ -68,3 +69,14 @@ class KnowledgeBase(Graph):
                 else:
                     result.intersection_update(link)
         return result - negs
+
+    def valid_attribute(self, value, rings):
+        s = self.attribute(rings)
+        words = value.split()
+        for i in range(len(words)):
+            for j in range(len(words), i, -1):
+                partial = ' '.join(words[i:j])
+                if partial in s:
+                    return partial
+        return False
+

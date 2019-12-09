@@ -66,15 +66,19 @@ def test_kb_nlu():
         KnowledgeBase([
             ('bird', 'wings', 'has'),
             ('bird', 'tail', 'has'),
-            ('dog', 'tail', 'has')
+            ('dog', 'tail', 'has'),
+            ('bird', 'animal', 'type'),
+            ('dog', 'animal', 'type')
         ]), 'x', 'y',
-        'this %a=(&animal) has, a:has',
+        'this $animal has, |$animal:has|',
         ['this thing is cool']
     )
     print(t.expression)
-    score, vars = t.user_transition_check('this bird has wings')
+    vars = {'animal': 'bird'}
+    score, vars = t.user_transition_check('this bird has wings', vars)
     assert score
-    score, vars = t.user_transition_check('this dog has tail')
+    vars = {'animal': 'dog'}
+    score, vars = t.user_transition_check('this dog has a tail', vars)
     assert score
-    score, vars = t.user_transition_check('this dog has wings')
+    score, vars = t.user_transition_check('this dog has wings', vars)
     assert not score

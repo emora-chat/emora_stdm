@@ -104,8 +104,13 @@ class VirtualExpression(Expression):
         if match:
             for var, virtual in self.virtuals.items():
                 if var in assigned:
-                    if not virtual(assigned[var]):
+                    val = virtual(assigned[var], vars)
+                    if not val:
                         return None, {}
+                    if val != assigned[var]:
+                        for k, v in assigned.items():  # todo: fix this hack
+                            if v == assigned[var]:
+                                assigned[k] = val
                     del assigned[var]
         return match, assigned
 

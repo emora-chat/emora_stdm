@@ -83,7 +83,8 @@ def test_var():
 def test_virtual_expression():
     e = VE('i, saw, {a, the} %a=animal, yesterday',
            {
-                'animal': (lambda item: item.strip() in {'dog', 'bird', 'cat'})
+                'animal': (lambda item, _:
+                           item.strip() if item.strip() in {'dog', 'bird', 'cat'} else False)
            })
     print(e)
     match, vars = e.match('i saw the dog yesterday')
