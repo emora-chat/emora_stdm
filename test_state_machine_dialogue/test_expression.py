@@ -1,6 +1,7 @@
 
 import pytest
 from expression import Expression as E
+from expression import VirtualExpression as VE
 
 
 def test_literal():
@@ -10,7 +11,6 @@ def test_literal():
 
 
 def test_conjunction():
-    #e = E({'hello', 'there', 'you', 'hey'})
     e = E('<hello, there, you, hey>')
     assert e.match('oh hey hello there whats new with you then')[0]
     assert e.match('oh hey hello there you!')[0]
@@ -18,7 +18,6 @@ def test_conjunction():
 
 
 def test_disjunction():
-    #e = E('hello', 'hey', 'hi', 'how are you')
     e = E('{hello, hey, hi, how are you}')
     assert e.match('hey hello')[0]
     assert e.match('oh hey there')[0]
@@ -27,7 +26,6 @@ def test_disjunction():
 
 
 def test_inflexible_sequence():
-    #e = E(['hello', 'how', 'are', 'you'])
     e = E('[hello, how, are, you]')
     print(e)
     assert e.match('hello, how are you?')[0]
@@ -36,7 +34,6 @@ def test_inflexible_sequence():
 
 
 def test_flexible_sequence():
-    #e = E(('hello', 'how', 'are', 'you'))
     e = E('(hello, how, are, you)')
     print(e)
     assert e.match('hey hello there how are you today?')[0]
@@ -57,15 +54,46 @@ def test_negation():
     assert not e.match('oh hello there you')[0]
 
 
+def test_regex():
+    e = E('hello /(?<var>[a-z A-Z_0-9]+)/ there')
+    print(e)
+    match, vars = e.match('hello you there')
+    assert match
+    assert vars['var'].strip() == 'you'
+    match, vars = e.match('hello abcd')
+    assert not match
+
+
 def test_assign():
     e = E('hello there %first={jon, sarah} morning')
     print(e)
-    assert e.match('hello there jon morning')[0].group('first') == 'jon'
-    assert e.match('hello there sarah morning')[0].group('first') == 'sarah'
+    assert e.match('hello there jon morning')[1]['first'] == 'jon'
+    assert e.match('hello there then sarah morning')[1]['first'] == 'sarah'
+
+
+def test_var():
+    e = E('{i, you}, {can, will, may, might}, {bake, make, cook}, $food, {tonight, tomorrow}')
+    print(e)
+    assert e.match('i might cook pasta tomorrow', {'food': 'pasta'})[0]
+    assert not e.match('i might cook steak tomorrow', {'food': 'pasta'})[0]
+    assert not e.match('i might cook pasta tomorrow', {'food': 'steak'})[0]
+    assert not e.match('i might cook pasta tomorrow')[0]
+
+
+def test_virtual_expression():
+    e = VE('i, saw, {a, the} %a=animal, yesterday',
+           {
+                'animal': (lambda item: item.strip() in {'dog', 'bird', 'cat'})
+           })
+    print(e)
+    match, vars = e.match('i saw the dog yesterday')
+    assert match
+    assert vars['a'] == 'dog'
+    match, vars = e.match('i saw the horse yesterday')
+    assert not match
 
 
 def test_compound():
-    #e = E(('hey', E('hey', 'hello'), {'you', 'are'}, ['good', 'today', {False, 'right'}]))
     e = E('hey {hey, hello} <you, are> [-right, good, today]')
     print(e)
     matches = [
