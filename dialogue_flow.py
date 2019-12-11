@@ -143,6 +143,12 @@ class DialogueFlow:
         self._jump_states = {}
         self._back_states = []
 
+    def vars(self):
+        return self._vars
+
+    def state(self):
+        return self._state
+
     def knowledge_base(self):
         return self._kb
 
@@ -175,7 +181,7 @@ class DialogueFlow:
         best_score, next_state, vars_update, utterance = None, None, None, None
         for source, target, transition in self._graph.arcs_out(self._state):
             score, vars = transition.system_transition_check()
-            if best_score is None or score > best_score:
+            if score > 0 and (best_score is None or score > best_score):
                 best_score, next_state, vars_update = score, target, vars
                 utterance = transition.response(self._vars)
         self._vars.update(vars_update)

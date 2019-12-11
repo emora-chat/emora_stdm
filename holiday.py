@@ -3,7 +3,7 @@
 from dialogue_flow import DialogueFlow
 
 
-component = DialogueFlow('start')
+component = DialogueFlow('prestart')
 
 arcs = [
     ('feeling_positive', 'feeling', 'type'),
@@ -26,7 +26,8 @@ feelings_negative = ['sad', 'nervous', 'stress', 'stressed', 'stressful', 'worri
                      'terrible', 'horrible', 'awful', 'depressed', 'lonely',
                      'disgusted', 'crazy', 'insane']
 feelings_relax = ['relax', 'decompress', 'calm down', 'chill out']
-holiday = ['christmas', 'new year', 'new years', 'christmas eve', 'hanukkah', 'kwanzaa']
+holiday = ['christmas', 'new year', 'new years', 'christmas eve', 'hanukkah', 'kwanzaa',
+           'holiday', 'holidays', 'winter break', 'winter vacation', 'new years', 'end of the year']
 yn_qw = ['do', 'is', 'are', 'was', 'were', 'did', 'will']
 q_word = ['what', 'when', 'where', 'why', 'how', 'who']
 affirmative = ['yes', 'yeah', 'yea', 'of course', 'sure', 'yep', 'yup', 'absolutely',
@@ -44,7 +45,7 @@ arcs.extend([(q, 'yn_qw', 'type') for q in yn_qw])
 arcs.extend([(f, 'feelings_positive', 'type') for f in feelings_positive])
 arcs.extend([(f, 'feelings_negative', 'type') for f in feelings_negative])
 arcs.extend([(q, 'question_word', 'type') for q in q_word])
-arcs.extend([(x, 'holiday', 'type') for x in holiday])
+arcs.extend([(x, 'holiday_t', 'type') for x in holiday])
 arcs.extend([(x, 'feelings_relax', 'type') for x in feelings_relax])
 arcs.extend([(x, 'unsure', 'type') for x in unsure])
 arcs.extend([(x, 'activity', 'type') for x in activity])
@@ -60,10 +61,20 @@ arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
 
+# pre start
+component.add_transition(
+    'prestart', 'prestart', None, ['x'], settings='e'
+)
+
+component.add_transition(
+    'prestart', 'start',
+    '&holiday_t', []
+)
+
 # start: are you excited for the holidays
 component.add_transition(
     'start', 'feelings_q',
-    '&yn_qw, you, &feelings_positive, &holiday',
+    '&yn_qw, you, &feelings_positive, &holiday_t',
     ['are you excited for the holidays']
 )
 
@@ -192,7 +203,7 @@ component.add_transition(
 
 component.add_transition(
     'feelings_neg', 'end',
-    '({holidays, &holiday}, &feelings_negative, i, &feelings_relax, {[&activity, &item], &activity})',
+    '({holidays, &holiday_t}, &feelings_negative, i, &feelings_relax, {[&activity, &item], &activity})',
     ['the holidays can be stressful, i like to relax by watching movies']
 )
 
@@ -221,7 +232,11 @@ component.add_transition(
 component.add_transition(
     'garbage', 'end',
     None,
-    ['thats understandable, one thing i always look forward to is holiday movies']
+    ['yeah, one thing i always look forward to is holiday movies']
+)
+
+component.add_transition(
+    'end', 'end', None, ['x'], settings='e'
 )
 
 
@@ -232,6 +247,7 @@ if __name__ == '__main__':
     print(component.system_transition())
     i = input('U: ')
     while True:
-        confidence = component.user_transition(i) / 10
-        print(component.system_transition())
+        confidence = component.user_transition(i) / 10 - 0.3
+        print(component.state(), component.vars())
+        print('({}) '.format(confidence), component.system_transition())
         i = input('U: ')
