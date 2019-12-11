@@ -82,7 +82,7 @@ class Expression:
         match = compilation.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:
             return None, {}
-        return match, {x: y.strip() for x, y in match.groupdict().items()}
+        return match, {x: y.strip() for x, y in match.groupdict().items() if y}
 
     def __str__(self):
         return self.re

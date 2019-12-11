@@ -2,7 +2,8 @@
 import regex
 import random
 from structpy.automaton import StateMachine
-from structpy.graph.labeled_digraph import DeterministicMapDigraph as Graph
+from structpy.graph.labeled_digraph import MapMultidigraph as Graph
+from knowledge_base import KnowledgeBase
 from expression import VirtualExpression
 from enum import Enum
 
@@ -47,14 +48,21 @@ class DialogueTransition:
         self.knowledge_base = knowledge_base
 
     def update_settings(self):
-        self.nlu_score = 10
-        self.nlu_min = 1
-        self.nlg_score = 10
-        self.nlg_min = 1
+        if 'e' in self.settings:
+            self.nlu_score = 3
+            self.nlu_min = 1
+            self.nlg_score = 3
+            self.nlg_min = 1
+        else:
+            self.nlu_score = 10
+            self.nlu_min = 1
+            self.nlg_score = 10
+            self.nlg_min = 1
+
 
     def user_transition_check(self, utterance, state_vars=None):
         if not self.nlu:
-            return 0, {}
+            return self.nlu_score, {}
         else:
             match, vars = self.expression.match(utterance, state_vars)
             if match:
@@ -97,8 +105,15 @@ class DialogueTransition:
             ont_var = r'_O{}_{}'.format(str(i), ont_entry[1:])
             i += 1
             exp = exp.replace(ont_entry, ont_var)
-            virtuals[ont_var] = lambda item, _: \
-                ont_entry[1:] if ont_entry[1:] in knowledge_base.types(item) else False
+
+            class ont_virtual:
+                def __init__(self, ont_entry):
+                    self.ont_entry = ont_entry
+                def __call__(self, item, vars):
+                    return self.ont_entry[1:] if self.ont_entry[1:] in knowledge_base.types(item) \
+                        else False
+
+            virtuals[ont_var] = ont_virtual(ont_entry)
         i = 0
         for kb_entry in regex.findall(_nlu_macro_cap, exp):
             kb_var = r'_K{}_'.format(str(i))
@@ -122,11 +137,15 @@ class DialogueFlow:
 
     def __init__(self, initial_state=None):
         self._graph = Graph()
+        self._kb = KnowledgeBase()
         self._initial_state = initial_state
         self._state = self._initial_state
         self._vars = {}
         self._jump_states = {}
         self._back_states = []
+
+    def knowledge_base(self):
+        return self._kb
 
     def reset(self):
         self._state = self._initial_state
@@ -140,7 +159,7 @@ class DialogueFlow:
     def add_transition(self, source, target, nlu, nlg, settings='', nlg_vars=None):
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)
-        transition = DialogueTransition(source, target, nlu, nlg, settings, nlg_vars)
+        transition = DialogueTransition(self._kb, source, target, nlu, nlg, settings, nlg_vars)
         self._graph.add(source, target, transition)
 
     def user_transition(self, utterance=None):
@@ -151,6 +170,7 @@ class DialogueFlow:
                 best_score, next_state, vars_update = score, target, vars
         self._vars.update(vars_update)
         self._state = next_state
+        return best_score
 
     def system_transition(self):
         best_score, next_state, vars_update, utterance = None, None, None, None
