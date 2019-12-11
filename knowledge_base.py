@@ -22,6 +22,16 @@ class KnowledgeBase(Graph):
             self.data(type)[_attr] = set()
         self.data(type)[_attr].add(attribute)
 
+    def type_check(self, value, type):
+        words = value.split()
+        for i in range(len(words)):
+            for j in range(len(words), i, -1):
+                partial = ' '.join(words[i:j])
+                s = self.types(partial)
+                if type in s:
+                    return True
+        return False
+
     def types(self, node):
         if self.has_node(node):
             s = set(traversal.BreadthFirstOnArcs(self, node, _type)) - {node}

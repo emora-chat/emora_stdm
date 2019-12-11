@@ -110,8 +110,7 @@ class DialogueTransition:
                 def __init__(self, ont_entry):
                     self.ont_entry = ont_entry
                 def __call__(self, item, vars):
-                    return self.ont_entry[1:] if self.ont_entry[1:] in knowledge_base.types(item) \
-                        else False
+                    return self.ont_entry[1:] if knowledge_base.type_check(item, self.ont_entry[1:]) else False
 
             virtuals[ont_var] = ont_virtual(ont_entry)
         i = 0

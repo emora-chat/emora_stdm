@@ -11,41 +11,63 @@ arcs = [
     ('family_sinular', 'family_all', 'type'),
     ('family_plural', 'family_all', 'type')
 ]
-family = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
-          'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
-          'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
-          'granddaughter']
-family_plural = ['brothers', 'sons', 'daughters', 'sisters',
-                 'grandparents', 'parents', 'siblings', 'kids', 'children',
-                 'cousins', 'aunts', 'uncles', 'grandchildren', 'grandsons',
-                 'granddaughters', 'family']
+anyfamily = ['family', 'famplural']
+singularfamily = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
+                  'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
+                  'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
+                  'granddaughter']
+pluralfamily = ['brothers', 'sons', 'daughters', 'sisters',
+                'grandparents', 'parents', 'siblings', 'kids', 'children',
+                'cousins', 'aunts', 'uncles', 'grandchildren', 'grandsons',
+                'granddaughters', 'family', 'relatives']
 feelings_positive = ['happy', 'excited', 'joyful', 'joy', 'thrilled', 'ready']
-feelings_negative = ['sad', 'nervous', 'stress', 'stressed', 'worried',
+feelings_negative = ['sad', 'nervous', 'stress', 'stressed', 'stressful', 'worried',
                      'anxious', 'scared', 'fearful', 'annoyed', 'bothered',
                      'terrible', 'horrible', 'awful', 'depressed', 'lonely',
                      'disgusted', 'crazy', 'insane']
+feelings_relax = ['relax', 'decompress', 'calm down', 'chill out']
 holiday = ['christmas', 'new year', 'new years', 'christmas eve', 'hanukkah', 'kwanzaa']
 yn_qw = ['do', 'is', 'are', 'was', 'were', 'did', 'will']
 q_word = ['what', 'when', 'where', 'why', 'how', 'who']
 affirmative = ['yes', 'yeah', 'yea', 'of course', 'sure', 'yep', 'yup', 'absolutely',
                'you bet', 'right']
 negative = ['no', 'nope', 'absolutely not', 'of course not']
+unsure = ['dont know', 'uncertain', 'not sure']
+activity = ['watching']
+item = ['movie', 'movies', 'show', 'shows', 'tv', 'television']
+like = ['like', 'enjoy']
+winteractivity = ['ski', 'skiing', 'snowboard', 'snowboarding', 'sled', 'sledding']
+fun = ['fun', 'exciting', 'enjoyable']
 
 arcs.extend([(a, 'affirmative', 'type') for a in affirmative])
 arcs.extend([(q, 'yn_qw', 'type') for q in yn_qw])
-arcs.extend([(f, 'feeling_positive', 'type') for f in feelings_positive])
-arcs.extend([(f, 'feeling_negative', 'type') for f in feelings_negative])
+arcs.extend([(f, 'feelings_positive', 'type') for f in feelings_positive])
+arcs.extend([(f, 'feelings_negative', 'type') for f in feelings_negative])
 arcs.extend([(q, 'question_word', 'type') for q in q_word])
+arcs.extend([(x, 'holiday', 'type') for x in holiday])
+arcs.extend([(x, 'feelings_relax', 'type') for x in feelings_relax])
+arcs.extend([(x, 'unsure', 'type') for x in unsure])
+arcs.extend([(x, 'activity', 'type') for x in activity])
+arcs.extend([(x, 'item', 'type') for x in item])
+arcs.extend([(x, 'negative', 'type') for x in negative])
+arcs.extend([(x, 'like', 'type') for x in like])
+arcs.extend([(x, 'winteractivity', 'type') for x in winteractivity])
+arcs.extend([(x, 'fun', 'type') for x in fun])
+arcs.extend([(x, 'singularfamily', 'type') for x in singularfamily])
+arcs.extend([(x, 'pluralfamily', 'type') for x in pluralfamily])
+arcs.extend([(x, 'anyfamily', 'type') for x in anyfamily])
 arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
 
+# start: are you excited for the holidays
 component.add_transition(
     'start', 'feelings_q',
     '&yn_qw, you, &feelings_positive, &holiday',
     ['are you excited for the holidays']
 )
 
+# yes
 component.add_transition(
     'feelings_q', 'feelings_pos',
     '({&affirmative, &feelings_positive})',
@@ -53,27 +75,153 @@ component.add_transition(
 )
 
 component.add_transition(
+    'feelings_pos', 'feelings_pos_reason',
+    '{(what, &feelings_positive, {part, most, best}),'
+    '(you, &feelings_positive)}',
+    ['what excites you the most']
+)
+
+# activities
+component.add_transition(
+    'feelings_pos_reason', 'activities',
+    '{'
+    '{christmas carols, christmas carolling, carols, carolling},'
+    '({bake,baking,cook,cooking,make,making},{treats,cookies,food,(gingerbread,{men,house,houses})}),'
+    '(playing, snow),'
+    '({build,building,make,making,create,creating},{snowmen,snowman,snowangel,snowangels}),'
+    '&winteractivity,'
+    '}',
+    ['i always thought building a snowman and baking cookies sounds fun']
+)
+
+component.add_transition(
+    'activities', 'end',
+    '({sounds,seems,think},&fun)',
+    ['that sounds fun, i really like watching holiday movies']
+)
+
+# parties
+component.add_transition(
+    'feelings_pos_reason', 'parties',
+    '{party, parties, extravaganza, bash, get together}',
+    ['parties are cool']
+)
+
+component.add_transition(
+    'parties', 'end',
+    '({sounds,seems,think},&fun)',
+    ['spending time with people is great, i enjoy watching holiday movies with them']
+)
+
+# family
+component.add_transition(
+    'feelings_pos_reason', 'family',
+    '({({spend,spending},time),see,seeing,visit,visiting}, &anyfamily)',
+    ['i think its enjoyable to visit relatives during the holidays']
+)
+
+component.add_transition(
+    'family', 'end',
+    '({sounds,seems,think},&fun)',
+    ['i think family is important too, one common tradition i hear of is watching holiday movies']
+)
+
+# gifts
+component.add_transition(
+    'feelings_pos_reason', 'gifts',
+    '({giving,give,receiving,receive,getting,get,open,opening,wrap,wrapping,unwrap,unwrapping},'
+    '{gift,gifts,present,presents})',
+    ['i like shopping for my friends and family']
+)
+
+component.add_transition(
+    'gifts', 'end',
+    '({sounds,seems,think},&fun)',
+    ['generosity is great, watching holiday movies with people is fun too i think']
+)
+
+# atmosphere
+component.add_transition(
+    'feelings_pos_reason', 'atmosphere',
+    '{'
+    '({pretty,gorgeous,wonderful,scenic,beautiful,magical},'
+    '{lights,displays,time,season,snow,landscape,outside}),'
+    '{pretty,gorgeous,wonderful,scenic,beautiful,magical}'
+    '}',
+    ['its a really beautiful time of the year']
+)
+
+component.add_transition(
+    'atmosphere', 'end',
+    '({sounds,seems,think},&fun)',
+    ['the lights are magical, i also really like seeing holiday movies']
+)
+
+# food
+component.add_transition(
+    'feelings_pos_reason', 'food',
+    '{food,dishes,meals,snacks,treats}',
+    ['there is always such good food']
+)
+
+component.add_transition(
+    'food', 'end',
+    '({sounds,seems,think},&fun)',
+    ['holiday food is delicious, i always curl up with a good holiday movie afterwards']
+)
+
+# vacation
+component.add_transition(
+    'feelings_pos_reason', 'vacation',
+    '{vacation,({day,days,week,weeks,time},off),break}',
+    ['the time off during the holidays is always refreshing']
+)
+
+component.add_transition(
+    'vacation', 'end',
+    '({sounds,seems,think},&fun)',
+    ['taking a break is important, i especially like to take breaks by watching holiday movies']
+)
+
+# no
+component.add_transition(
     'feelings_q', 'feelings_neg',
     '({&negative, &feelings_negative})',
     ['no the holidays stress me out']
 )
 
 component.add_transition(
-    'feelings_q', 'feelings_unsure', None,
-    ['i dont know'], settings='e'
+    'feelings_neg', 'end',
+    '({holidays, &holiday}, &feelings_negative, i, &feelings_relax, {[&activity, &item], &activity})',
+    ['the holidays can be stressful, i like to relax by watching movies']
+)
+
+# not sure
+component.add_transition(
+    'feelings_q', 'feelings_unsure',
+    '&unsure',
+    ['i dont know']
 )
 
 component.add_transition(
-    'feelings_pos', 'feelings_pos_r',
-    '{(what, &feelings_positive, {part, most, best}),'
-    '(you, &feelings_positive)}',
-    ['what excites you the most']
+    'feelings_unsure', 'feelings_pos_reason',
+    None,
+    ['is there anything about the holiday youre looking forward to']
+)
+
+#garbage
+
+component.add_transition(
+    'feelings_pos_reason', 'garbage',
+    None,
+    ['is there anything about the holiday youre looking forward to'],
+    settings='e'
 )
 
 component.add_transition(
-    'feelings_neg', 'feelings_neg_r',
-    '',
-    ['']
+    'garbage', 'end',
+    None,
+    ['thats understandable, one thing i always look forward to is holiday movies']
 )
 
 
