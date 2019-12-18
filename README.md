@@ -16,7 +16,7 @@ To add transitions, use:
 ```.add_transition(source, target, NLU, NLG_list)``` method like the 
 following:
 ```
-component.add_transition(
+dialogue_manager.add_transition(
     'feelings_pos', 'feelings_pos_reason',
     '{(what, &feelings_positive, {part, most, best}),'
     '(you, &feelings_positive)}',
@@ -29,6 +29,16 @@ of natural language expressions given by a user that satisfy the
 transition (see below), and the fourth argument is a list of natural 
 language expressions that the system selects as a response when
 taking this transition during its turn.
+
+A user turn can be taken, updating state, using
+```dialogue_manager.user_transition(input)```
+where input is a string representing the user utterance.
+
+A system turn can be taken using
+```dialogue_manager.system_transition()```
+
+## NLU Expressions
+
 
 
 
