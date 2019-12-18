@@ -201,6 +201,8 @@ can be written. Given an appropriately constructed KB and ontology,
 this example might match "a cow can moo", "a dog can bark", and
 everything in between.
 
+## Technical notes
+
 ####################################################################
 GIT SUBTREE SETUP FOR STRUCTPY REPO:
 ####################################################################
