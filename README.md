@@ -32,13 +32,17 @@ taking this transition during its turn.
 
 A user turn can be taken, updating state, using
 
-```dialogue_manager.user_transition(input)```
+```
+dialogue_manager.user_transition(input)
+```
 
 where input is a string representing the user utterance.
 
 A system turn can be taken using
 
-```dialogue_manager.system_transition()```
+```
+dialogue_manager.system_transition()
+```
 
 ## NLU Expressions
 
