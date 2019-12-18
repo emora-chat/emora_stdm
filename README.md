@@ -10,7 +10,8 @@ a state machine that drives natural language conversation.
 initializes a new `DialogueFlow` object with `'start'` as the 
 initial state of the state machine.
 
-To add transitions, use the `.add_transition` method like the 
+To add transitions, use:
+```.add_transition(source, target, NLU, NLG_list)``` method like the 
 following:
 ```
 component.add_transition(
@@ -20,7 +21,8 @@ component.add_transition(
     ['what excites you the most']
 )
 ```
-
+where `'feelings_pos', 'feelings_pos_reason'` are the source and
+target states of the transition
 
 ####################################################################
 GIT SUBTREE SETUP FOR STRUCTPY REPO:
