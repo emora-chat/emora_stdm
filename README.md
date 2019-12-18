@@ -4,7 +4,9 @@ Defines a dialogue management framework based on state machines and
 regular expressions. 
 
 Class `DialogueFlow` is the main class to initialize. It defines
-a state machine that drives natural language conversation.
+a state machine that drives natural language conversation. State
+transitions in the state machine (alternately) represent either 
+system or user turns.
 
 `dialogue_manager = DialogueFlow('start')`
 initializes a new `DialogueFlow` object with `'start'` as the 
@@ -21,8 +23,14 @@ component.add_transition(
     ['what excites you the most']
 )
 ```
-where `'feelings_pos', 'feelings_pos_reason'` are the source and
-target states of the transition
+where the first two arguments are the source and target states of 
+the transition, the third argument is a string that defines a set 
+of natural language expressions given by a user that satisfy the 
+transition (see below), and the fourth argument is a list of natural 
+language expressions that the system selects as a response when
+taking this transition during its turn.
+
+
 
 ####################################################################
 GIT SUBTREE SETUP FOR STRUCTPY REPO:
