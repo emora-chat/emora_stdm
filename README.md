@@ -12,12 +12,14 @@ initial state of the state machine.
 
 To add transitions, use the `.add_transition` method like the 
 following:
-`component.add_transition(
+```
+component.add_transition(
     'feelings_pos', 'feelings_pos_reason',
     '{(what, &feelings_positive, {part, most, best}),'
     '(you, &feelings_positive)}',
     ['what excites you the most']
-)`
+)
+```
 
 
 ####################################################################
