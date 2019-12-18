@@ -41,9 +41,69 @@ A system turn can be taken using
 dialogue_manager.system_transition()
 ```
 
+
 ## NLU Expressions
 
+Strings created for transition NLU define a set of user expressions
+that satisfy the transition by compiling into regular expressions.
+These expressions can be formed using the below constructs, which
+are all arbitrarily nestable and concatenable:
 
+### Literal
+```
+'hello there'
+```
+directly match the user utterance "hello there"
+
+### Disjunction
+```
+'{hello there, hi}'
+```
+matches if the utterance contains any term inside `{}`, in this case 
+"hello there", "hi", "hi hello there", and "oh hi bob" all match
+
+### Conjunction
+```
+'<bob, hi>'
+```
+matches as long as the utterance contains all terms inside `<>`,
+in this case, "hi bob" and "oh bob hi" both would match, but not
+"hi"
+
+### Flexible sequence
+```
+'(hi, bob, how, you)'
+```
+matches as long as the utterance contains all terms inside `()`,
+and the terms are ordered properly within the utterance. Matches
+in the example include "hi bob how are you", but not "how are you 
+bob"
+
+### Inflexible sequence
+```
+'[how, are, you]'
+```
+matches an exact sequence of terms with no words inserted between
+terms. The only utterance matching the example is "how are you"
+
+### Nesting
+```
+'[{hi, hello}, (how, is, weekend)]'
+```
+would match "hi how is your weekend", "oh hello, so how is the
+weekend going", ...
+
+### Ontology reference
+```
+'i am &feeling'
+```
+Using a prepended `&` references a node in the ontology. Any 
+subtype of the referenced node can be matched in the expression.
+
+### Knowledge base reference
+```
+'
+```
 
 
 ####################################################################
