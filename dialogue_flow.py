@@ -34,7 +34,7 @@ def get_kb_rings(re, macro, vars):
 
 class DialogueTransition:
 
-    def __init__(self, knowledge_base, source, target, nlu, nlg, settings='', nlg_vars=None):
+    def __init__(self, knowledge_base, source, target, nlu, nlg, evaluation_transition=None, settings='', nlg_vars=None):
         self.source = source
         self.target = target
         self.nlu = nlu
@@ -45,6 +45,7 @@ class DialogueTransition:
         self.macros = {}
         nlu, virtuals = self._process_virtuals(nlu, knowledge_base)
         self.expression = VirtualExpression(nlu, virtuals)
+        self.evaluate_transition = evaluation_transition
         self.knowledge_base = knowledge_base
 
     def update_settings(self):
@@ -59,8 +60,13 @@ class DialogueTransition:
             self.nlg_score = 10
             self.nlg_min = 1
 
-
     def user_transition_check(self, utterance, state_vars=None):
+        score, vars = self._user_transition_check(utterance, state_vars)
+        if self.evaluate_transition:
+            score, vars = self.evaluate_transition(utterance, state_vars, score, vars)
+        return score, vars
+
+    def _user_transition_check(self, utterance, state_vars=None):
         if not self.nlu:
             return self.nlu_score, {}
         else:
