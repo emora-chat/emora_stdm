@@ -1,7 +1,4 @@
-
-
 from dialogue_flow import DialogueFlow
-
 
 component = DialogueFlow('prestart')
 
@@ -155,9 +152,10 @@ component.add_transition(
 component.add_transition(
     'feelings_pos_reason', 'atmosphere',
     '{'
-    '({pretty,gorgeous,wonderful,scenic,beautiful,magical},'
-    '{lights,displays,time,season,snow,landscape,outside}),'
-    '{pretty,gorgeous,wonderful,scenic,beautiful,magical}'
+    '({pretty,gorgeous,wonderful,scenic,beautiful,magical},{lights,light,display,displays,house,houses,time,season,snow,landscape,outside,decoration,decorations,ornaments,ornament}),'
+    '{pretty,gorgeous,wonderful,scenic,beautiful,magical},'
+    '{(christmas,{tree,trees}),tree,trees,fire,fireplace,mantel,decoration,decorations,stockings,stocking,ornaments,ornament},'
+    '{santa,santa claus,mrs claus,claus,reindeer,sleigh,chimney}'
     '}',
     ['its a really beautiful time of the year']
 )
@@ -165,13 +163,13 @@ component.add_transition(
 component.add_transition(
     'atmosphere', 'end',
     '({sounds,seems,think},&fun)',
-    ['the lights are magical, i also really like seeing holiday movies']
+    ['i think that there are so many magical holiday sights to see, i also really enjoying watching christmas movies']
 )
 
 # food
 component.add_transition(
     'feelings_pos_reason', 'food',
-    '{food,dishes,meals,snacks,treats}',
+    '{food,dishes,meals,snacks,treats,chocolate,hot chocolate,cocoa,hot cocoa,sipping}',
     ['there is always such good food']
 )
 
@@ -220,7 +218,7 @@ component.add_transition(
     ['is there anything about the holiday youre looking forward to']
 )
 
-#garbage
+# garbage
 
 component.add_transition(
     'feelings_pos_reason', 'garbage',
@@ -238,10 +236,6 @@ component.add_transition(
 component.add_transition(
     'end', 'end', None, ['x'], settings='e'
 )
-
-
-
-
 
 if __name__ == '__main__':
     print(component.system_transition())

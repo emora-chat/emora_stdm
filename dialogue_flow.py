@@ -167,10 +167,10 @@ class DialogueFlow:
     def set_initial_state(self, state):
         self._initial_state = state
 
-    def add_transition(self, source, target, nlu, nlg, settings='', nlg_vars=None):
+    def add_transition(self, source, target, nlu, nlg, evaluation_transition=None, settings='', nlg_vars=None):
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)
-        transition = DialogueTransition(self._kb, source, target, nlu, nlg, settings, nlg_vars)
+        transition = DialogueTransition(self._kb, source, target, nlu, nlg, evaluation_transition, settings, nlg_vars)
         self._graph.add(source, target, transition)
 
     def user_transition(self, utterance=None):
