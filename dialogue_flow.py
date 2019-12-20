@@ -7,6 +7,8 @@ from knowledge_base import KnowledgeBase
 from expression import VirtualExpression
 from enum import Enum
 
+HIGHSCORE = 10
+LOWSCORE = 3
 
 _macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
 _nlu_macro_cap = r'(\|[^|=%]+\|)'
@@ -50,20 +52,20 @@ class DialogueTransition:
 
     def update_settings(self):
         if 'e' in self.settings:
-            self.nlu_score = 3
+            self.nlu_score = LOWSCORE
             self.nlu_min = 1
-            self.nlg_score = 3
+            self.nlg_score = LOWSCORE
             self.nlg_min = 1
         else:
-            self.nlu_score = 10
+            self.nlu_score = HIGHSCORE
             self.nlu_min = 1
-            self.nlg_score = 10
+            self.nlg_score = HIGHSCORE
             self.nlg_min = 1
 
-    def user_transition_check(self, utterance, state_vars=None):
+    def user_transition_check(self, utterance, state_vars=None, arg_dict=None):
         score, vars = self._user_transition_check(utterance, state_vars)
         if self.evaluate_transition:
-            score, vars = self.evaluate_transition(utterance, state_vars, score, vars)
+            score, vars = self.evaluate_transition(arg_dict, score, vars)
         return score, vars
 
     def _user_transition_check(self, utterance, state_vars=None):
@@ -173,10 +175,10 @@ class DialogueFlow:
         transition = DialogueTransition(self._kb, source, target, nlu, nlg, evaluation_transition, settings, nlg_vars)
         self._graph.add(source, target, transition)
 
-    def user_transition(self, utterance=None):
+    def user_transition(self, utterance=None, arg_dict=None):
         best_score, next_state, vars_update = None, None, None
         for source, target, transition in self._graph.arcs_out(self._state):
-            score, vars = transition.user_transition_check(utterance, self._vars)
+            score, vars = transition.user_transition_check(utterance, self._vars, arg_dict)
             if best_score is None or score > best_score:
                 best_score, next_state, vars_update = score, target, vars
         self._vars.update(vars_update)
