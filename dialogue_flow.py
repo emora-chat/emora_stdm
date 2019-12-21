@@ -191,6 +191,9 @@ class DialogueFlow:
         transition = DialogueTransition(self._kb, source, target, nlu, nlg, evaluation_transition, settings, nlg_vars)
         self._graph.add(source, target, transition)
 
+    def set_transition_nlg_score(self, source, target, score):
+        self._graph.arc(source, target).nlg_score = score
+
     def user_transition(self, utterance=None, arg_dict=None):
         best_score, next_state, vars_update = None, None, None
         for source, target, transition in self._graph.arcs_out(self._state):
