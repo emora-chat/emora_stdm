@@ -28,6 +28,7 @@ arcs.extend([(f, 'uppers', 'type') for f in uppers])
 arcs.extend([(f, 'negative', 'type') for f in negative])
 arcs.extend([(f, 'positive_indicators', 'type') for f in positive_indicators])
 arcs.extend([(f, 'negative_indicators', 'type') for f in negative_indicators])
+arcs.extend([(f, 'negation', 'type') for f in negation])
 arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
@@ -57,6 +58,29 @@ component.add_transition(
 )
 
 component.add_transition(
+    'how_are_you', 'unrecognized_emotion',
+    None,
+    ["im trying"],
+    settings = 'e'
+)
+
+component.add_transition(
+    'how_are_you', 'decline_share',
+    '{'
+    '({dont, do not, cant, cannot, shouldnt, should not}, {talk, discuss, share}),'
+    '&negative'
+    '}',
+    ["i dont want to talk about it"]
+)
+
+component.add_transition(
+    'unrecognized_emotion', 'end',
+    None,
+    ["Hmm, I'm not sure what you mean."],
+    settings = 'e'
+)
+
+component.add_transition(
     'feeling_pos', 'acknowledge_pos',
     None,
     ["Im glad to hear that. What has caused your good mood?"]
@@ -77,19 +101,25 @@ component.add_transition(
 # expand REGEX
 component.add_transition(
     'acknowledge_pos', 'share_pos',
-    '(-&negation, &positive_indicators)',
+    '{'
+    '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
+    '}',
     ["i just had a good day with my family yesterday"]
 )
 
 component.add_transition(
     'acknowledge_neg', 'share_pos',
-    '(-&negation, &positive_indicators)',
+    '{'
+    '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
+    '}',
     ["i just had a good day with my family yesterday"]
 )
 
 component.add_transition(
     'acknowledge_neutral', 'share_pos',
-    '(-&negation, &positive_indicators)',
+    '{'
+    '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
+    '}',
     ["i just had a good day with my family yesterday"]
 )
 
@@ -136,6 +166,33 @@ component.add_transition(
     '&negative'
     '}',
     ["i dont want to talk about it"]
+)
+
+component.add_transition(
+    'acknowledge_pos', 'misunderstood',
+    None,
+    ["just stuff"],
+    settings = 'e'
+)
+
+component.add_transition(
+    'acknowledge_neg', 'misunderstood',
+    None,
+    ["just stuff"],
+    settings = 'e'
+)
+
+component.add_transition(
+    'acknowledge_neutral', 'misunderstood',
+    None,
+    ["just stuff"],
+    settings = 'e'
+)
+
+component.add_transition(
+    'misunderstood', 'end',
+    None,
+    ["Thanks for sharing that with me."]
 )
 
 component.add_transition(
