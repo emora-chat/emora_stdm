@@ -157,7 +157,6 @@ component.add_transition(
 )
 
 if __name__ == '__main__':
-    print(component.system_transition())
     i = input('U: ')
     while True:
         arg_dict = {"prev_conv_date": "2019-12-20 16:55:33.562881", "name": "sarah"}
