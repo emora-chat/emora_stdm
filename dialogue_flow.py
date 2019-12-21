@@ -118,7 +118,7 @@ class DialogueTransition:
                 def __init__(self, ont_entry):
                     self.ont_entry = ont_entry
                 def __call__(self, item, vars):
-                    return self.ont_entry[1:] if knowledge_base.type_check(item, self.ont_entry[1:]) else False
+                    return knowledge_base.type_check(item, self.ont_entry[1:])
 
             virtuals[ont_var] = ont_virtual(ont_entry)
         i = 0
@@ -185,13 +185,13 @@ class DialogueFlow:
         self._state = next_state
         return best_score
 
-    def system_transition(self):
+    def system_transition(self, arg_dict=None):
         best_score, next_state, vars_update, utterance = None, None, None, None
         for source, target, transition in self._graph.arcs_out(self._state):
             score, vars = transition.system_transition_check()
             if score > 0 and (best_score is None or score > best_score):
                 best_score, next_state, vars_update = score, target, vars
-                utterance = transition.response(self._vars)
+                utterance = transition.response(self._vars, arg_dict)
         self._vars.update(vars_update)
         self._state = next_state
         return utterance

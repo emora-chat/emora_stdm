@@ -29,7 +29,7 @@ class KnowledgeBase(Graph):
                 partial = ' '.join(words[i:j])
                 s = self.types(partial)
                 if type in s:
-                    return True
+                    return partial
         return False
 
     def types(self, node):
