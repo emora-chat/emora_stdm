@@ -100,6 +100,16 @@ component.add_transition(
 )
 
 component.add_transition(
+    'receive_name', 'missed_name',
+    None, ["i dont want to tell you"]
+)
+
+component.add_transition(
+    'missed_name', 'acknowledge_name',
+    None, ["Its very nice to meet you."]
+)
+
+component.add_transition(
     'receive_name', 'got_name',
     '%name=&names', ["my names bob"]
 )
@@ -157,8 +167,13 @@ if __name__ == '__main__':
             arg_dict["request_type"] = "LaunchRequest"
             arg_dict2["request_type"] = "LaunchRequest"
             arg_dict3["request_type"] = "LaunchRequest"
-        confidence = component.user_transition(i, arg_dict) / 10 - 0.3
+        using = arg_dict3
+        confidence = component.user_transition(i, using) / 10 - 0.3
         print(component.state(), component.vars())
-        component.vars().update({key:val for key,val in arg_dict.items() if val is not None})
+        if component.state() == "end":
+            break
+        component.vars().update({key:val for key,val in using.items() if val is not None})
         print('({}) '.format(confidence), component.system_transition())
+        if component.state() == "end":
+            break
         i = input('U: ')

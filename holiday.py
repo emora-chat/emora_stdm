@@ -8,7 +8,7 @@ arcs = [
     ('family_sinular', 'family_all', 'type'),
     ('family_plural', 'family_all', 'type')
 ]
-anyfamily = ['family', 'famplural']
+anyfamily = ['singularfamily', 'pluralfamily']
 singularfamily = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
                   'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
                   'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
