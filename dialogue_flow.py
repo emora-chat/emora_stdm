@@ -13,6 +13,21 @@ LOWSCORE = 3
 _macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
 _nlu_macro_cap = r'(\|[^|=%]+\|)'
 
+def random_choice(choices):
+    transitions = list(choices.keys())
+    total = sum(choices.values())
+    thresholds = []
+    curr = 0
+    for t in transitions:
+        prob = choices[t] / total
+        curr += prob
+        thresholds.append(curr)
+    r = random.uniform(0, 1.0)
+    for i, threshold in enumerate(thresholds):
+        if r < threshold:
+            return transitions[i]
+    return transitions[-1]
+
 def get_kb_rings(re, macro, vars):
     var = None
     if macro[0] == '%':
@@ -54,8 +69,8 @@ class DialogueTransition:
         if 'e' in self.settings:
             self.nlu_score = LOWSCORE
             self.nlu_min = 1
-            self.nlg_score = LOWSCORE
-            self.nlg_min = 1
+            self.nlg_score = 0
+            self.nlg_min = 0
         else:
             self.nlu_score = HIGHSCORE
             self.nlu_min = 1
@@ -148,6 +163,7 @@ class DialogueFlow:
         self._initial_state = initial_state
         self._state = self._initial_state
         self._vars = {}
+        self._state_update_functions = {}
         self._jump_states = {}
         self._back_states = []
 
@@ -183,18 +199,28 @@ class DialogueFlow:
                 best_score, next_state, vars_update = score, target, vars
         self._vars.update(vars_update)
         self._state = next_state
+        if self._state in self._state_update_functions:
+            self._state_update_functions[self._state](self)
         return best_score
 
-    def system_transition(self, arg_dict=None):
-        best_score, next_state, vars_update, utterance = None, None, None, None
+    def system_transition(self):
+        class Dict(dict):
+            def __hash__(self):
+                return hash(id(self))
+        choices = {}
         for source, target, transition in self._graph.arcs_out(self._state):
             score, vars = transition.system_transition_check()
-            if score > 0 and (best_score is None or score > best_score):
-                best_score, next_state, vars_update = score, target, vars
-                utterance = transition.response(self._vars, arg_dict)
+            choices[(transition, Dict(vars), target)] = score
+        transition, vars_update, next_state = random_choice(choices)
+        utterance = transition.response(self._vars)
         self._vars.update(vars_update)
         self._state = next_state
+        if self._state in self._state_update_functions:
+            self._state_update_functions[self._state](self)
         return utterance
+
+    def register_state_update_function(self, state, function_ptr):
+        self._state_update_functions[state] = function_ptr
 
 
 
