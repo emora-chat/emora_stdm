@@ -67,19 +67,18 @@ class Expression:
             tree = _expression_parser.parse(expstring)
             self.re = _ExpressionReducer().transform(tree)
 
-    def match(self, text, vars=None):
+    def match(self, text, *replacement_dicts):
         if self.re is None:
             return True, {}
         expression = self.re
-        compilation = self._compiled
-        if vars:
-            for var, val in vars.items():
-                expression = expression.replace('$'+var, val)
-            compilation = regex.compile(expression)
-        elif compilation is None:
+        replaced = False
+        for replacement_dict in replacement_dicts:
+            for original, replacement in replacement_dict.items():
+                expression = expression.replace(original, replacement)
+                replaced = True
+        if replaced:
             self._compiled = regex.compile(expression)
-            compilation = self._compiled
-        match = compilation.match(text + ' ')
+        match = self._compiled.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:
             return None, {}
         return match, {x: y.strip() for x, y in match.groupdict().items() if y}
@@ -87,32 +86,6 @@ class Expression:
     def __str__(self):
         return self.re
 
-
-class VirtualExpression(Expression):
-
-    def __init__(self, expstring, virtuals=None):
-        Expression.__init__(self, expstring)
-        if virtuals is None:
-            self.virtuals = {}  # dict<var: string, member_fn: bool(str: val)>
-        else:
-            self.virtuals = virtuals
-            for var, virtual in virtuals.items():
-                self.re = self.re.replace(var, '(?P<{}>{})'.format(var, '[a-z A-Z_0-9]*'))
-
-    def match(self, text, vars=None):
-        match, assigned = Expression.match(self, text, vars)
-        if match:
-            for var, virtual in self.virtuals.items():
-                if var in assigned:
-                    val = virtual(assigned[var], vars)
-                    if not val:
-                        return None, {}
-                    if val != assigned[var]:
-                        for k, v in assigned.items():  # todo: fix this hack
-                            if v == assigned[var]:
-                                assigned[k] = val
-                    del assigned[var]
-        return match, assigned
 
 
 

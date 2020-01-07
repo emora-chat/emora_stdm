@@ -4,7 +4,7 @@ import random
 from structpy.automaton import StateMachine
 from structpy.graph.labeled_digraph import MapMultidigraph as Graph
 from knowledge_base import KnowledgeBase
-from expression import VirtualExpression
+from expression import Expression
 from enum import Enum
 
 HIGHSCORE = 10
@@ -13,57 +13,20 @@ LOWSCORE = 3
 _macro_cap = r'(\|[^|=%]+\||%[^|%=]*=\|[^|=%]+\|)'
 _nlu_macro_cap = r'(\|[^|=%]+\|)'
 
-def random_choice(choices):
-    transitions = list(choices.keys())
-    total = sum(choices.values())
-    thresholds = []
-    curr = 0
-    for t in transitions:
-        prob = choices[t] / total
-        curr += prob
-        thresholds.append(curr)
-    r = random.uniform(0, 1.0)
-    for i, threshold in enumerate(thresholds):
-        if r < threshold:
-            return transitions[i]
-    return transitions[-1]
-
-def get_kb_rings(re, macro, vars):
-    var = None
-    if macro[0] == '%':
-        var = macro[1:macro.find('=')]
-    val = macro[macro.find('|') + 1:-1]
-    for x, y in vars.items():
-        val = val.replace('$' + x, y)
-    travs = val.split(',')
-    rings = {}
-    for trav in travs:
-        negated = '-' in trav
-        chain = trav.split(':')
-        node = chain[0]
-        rings[node] = (negated, [])
-        for link in chain[1:]:
-            reversed = '/' in link
-            link = link.replace('/', '').replace('-', '')
-            rings[node][1].append((reversed, link))
-    return rings, var
-
 
 class DialogueTransition:
 
-    def __init__(self, knowledge_base, source, target, nlu, nlg, evaluation_transition=None, settings='', nlg_vars=None):
+    def __init__(self, dialogue_flow, source, target, nlu, nlg,
+                 settings='', eval_function=None):
+        self.dialogue_flow = dialogue_flow
         self.source = source
         self.target = target
-        self.nlu = nlu
+        self.nlu = Expression(nlu)
         self.nlg = nlg
-        self.nlg_vars = {} if not nlg_vars else nlg_vars
         self.settings = settings
+
         self.update_settings()
-        self.macros = {}
-        nlu, virtuals = self._process_virtuals(nlu, knowledge_base)
-        self.expression = VirtualExpression(nlu, virtuals)
-        self.evaluate_transition = evaluation_transition
-        self.knowledge_base = knowledge_base
+        self.eval_function = eval_function
 
     def update_settings(self):
         if 'e' in self.settings:
@@ -77,82 +40,21 @@ class DialogueTransition:
             self.nlg_score = HIGHSCORE
             self.nlg_min = 1
 
-    def user_transition_check(self, utterance, state_vars=None, arg_dict=None):
-        score, vars = self._user_transition_check(utterance, state_vars)
-        if self.evaluate_transition:
-            score, vars = self.evaluate_transition(arg_dict, score, vars)
+    def eval_user_transition(self, utterance, state_vars=None, arg_dict=None):
+        score, vars = 0, {}
+        match, vars = self.nlu.match(utterance, state_vars)
+        if match:
+            return self.nlu_score, vars
+        if self.eval_function:
+            score, vars = self.eval_function(arg_dict, score, vars)
         return score, vars
 
-    def _user_transition_check(self, utterance, state_vars=None):
-        if not self.nlu:
-            return self.nlu_score, {}
-        else:
-            match, vars = self.expression.match(utterance, state_vars)
-            if match:
-                return self.nlu_score, vars
-            else:
-                return 0, {}
-
-    def system_transition_check(self):
+    def eval_system_transition(self):
         if not self.nlg:
-            return 0, {}
+            return 0, '', {}
         else:
-            return self.nlg_score, self.nlg_vars
-
-    def response(self, vars=None):
-        if vars is None:
-            vars = {}
-        choices = []
-        for choice in self.nlg:
-            for macro in regex.findall(_macro_cap, choice):
-                rings, var = get_kb_rings(_macro_cap, macro, vars)
-                result = self.knowledge_base.attribute(rings)
-                if result:
-                    e = random.choice(list(result))
-                    choice = choice.replace(macro, e)
-                    if var:
-                        vars[var] = e
-            for x, y in vars.items():
-                choice = choice.replace('$'+x, y)
-            if '|' not in choice and '$' not in choice:
-                choices.append(choice)
-        return random.choice(choices)
-
-    def _process_virtuals(self, exp, knowledge_base):
-        if not exp:
-            return '', {}
-        i = 0
-        virtuals = {}
-        ont_regex = r'[^&]*(?:(&[a-zA-Z 0-9_]+)[^&]*)'
-        for ont_entry in regex.findall(ont_regex, exp):
-            ont_var = r'_O{}_{}'.format(str(i), ont_entry[1:])
-            i += 1
-            exp = exp.replace(ont_entry, ont_var)
-
-            class ont_virtual:
-                def __init__(self, ont_entry):
-                    self.ont_entry = ont_entry
-                def __call__(self, item, vars):
-                    return knowledge_base.type_check(item, self.ont_entry[1:])
-
-            virtuals[ont_var] = ont_virtual(ont_entry)
-        i = 0
-        for kb_entry in regex.findall(_nlu_macro_cap, exp):
-            kb_var = r'_K{}_'.format(str(i))
-            exp = exp.replace(kb_entry, kb_var)
-
-            class kb_virtual:
-                def __init__(self, kb_entry):
-                    self.kb_entry = kb_entry
-                def __call__(self, item, vars):
-                    kb_entry = str(self.kb_entry)
-                    for k, v in vars.items():
-                        kb_entry = kb_entry.replace('$'+k, v)
-                    rings, _ = get_kb_rings(_nlu_macro_cap, kb_entry, {})
-                    return knowledge_base.valid_attribute(item, rings)
-
-            virtuals[kb_var] = kb_virtual(kb_entry)
-        return exp, virtuals
+            pass  # todo
+            # return self.nlg_score, self.nlg_vars
 
 
 class DialogueFlow:
