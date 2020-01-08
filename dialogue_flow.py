@@ -32,7 +32,7 @@ class DialogueTransition:
         self.nlu = nlu
         self.nlg = nlg
         self.settings = settings
-
+        self.re = None
         if nlu:
             if nlu[0] not in '-[<':
                 expstring = '({})'.format(nlu)
@@ -91,7 +91,7 @@ class DialogueTransition:
 
     def eval_user_transition(self, utterance, state_vars=None, arg_dict=None):
         score, vars = 0, {}
-        if 'e' not in self.settings:
+        if 'e' not in self.settings and self.re is not None:
             re = self.re
             # variable replacement
             re = self.variable_replacement(re, state_vars)
@@ -107,8 +107,8 @@ class DialogueTransition:
             match, vars = self.match(utterance, re)
             if match:
                 score = self.nlu_score
-            if self.eval_function:
-                score, vars = self.eval_function(arg_dict, score, vars)
+        if self.eval_function:
+            score, vars = self.eval_function(arg_dict, score, vars)
         return score, vars
 
     def ontology_selection(self, utterance):

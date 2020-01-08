@@ -77,21 +77,21 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start_new',
-    None, [], is_new_user
+    None, [], evaluation_transition=is_new_user
 )
 
 # start: infrequent user
 
 component.add_transition(
     'prestart', 'start_infreq',
-    None, [], is_infreq_user
+    None, [], evaluation_transition=is_infreq_user
 )
 
 # start: frequent user
 
 component.add_transition(
     'prestart', 'start_freq',
-    None, [], is_freq_user
+    None, [], evaluation_transition=is_freq_user
 )
 
 component.add_transition(
@@ -101,7 +101,7 @@ component.add_transition(
 
 component.add_transition(
     'receive_name', 'got_name',
-    '%name=&names', ["my names bob"]
+    '%name=&names', ["i am an alexa prize socialbot"]
 )
 
 component.add_transition(
@@ -112,14 +112,14 @@ component.add_transition(
 component.add_transition(
     'start_freq', 'greet_freq',
     None, [standard_opening + " Welcome back, $name"],
-    is_freq_user
+    evaluation_transition=is_freq_user
 
 )
 
 component.add_transition(
     'start_infreq', 'greet_infreq',
     None, [standard_opening + " Its good to see you again, $name, its been a while since we last chatted"],
-    is_infreq_user
+    evaluation_transition=is_infreq_user
 )
 
 component.add_transition(
