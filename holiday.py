@@ -65,7 +65,7 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start',
-    '&holiday_t', ["holiday"]
+    '&holiday_t', []
 )
 
 # start: are you excited for the holidays
