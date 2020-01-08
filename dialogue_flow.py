@@ -57,7 +57,7 @@ class DialogueTransition:
         if 'e' in self.settings:
             self.nlu_score = LOWSCORE
             self.nlu_min = 1
-            self.nlg_score = LOWSCORE
+            self.nlg_score = 0
             self.nlg_min = 0
         else:
             self.nlu_score = HIGHSCORE
