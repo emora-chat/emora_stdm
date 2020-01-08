@@ -174,5 +174,6 @@ if __name__ == '__main__':
         component.vars().update({key:val for key,val in using.items() if val is not None})
         print('({}) '.format(confidence), component.system_transition())
         if component.state() == "end":
+            print(component.state(), component.vars())
             break
         i = input('U: ')

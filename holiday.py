@@ -243,4 +243,7 @@ if __name__ == '__main__':
         confidence = component.user_transition(i) / 10 - 0.3
         print(component.state(), component.vars())
         print('({}) '.format(confidence), component.system_transition())
+        if component.state() == "end":
+            print(component.state(), component.vars())
+            break
         i = input('U: ')

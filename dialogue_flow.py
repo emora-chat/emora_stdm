@@ -57,7 +57,7 @@ class DialogueTransition:
         if 'e' in self.settings:
             self.nlu_score = LOWSCORE
             self.nlu_min = 1
-            self.nlg_score = 0
+            self.nlg_score = LOWSCORE
             self.nlg_min = 0
         else:
             self.nlu_score = HIGHSCORE
@@ -244,9 +244,8 @@ class DialogueFlow:
         utterance = ''
         for source, target, transition in self._graph.arcs_out(self._state):
             score, utterance, vars = transition.eval_system_transition(self._vars, arg_dict)
-            if score > 0.0:
-                choices[(transition, Dict(vars), target)] = score
-        transition, vars_update, next_state = random_choice(choices)
+            choices[(transition, utterance, Dict(vars), target)] = score
+        transition, utterance, vars_update, next_state = random_choice(choices)
         self._vars.update(vars_update)
         self._state = next_state
         if self._state in self._state_update_functions:
