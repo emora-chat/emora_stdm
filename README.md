@@ -200,18 +200,3 @@ Together with ontology reference, highly generalizable expressions
 can be written. Given an appropriately constructed KB and ontology,
 this example might match "a cow can moo", "a dog can bark", and
 everything in between.
-
-## Technical notes
-
-####################################################################
-GIT SUBTREE SETUP FOR STRUCTPY REPO:
-####################################################################
-
-git remote add -f structpy https://github.com/jdfinch/structpy.git
-git subtree add --prefix structpy structpy master --squash
-
-####################################################################
-GIT SUBTREE UPDATE COMMAND FOR STRUCTPY REPO:
-####################################################################
-
-git subtree pull --prefix structpy structpy master --squash
