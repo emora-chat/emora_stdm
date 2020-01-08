@@ -75,9 +75,7 @@ class DialogueTransition:
         ont_matches = regex.findall(DialogueTransition._ont_capture, re)
         for ont_lookup in ont_matches:
             re_ont_options = self.dialogue_flow.ontology_recognize(utterance, ont_lookup[1:].strip())
-            if not re_ont_options:
-                return None
-            else:
+            if re_ont_options:
                 replacement = '(?:{})'.format('|'.join(re_ont_options))
                 re = re.replace(ont_lookup, replacement)
         return re
@@ -86,41 +84,38 @@ class DialogueTransition:
         query_matches = regex.findall(DialogueTransition._query_capture, re)
         for query in set(query_matches):
             query_options = self.dialogue_flow.query(query[1:-1], filter=utterance.split())
-            if not query_options:
-                return None
-            else:
+            if query_options:
                 replacement = '(?:{})'.format('|'.join(query_options))
                 re = re.replace(query, replacement)
         return re
 
     def eval_user_transition(self, utterance, state_vars=None, arg_dict=None):
-        re = self.re
-        # variable replacement
-        re = self.variable_replacement(re, state_vars)
-        # ontology query and replacement
-        re = self.ontology_replacement(re, utterance)
-        if re is None:
-            return 0, {}
-        # knowledge base query and replacement
-        re = self.knowledge_replacement(re, utterance)
-        if re is None:
-            return 0, {}
-        # actually do the match, run eval_function if specified
-        score = 0
-        match, vars = self.match(utterance, re)
-        if match:
-            score = self.nlu_score
-        if self.eval_function:
-            score, vars = self.eval_function(arg_dict, score, vars)
+        score, vars = 0, {}
+        if 'e' not in self.settings:
+            re = self.re
+            # variable replacement
+            re = self.variable_replacement(re, state_vars)
+            # ontology query and replacement
+            re = self.ontology_replacement(re, utterance)
+            if re is None:
+                return 0, {}
+            # knowledge base query and replacement
+            re = self.knowledge_replacement(re, utterance)
+            if re is None:
+                return 0, {}
+            # actually do the match, run eval_function if specified
+            match, vars = self.match(utterance, re)
+            if match:
+                score = self.nlu_score
+            if self.eval_function:
+                score, vars = self.eval_function(arg_dict, score, vars)
         return score, vars
 
     def ontology_selection(self, utterance):
         ont_matches = regex.findall(DialogueTransition._ont_capture, utterance)
         for ont_lookup in ont_matches:
             ont_options = self.dialogue_flow.knowledge_base().subtypes(ont_lookup[1:].strip())
-            if not ont_options:
-                return None
-            else:
+            if ont_options:
                 replacement = random.choice(ont_options)
                 utterance = utterance.replace(ont_lookup, replacement)
         return utterance
@@ -132,9 +127,7 @@ class DialogueTransition:
             var = regex.match(DialogueTransition._var_setting_capture, query).group(0)
             search_specs = query.replace(var,"")[2:-1]
             query_options = self.dialogue_flow.query(search_specs, filter=utterance.split())
-            if not query_options:
-                return None
-            else:
+            if query_options:
                 replacement = random.choice(list(query_options))
                 utterance = utterance.replace(query, replacement)
                 vars[var[1:]] = replacement
@@ -144,9 +137,7 @@ class DialogueTransition:
         query_matches = regex.findall(DialogueTransition._query_capture, utterance)
         for query in set(query_matches):
             query_options = self.dialogue_flow.query(query[1:-1], filter=utterance.split())
-            if not query_options:
-                return None
-            else:
+            if query_options:
                 replacement = random.choice(list(query_options))
                 utterance = utterance.replace(query, replacement)
         return utterance
@@ -243,7 +234,7 @@ class DialogueFlow:
             self._state_update_functions[self._state](self)
         return best_score
 
-    def system_transition(self, arg_dict):
+    def system_transition(self, arg_dict=None):
         class Dict(dict):
             def __hash__(self):
                 return hash(id(self))

@@ -65,7 +65,7 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start',
-    '&holiday_t', []
+    '&holiday_t', ["holiday"]
 )
 
 # start: are you excited for the holidays
@@ -238,7 +238,6 @@ component.add_transition(
 )
 
 if __name__ == '__main__':
-    print(component.system_transition())
     i = input('U: ')
     while True:
         confidence = component.user_transition(i) / 10 - 0.3
