@@ -193,7 +193,7 @@ the above expression matches "black widow is played by scarlett
 johansson"
 
 ```
-'a %a=&animal can |$a:sound|'
+'a %a=&animal, can |$a:sound|'
 ```
 knowledge graph expressions can be built using veriable references.
 Together with ontology reference, highly generalizable expressions
