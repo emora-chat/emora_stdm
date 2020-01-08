@@ -54,39 +54,5 @@ class _ExpressionReducer(Transformer):
         return args[0].children[0]
 
 
-class Expression:
-
-    def __init__(self, expstring):
-
-        self.re = None
-        self._compiled = None
-
-        if expstring:
-            if expstring[0] not in '-[<':
-                expstring = '({})'.format(expstring)
-            tree = _expression_parser.parse(expstring)
-            self.re = _ExpressionReducer().transform(tree)
-
-    def match(self, text, *replacement_dicts):
-        if self.re is None:
-            return True, {}
-        expression = self.re
-        replaced = False
-        for replacement_dict in replacement_dicts:
-            for original, replacement in replacement_dict.items():
-                expression = expression.replace(original, replacement)
-                replaced = True
-        if replaced:
-            self._compiled = regex.compile(expression)
-        match = self._compiled.match(text + ' ')
-        if match is None or match.span()[0] == match.span()[1]:
-            return None, {}
-        return match, {x: y.strip() for x, y in match.groupdict().items() if y}
-
-    def __str__(self):
-        return self.re
-
-
-
 
 

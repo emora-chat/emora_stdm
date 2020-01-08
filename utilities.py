@@ -15,3 +15,11 @@ def random_choice(choices):
         if r < threshold:
             return transitions[i]
     return transitions[-1]
+
+def all_grams(s):
+    tokens = [token for token in s.split() if token != ""]
+    all_grams = set()
+    for n in range(len(tokens)+1):
+        ngrams = zip(*[tokens[i:] for i in range(n)])
+        all_grams.update(set([" ".join(ngram) for ngram in ngrams]))
+    return all_grams

@@ -1,8 +1,16 @@
 
 import pytest
-from dialogue_flow import DialogueTransition
+from dialogue_flow import DialogueTransition, DialogueFlow
 from knowledge_base import KnowledgeBase
 
+df = DialogueFlow()
+df._kb = KnowledgeBase([
+            ('avengers', 'chris evans', 'stars'),
+            ('avengers', 'scarlett johansson', 'stars'),
+            ('chris evans', 'quality', 'good'),
+            ('chris evans', 'steve rogers', 'plays'),
+            ('scarlett johansson', 'black widow', 'plays')
+        ])
 
 def test_simple_nlg():
     t = DialogueTransition(
@@ -12,8 +20,9 @@ def test_simple_nlg():
             'how are ya'
         ]
     )
-    assert t.system_transition_check()[0]
-    assert t.response() == 'how are ya'
+    result = t.eval_system_transition()
+    assert result[0]
+    assert result[1] == 'how are ya'
 
 
 def test_variable_nlg():
@@ -23,59 +32,48 @@ def test_variable_nlg():
             'i am $feeling'
         ]
     )
-    assert t.response({'feeling': 'good'}) == 'i am good'
-    assert t.response({'feeling': 'bad'}) == 'i am bad'
+    result = t.eval_system_transition({'feeling': 'good'})
+    assert result[1] == 'i am good'
+    result = t.eval_system_transition({'feeling': 'bad'})
+    assert result[1] == 'i am bad'
 
 
 def test_kb_nlg():
-    t = DialogueTransition(
-        KnowledgeBase([
-            ('avengers', 'chris evans', 'stars')
-        ]), 'x', 'y', None,
+    df.add_transition('1', '2', None,
         [
-            'it has |$movie:stars| in it'
-        ]
-    )
-    assert t.response({'movie': 'avengers'}) == 'it has chris evans in it'
+            'it has #$movie:stars# in it'
+        ])
+    result = df.get_transition('1', '2').eval_system_transition({'movie': 'avengers'})
+    assert result[1] == 'it has chris evans in it' or result[1] == 'it has scarlett johansson in it'
 
 def test_kb_nlg_query():
-    t = DialogueTransition(
-        KnowledgeBase([
-            ('avengers', 'chris evans', 'stars'),
-            ('avengers', 'scarlett johansson', 'stars'),
-            ('chris evans', 'quality', 'good'),
-            ('chris evans', 'steve rogers', 'plays'),
-            ('scarlett johansson', 'black widow', 'plays')
-        ]), 'x', 'y', None,
+    df.add_transition( '3', '4', None,
         [
-            '%actor=|$movie:stars, $role:/plays| plays $role'
+            '%actor=#$movie:stars, $role:/plays# plays $role'
         ]
     )
     vars = {'role': 'black widow', 'movie': 'avengers'}
-    assert t.response(vars) == 'scarlett johansson plays black widow'
+    result = df.get_transition('3', '4').eval_system_transition(vars)
+    assert result[1] == 'scarlett johansson plays black widow'
     assert vars['actor'] == 'scarlett johansson'
     vars['role'] = 'steve rogers'
-    assert t.response(vars) == 'chris evans plays steve rogers'
+    result = df.get_transition('3', '4').eval_system_transition(vars)
+    assert result[1] == 'chris evans plays steve rogers'
     assert vars['actor'] == 'chris evans'
 
 def test_nlg_preprocessing():
-    t = DialogueTransition(
-        KnowledgeBase([
-            ('avengers', 'chris evans', 'stars'),
-            ('avengers', 'scarlett johansson', 'stars'),
-            ('chris evans', 'quality', 'good'),
-            ('chris evans', 'steve rogers', 'plays'),
-            ('scarlett johansson', 'black widow', 'plays')
-        ]), 'x', 'y', None,
+    df.add_transition( '5', '6', None,
         [
-            '%actor=|$movie:stars, $role:/plays| plays $role that $actor'
+            '%actor=#$movie:stars, $role:/plays# plays $role, that $actor'
         ]
     )
     vars = {'role': 'black widow', 'movie': 'avengers', 'actor': 'bob'}
-    assert t.response(vars) == 'scarlett johansson plays black widow that scarlett johansson'
+    result = df.get_transition('5', '6').eval_system_transition(vars)
+    assert result[1] == 'scarlett johansson plays black widow that bob'
     assert vars['actor'] == 'scarlett johansson'
     vars['role'] = 'steve rogers'
-    assert t.response(vars) == 'chris evans plays steve rogers that chris evans'
+    result = df.get_transition('5', '6').eval_system_transition(vars)
+    assert result[1] == 'chris evans plays steve rogers that scarlett johansson'
     assert vars['actor'] == 'chris evans'
 
 
