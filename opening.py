@@ -7,6 +7,7 @@ component = DialogueFlow('prestart')
 
 standard_opening = "Hi this is an Alexa Prize Socialbot."
 inquire_feeling = "How are you today?"
+transition_out = "What would you like to talk about today?"
 
 arcs = []
 
@@ -301,25 +302,25 @@ component.add_transition(
 component.add_transition(
     'misunderstood', 'end',
     None,
-    {"Thanks for sharing that with me."}
+    {"Thanks for sharing that with me. " + transition_out}
 )
 
 component.add_transition(
     'share_pos', 'acknowledge_share_pos',
     None,
-    {"Sounds really nice, thanks for sharing that with me. I love hearing about your life."}
+    {"Sounds really nice, thanks for sharing that with me. I love hearing about your life. " + transition_out}
 )
 
 component.add_transition(
     'share_neg', 'acknowledge_share_neg',
     None,
-    {"I think that sounds really unfortunate, I hope it gets better for you soon."}
+    {"I think that sounds really unfortunate, I hope it gets better for you soon. " + transition_out}
 )
 
 component.add_transition(
     'decline_share', 'acknowledge_decline_share',
     None,
-    {"That's ok, I'm happy to talk about other things too."}
+    {"That's ok, I'm happy to talk about other things too. " + transition_out}
 )
 
 component.add_transition(
