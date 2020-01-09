@@ -205,6 +205,9 @@ class DialogueFlow:
     def vars(self):
         return self._vars
 
+    def set_vars(self, vars):
+        self._vars = vars
+
     def state(self):
         return self._state
 
