@@ -111,18 +111,18 @@ component.add_transition(
 
 component.add_transition(
     'receive_name', 'got_name',
-    '%name=&names', {"i am an alexa prize socialbot"}
+    '%username=&names', {"i am an alexa prize socialbot"}
 )
 
 component.add_transition(
     'got_name', 'acknowledge_name',
-    None, {"Nice to meet you, $name":0.999, "Nice to meet you":0.001}
+    None, {"Nice to meet you, $username":0.999, "Nice to meet you":0.001}
 )
 
 component.add_transition(
     'start_freq', 'greet_freq',
     None,
-    {standard_opening + " Welcome back, $name": 0.999,
+    {standard_opening + " Welcome back, $username": 0.999,
      standard_opening + " Welcome back, im excited to talk to you again": 0.001},
     evaluation_transition=is_freq_user
 
@@ -131,7 +131,7 @@ component.add_transition(
 component.add_transition(
     'start_infreq', 'greet_infreq',
     None,
-    {standard_opening + " Its good to see you again, $name, its been a while since we last chatted": 0.999,
+    {standard_opening + " Its good to see you again, $username, its been a while since we last chatted": 0.999,
      standard_opening + " Its good to see you again, its been a while since we last chatted": 0.001},
     evaluation_transition=is_infreq_user
 )
@@ -163,9 +163,9 @@ component.add_transition(
 if __name__ == '__main__':
     i = input('U: ')
     while True:
-        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "name": "sarah"}
-        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "name": "sarah"}
-        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "name": None}
+        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah"}
+        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah"}
+        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None}
         arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently."}
         if i == "hello":
             arg_dict["request_type"] = "LaunchRequest"
@@ -173,7 +173,7 @@ if __name__ == '__main__':
             arg_dict3["request_type"] = "LaunchRequest"
             arg_dict4["request_type"] = "LaunchRequest"
 
-        using = arg_dict3
+        using = arg_dict2
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3
