@@ -116,7 +116,7 @@ component.add_transition(
 
 component.add_transition(
     'got_name', 'acknowledge_name',
-    None, {"Nice to meet you, $name. $stat":0.999, "Nice to meet you":0.001}
+    None, {"Nice to meet you, $name":0.999, "Nice to meet you":0.001}
 )
 
 component.add_transition(
