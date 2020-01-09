@@ -206,6 +206,8 @@ class DialogueFlow:
         return self._vars
 
     def set_vars(self, vars):
+        if vars is None:
+            vars = {}
         self._vars = vars
 
     def state(self):
