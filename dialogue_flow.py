@@ -113,7 +113,6 @@ class DialogueTransition:
             if re is None:
                 return 0, {}
             # actually do the match, run eval_function if specified
-            print(re)
             match, vars = self.match(utterance, re)
             if match:
                 score = self.nlu_score
