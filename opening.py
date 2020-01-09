@@ -224,28 +224,11 @@ component.add_transition(
 )
 
 component.add_transition(
-    'acknowledge_neg', 'share_pos',
-    '{'
-    '<-&negation, (&positive_indicators)>'
-    '}',
-    {"i just had a good day with my family yesterday"}
-)
-
-component.add_transition(
     'acknowledge_neutral', 'share_pos',
     '{'
     '<-&negation, (&positive_indicators)>'
     '}',
     {"i just had a good day with my family yesterday"}
-)
-
-component.add_transition(
-    'acknowledge_pos', 'share_neg',
-    '{'
-    '(&negation, &positive_indicators),'
-    '(&negative_indicators)'
-    '}',
-    {"i didnt sleep well last night"}
 )
 
 component.add_transition(
