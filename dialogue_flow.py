@@ -34,7 +34,8 @@ class DialogueTransition:
         self.settings = settings
         self.re = None
         if nlu:
-            if nlu[0] not in '-[<':
+            expstring = nlu
+            if nlu[0] not in '-[<{/':
                 expstring = '({})'.format(nlu)
             tree = _expression_parser.parse(expstring)
             self.re = _ExpressionReducer().transform(tree)
@@ -112,6 +113,7 @@ class DialogueTransition:
             if re is None:
                 return 0, {}
             # actually do the match, run eval_function if specified
+            print(re)
             match, vars = self.match(utterance, re)
             if match:
                 score = self.nlu_score

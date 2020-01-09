@@ -150,8 +150,8 @@ component.add_transition(
 component.add_transition(
     'how_are_you', 'feeling_pos',
     '{'
-    '<-&negation, (&feelings_positive)>,'
-    '(&negation, &feelings_negative)'
+    '[-&negation, (&feelings_positive)],'
+    '[&negation, (&feelings_negative)]'
     '}',
     {"im good"}
 )
@@ -159,8 +159,8 @@ component.add_transition(
 component.add_transition(
     'how_are_you', 'feeling_neg',
     '{'
-    '<-&negation, (&feelings_negative)>,'
-    '(&negation, {&feelings_positive,&feelings_neutral})'
+    '[-&negation, (&feelings_negative)],'
+    '[&negation, ({&feelings_positive,&feelings_neutral})]'
     '}',
     {"im bad"}
 )
@@ -168,7 +168,7 @@ component.add_transition(
 component.add_transition(
     'how_are_you', 'feeling_neutral',
     '{'
-    '<-&negation, (&feelings_neutral)>'
+    '[-&negation, (&feelings_neutral)]'
     '}',
     {"im ok"}
 )
@@ -183,7 +183,7 @@ component.add_transition(
 component.add_transition(
     'how_are_you', 'decline_share',
     '{'
-    '<-&negation, ({talk, discuss, share})>,'
+    '[-&negation, ({talk, discuss, share})],'
     '(&negative)'
     '}',
     {"i dont want to talk about it"}
@@ -218,7 +218,7 @@ component.add_transition(
 component.add_transition(
     'acknowledge_pos', 'share_pos',
     '{'
-    '<-&negation, (&positive_indicators)>'
+    '[-&negation, (&positive_indicators)]'
     '}',
     {"i just had a good day with my family yesterday"}
 )
@@ -226,7 +226,7 @@ component.add_transition(
 component.add_transition(
     'acknowledge_neg', 'share_pos',
     '{'
-    '<-&negation, (&positive_indicators)>'
+    '[-&negation, (&positive_indicators)]'
     '}',
     {"i just had a good day with my family yesterday"}
 )
@@ -234,52 +234,42 @@ component.add_transition(
 component.add_transition(
     'acknowledge_neutral', 'share_pos',
     '{'
-    '<-&negation, (&positive_indicators)>'
+    '[-&negation, (&positive_indicators)]'
     '}',
     {"i just had a good day with my family yesterday"}
 )
 
 component.add_transition(
     'acknowledge_pos', 'share_neg',
-    '{'
-    '(&negation, &positive_indicators),'
-    '(&negative_indicators)'
-    '}',
+    '&negative_indicators',
     {"i didnt sleep well last night"}
 )
 
 component.add_transition(
     'acknowledge_neg', 'share_neg',
-    '{'
-    '(&negation, &positive_indicators),'
-    '(&negative_indicators)'
-    '}',
+    '&negative_indicators',
     {"i didnt sleep well last night"}
 )
 
 component.add_transition(
     'acknowledge_neutral', 'share_neg',
-    '{'
-    '(&negation, &positive_indicators),'
-    '(&negative_indicators)'
-    '}',
+    '&negative_indicators',
     {"i didnt sleep well last night"}
 )
 
 component.add_transition(
     'acknowledge_pos', 'decline_share',
     '{'
-    '<-&negation, ({talk, discuss, share})>,'
+    '[-&negation, ({talk, discuss, share})],'
     '(&negative)'
-    '}'
-    ,
+    '}',
     {"i dont want to talk about it"}
 )
 
 component.add_transition(
     'acknowledge_neg', 'decline_share',
     '{'
-    '<-&negation, ({talk, discuss, share})>,'
+    '[-&negation, ({talk, discuss, share})],'
     '(&negative)'
     '}',
     {"i dont want to talk about it"}
@@ -288,7 +278,7 @@ component.add_transition(
 component.add_transition(
     'acknowledge_neutral', 'decline_share',
     '{'
-    '<-&negation, ({talk, discuss, share})>,'
+    '[-&negation, ({talk, discuss, share})],'
     '(&negative)'
     '}',
     {"i dont want to talk about it"}

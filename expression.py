@@ -35,7 +35,7 @@ class _ExpressionReducer(Transformer):
         return r'\W*'.join(exp.children)
     def conjunction(self, args):
         (exp,) = args
-        return ''.join(['(?=.*{})'.format(term) + '.*' for term in exp.children])
+        return ''.join(['(?={})'.format(term) + '.*' for term in exp.children])
     def disjunction(self, args):
         (exp,) = args
         return '(?:{})'.format('|'.join(exp.children))

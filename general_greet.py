@@ -1,6 +1,6 @@
 from dialogue_flow import DialogueFlow, HIGHSCORE, LOWSCORE
 
-component = DialogueFlow('prestart')
+component = DialogueFlow('how_are_you')
 
 positive_indicators = ['feelings_positive','uppers']
 negative_indicators = ['feelings_negative','downers']
@@ -32,12 +32,6 @@ arcs.extend([(f, 'negation', 'type') for f in negation])
 arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
-
-
-component.add_transition(
-    'prestart', 'how_are_you',
-    None, {"how are you"}
-)
 
 component.add_transition(
     'how_are_you', 'feeling_pos',
