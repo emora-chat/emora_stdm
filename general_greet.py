@@ -36,31 +36,31 @@ for arc in arcs:
 
 component.add_transition(
     'prestart', 'how_are_you',
-    None, ["how are you"]
+    None, {"how are you"}
 )
 
 component.add_transition(
     'how_are_you', 'feeling_pos',
     '&feelings_positive',
-    ["im good"]
+    {"im good"}
 )
 
 component.add_transition(
     'how_are_you', 'feeling_neg',
     '&feelings_negative',
-    ["im bad"]
+    {"im bad"}
 )
 
 component.add_transition(
     'how_are_you', 'feeling_neutral',
     '&feelings_neutral',
-    ["im ok"]
+    {"im ok"}
 )
 
 component.add_transition(
     'how_are_you', 'unrecognized_emotion',
     None,
-    ["im trying"],
+    {"im trying"},
     settings = 'e'
 )
 
@@ -70,32 +70,32 @@ component.add_transition(
     '({dont, do not, cant, cannot, shouldnt, should not}, {talk, discuss, share}),'
     '&negative'
     '}',
-    ["i dont want to talk about it"]
+    {"i dont want to talk about it"}
 )
 
 component.add_transition(
     'unrecognized_emotion', 'end',
     None,
-    ["Hmm, I'm not sure what you mean."],
+    {"Hmm, I'm not sure what you mean."},
     settings = 'e'
 )
 
 component.add_transition(
     'feeling_pos', 'acknowledge_pos',
     None,
-    ["Im glad to hear that. What has caused your good mood?"]
+    {"Im glad to hear that. What has caused your good mood?"}
 )
 
 component.add_transition(
     'feeling_neg', 'acknowledge_neg',
     None,
-    ["Im sorry thats how you feel today. If you don't mind talking about it, what happened?"]
+    {"Im sorry thats how you feel today. If you don't mind talking about it, what happened?"}
 )
 
 component.add_transition(
     'feeling_neutral', 'acknowledge_neutral',
     None,
-    ["That's understandable. Is there anything in particular that made you feel this way?"]
+    {"That's understandable. Is there anything in particular that made you feel this way?"}
 )
 
 # expand REGEX
@@ -104,7 +104,7 @@ component.add_transition(
     '{'
     '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
     '}',
-    ["i just had a good day with my family yesterday"]
+    {"i just had a good day with my family yesterday"}
 )
 
 component.add_transition(
@@ -112,7 +112,7 @@ component.add_transition(
     '{'
     '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
     '}',
-    ["i just had a good day with my family yesterday"]
+    {"i just had a good day with my family yesterday"}
 )
 
 component.add_transition(
@@ -120,25 +120,25 @@ component.add_transition(
     '{'
     '(-{didnt, did not, dont, do not, not}, &positive_indicators),'
     '}',
-    ["i just had a good day with my family yesterday"]
+    {"i just had a good day with my family yesterday"}
 )
 
 component.add_transition(
     'acknowledge_pos', 'share_neg',
     '&negative_indicators',
-    ["i didnt sleep well last night"]
+    {"i didnt sleep well last night"}
 )
 
 component.add_transition(
     'acknowledge_neg', 'share_neg',
     '&negative_indicators',
-    ["i didnt sleep well last night"]
+    {"i didnt sleep well last night"}
 )
 
 component.add_transition(
     'acknowledge_neutral', 'share_neg',
     '&negative_indicators',
-    ["i didnt sleep well last night"]
+    {"i didnt sleep well last night"}
 )
 
 component.add_transition(
@@ -147,7 +147,7 @@ component.add_transition(
     '({dont, do not, cant, cannot, shouldnt, should not}, {talk, discuss, share}),'
     '&negative'
     '}',
-    ["i dont want to talk about it"]
+    {"i dont want to talk about it"}
 )
 
 component.add_transition(
@@ -156,7 +156,7 @@ component.add_transition(
     '({dont, do not, cant, cannot, shouldnt, should not}, {talk, discuss, share}),'
     '&negative'
     '}',
-    ["i dont want to talk about it"]
+    {"i dont want to talk about it"}
 )
 
 component.add_transition(
@@ -165,79 +165,79 @@ component.add_transition(
     '({dont, do not, cant, cannot, shouldnt, should not}, {talk, discuss, share}),'
     '&negative'
     '}',
-    ["i dont want to talk about it"]
+    {"i dont want to talk about it"}
 )
 
 component.add_transition(
     'acknowledge_pos', 'misunderstood',
     None,
-    ["just stuff"],
+    {"just stuff"},
     settings = 'e'
 )
 
 component.add_transition(
     'acknowledge_neg', 'misunderstood',
     None,
-    ["just stuff"],
+    {"just stuff"},
     settings = 'e'
 )
 
 component.add_transition(
     'acknowledge_neutral', 'misunderstood',
     None,
-    ["just stuff"],
+    {"just stuff"},
     settings = 'e'
 )
 
 component.add_transition(
     'misunderstood', 'end',
     None,
-    ["Thanks for sharing that with me."]
+    {"Thanks for sharing that with me."}
 )
 
 component.add_transition(
     'share_pos', 'acknowledge_share_pos',
     None,
-    ["Sounds really nice, thanks for sharing that with me. I love hearing about your life."]
+    {"Sounds really nice, thanks for sharing that with me. I love hearing about your life."}
 )
 
 component.add_transition(
     'share_neg', 'acknowledge_share_neg',
     None,
-    ["I think that sounds really unfortunate, I hope it gets better for you soon."]
+    {"I think that sounds really unfortunate, I hope it gets better for you soon."}
 )
 
 component.add_transition(
     'decline_share', 'acknowledge_decline_share',
     None,
-    ["That's ok, I'm happy to talk about other things too."]
+    {"That's ok, I'm happy to talk about other things too."}
 )
 
 component.add_transition(
     'acknowledge_share_pos', 'end',
     None,
-    ["thats cool"]
+    {"thats cool"}
 )
 
 component.add_transition(
     'acknowledge_share_neg', 'end',
     None,
-    ["thats cool"]
+    {"thats cool"}
 )
 
 component.add_transition(
     'acknowledge_decline_share', 'end',
     None,
-    ["thats cool"]
+    {"thats cool"}
 )
 
 component.add_transition(
     'garbage', 'end',
-    None, ['thats cool']
+    None, {'thats cool'}
 )
 
 component.add_transition(
-    'end', 'end', None, ['x'], settings='e'
+    'end', 'end', None, {'x'}, settings='e'
 )
 
 if __name__ == '__main__':
@@ -251,11 +251,15 @@ if __name__ == '__main__':
             arg_dict["request_type"] = "LaunchRequest"
             arg_dict2["request_type"] = "LaunchRequest"
             arg_dict3["request_type"] = "LaunchRequest"
-        confidence = component.user_transition(i, arg_dict) / 10 - 0.3
+
+        using = arg_dict2
+        component.vars().update({key: val for key, val in using.items() if val is not None})
+
+        confidence = component.user_transition(i) / 10 - 0.3
         print(component.state(), component.vars())
         if component.state() == "end":
             break
-        component.vars().update({key:val for key,val in arg_dict.items() if val is not None})
+
         print('({}) '.format(confidence), component.system_transition())
         if component.state() == "end":
             print(component.state(), component.vars())
