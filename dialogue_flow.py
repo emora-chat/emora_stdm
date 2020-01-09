@@ -89,7 +89,7 @@ class DialogueTransition:
                 re = re.replace(query, replacement)
         return re
 
-    def eval_user_transition(self, utterance, state_vars=None, arg_dict=None):
+    def eval_user_transition(self, utterance, state_vars=None):
         score, vars = 0, {}
         if 'e' not in self.settings and self.re is not None:
             re = self.re
@@ -110,7 +110,7 @@ class DialogueTransition:
         elif 'e' in self.settings:
             score = self.nlu_score
         if self.eval_function:
-            score, vars = self.eval_function(arg_dict, score, vars)
+            score, vars = self.eval_function(state_vars, score, vars)
         return score, vars
 
     def ontology_selection(self, utterance):
@@ -224,10 +224,10 @@ class DialogueFlow:
     def set_transition_nlg_score(self, source, target, score):
         self._graph.arc(source, target).nlg_score = score
 
-    def user_transition(self, utterance=None, arg_dict=None):
+    def user_transition(self, utterance=None):
         best_score, next_state, vars_update = None, None, None
         for source, target, transition in self._graph.arcs_out(self._state):
-            score, vars = transition.eval_user_transition(utterance, self._vars, arg_dict)
+            score, vars = transition.eval_user_transition(utterance, self._vars)
             if best_score is None or score > best_score:
                 best_score, next_state, vars_update = score, target, vars
         self._vars.update(vars_update)
@@ -236,14 +236,14 @@ class DialogueFlow:
             self._state_update_functions[self._state](self)
         return best_score
 
-    def system_transition(self, arg_dict=None):
+    def system_transition(self):
         class Dict(dict):
             def __hash__(self):
                 return hash(id(self))
         choices = {}
         utterance = ''
         for source, target, transition in self._graph.arcs_out(self._state):
-            score, utterance, vars = transition.eval_system_transition(self._vars, arg_dict)
+            score, utterance, vars = transition.eval_system_transition(self._vars)
             choices[(transition, utterance, Dict(vars), target)] = score
         transition, utterance, vars_update, next_state = random_choice(choices)
         self._vars.update(vars_update)

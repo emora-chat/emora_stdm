@@ -159,19 +159,22 @@ component.add_transition(
 if __name__ == '__main__':
     i = input('U: ')
     while True:
-        arg_dict = {"prev_conv_date": "2019-12-20 16:55:33.562881", "name": "sarah"}
+        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "name": "sarah"}
         arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "name": "sarah"}
         arg_dict3 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently."}
         if i == "hello":
             arg_dict["request_type"] = "LaunchRequest"
             arg_dict2["request_type"] = "LaunchRequest"
             arg_dict3["request_type"] = "LaunchRequest"
-        using = arg_dict3
-        confidence = component.user_transition(i, using) / 10 - 0.3
+
+        using = arg_dict2
+        component.vars().update({key: val for key, val in using.items()})
+
+        confidence = component.user_transition(i) / 10 - 0.3
         print(component.state(), component.vars())
         if component.state() == "end":
             break
-        component.vars().update({key:val for key,val in using.items() if val is not None})
+
         print('({}) '.format(confidence), component.system_transition())
         if component.state() == "end":
             print(component.state(), component.vars())
