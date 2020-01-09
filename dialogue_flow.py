@@ -30,7 +30,7 @@ class DialogueTransition:
         self.source = source
         self.target = target
         self.nlu = nlu
-        self.nlg = nlg
+        self.nlg = self.add_nlg_options(nlg) # dictionary of utterance: prob
         self.settings = settings
         self.re = None
         if nlu:
@@ -42,6 +42,12 @@ class DialogueTransition:
 
         self.update_settings()
         self.eval_function = eval_function
+
+    def add_nlg_options(self, nlg_collection):
+        if isinstance(nlg_collection, set):
+            # calculate uniform probabilities
+            nlg_collection = {item: 1/len(nlg_collection) for item in nlg_collection}
+        return nlg_collection
 
     def match(self, text, re):
         if re is None:
@@ -68,7 +74,9 @@ class DialogueTransition:
     def variable_replacement(self, re, state_vars):
         var_matches = regex.findall(DialogueTransition._var_capture, re)
         for var in set(var_matches):
-            re = re.replace(var, state_vars[var[1:]])
+            var_name = var[1:]
+            if var_name in state_vars:
+                re = re.replace(var, state_vars[var_name])
         return re
 
     def ontology_replacement(self, re, utterance):
@@ -149,7 +157,7 @@ class DialogueTransition:
             return 0, '', {}
         else:
             score, vars = 0, {}
-            choices = []
+            choices = {}
             for choice in self.nlg:
                 response = choice
                 # initial variable replacement
@@ -176,10 +184,10 @@ class DialogueTransition:
                     continue
                 response = response.replace(",","")
                 if "#" not in response and "%" not in response and "$" not in response:
-                    choices.append(response)
+                    choices[response] = self.nlg[choice]
             if len(choices) == 0:
                 return 0, '', vars
-            return self.nlg_score, random.choice(choices), vars
+            return self.nlg_score, random_choice(choices), vars
 
 
 class DialogueFlow:
