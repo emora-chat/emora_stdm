@@ -21,13 +21,13 @@ def check_launch_request(arg_dict):
 
 def check_new(arg_dict):
     if arg_dict:
-        if arg_dict["prev_conv_date"] is None:
+        if "prev_conv_date" not in arg_dict or arg_dict["prev_conv_date"] is None:
             return HIGHSCORE, {}
     return 0, {}
 
 def check_infreq(arg_dict):
     if arg_dict:
-        if arg_dict["prev_conv_date"] is not None:
+        if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
             delta = datetime.today() - old_datetime
             if delta.days >= 7:
@@ -36,7 +36,7 @@ def check_infreq(arg_dict):
 
 def check_freq(arg_dict):
     if arg_dict:
-        if arg_dict["prev_conv_date"] is not None:
+        if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
             delta = datetime.today() - old_datetime
             if delta.days < 7:
