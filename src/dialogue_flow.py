@@ -1,13 +1,9 @@
-
-from collections import OrderedDict
 import regex
 import random
-from structpy.automaton import StateMachine
 from structpy.graph.labeled_digraph import MapMultidigraph as Graph
-from knowledge_base import KnowledgeBase
-from expression import _expression_parser, _ExpressionReducer
-from enum import Enum
-from utilities import all_grams, random_choice
+from src.knowledge_base import KnowledgeBase
+from src.expression import _expression_parser, _ExpressionReducer
+from src.utilities import all_grams, random_choice
 
 HIGHSCORE = 10
 LOWSCORE = 3

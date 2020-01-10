@@ -1,7 +1,4 @@
-
-from expression import Expression as E
-from dialogue_flow import DialogueFlow, DialogueTransition
-
+from src.dialogue_flow import DialogueFlow
 
 if __name__ == '__main__':
     df = DialogueFlow('start')

@@ -1,6 +1,4 @@
-
-import pytest
-from knowledge_base import KnowledgeBase
+from src.knowledge_base import KnowledgeBase
 
 
 def test_constructor():

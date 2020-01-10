@@ -1,6 +1,6 @@
-from dialogue_flow import DialogueFlow, HIGHSCORE, LOWSCORE
+from src.dialogue_flow import DialogueFlow, HIGHSCORE
 from datetime import datetime
-from data import names, positive_indicators, negative_indicators, feelings_positive, \
+from modules.data import names, positive_indicators, negative_indicators, feelings_positive, \
                     feelings_negative, feelings_neutral, downers, uppers, negative, negation
 
 component = DialogueFlow('prestart')

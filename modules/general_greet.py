@@ -1,4 +1,4 @@
-from dialogue_flow import DialogueFlow, HIGHSCORE, LOWSCORE
+from src.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('how_are_you')
 

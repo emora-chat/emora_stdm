@@ -1,4 +1,4 @@
-from dialogue_flow import DialogueFlow
+from src.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('prestart')
 

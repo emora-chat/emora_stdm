@@ -1,7 +1,5 @@
-
-import pytest
-from dialogue_flow import DialogueTransition, DialogueFlow
-from knowledge_base import KnowledgeBase
+from src.dialogue_flow import DialogueFlow
+from src.knowledge_base import KnowledgeBase
 
 df = DialogueFlow()
 df._kb = KnowledgeBase([
