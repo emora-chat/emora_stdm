@@ -1,5 +1,7 @@
 from dialogue_flow import DialogueFlow, HIGHSCORE, LOWSCORE
 from datetime import datetime
+import pytz
+import random
 from data import names, positive_indicators, negative_indicators, feelings_positive, \
                     feelings_negative, feelings_neutral, downers, uppers, negative, negation
 
@@ -7,7 +9,9 @@ component = DialogueFlow('prestart')
 
 standard_opening = "Hi this is an Alexa Prize Socialbot."
 inquire_feeling = "How are you today?"
+time_acknowledgement = "$time_of_day_stat. "
 transition_out = "What would you like to talk about today?"
+
 
 arcs = []
 
@@ -31,28 +35,50 @@ def check_launch_request(arg_dict):
             return HIGHSCORE, {}
     return 0, {}
 
+def update_time_of_day_ack_variable(curr_hour = None):
+    if curr_hour is None:
+        curr_hour = datetime.now(pytz.timezone('US/Eastern')).hour
+    morning = ['its pretty early in the morning for me', 'its pretty early where I am']
+    midday = ['its the middle of the day for me', 'its the middle of my day here']
+    afternoon = ['im reaching the end of the afternoon here', 'its been a long day for me']
+    evening = ['its getting dark where I live', 'its getting pretty late for me here']
+    print(curr_hour, type(curr_hour))
+    if 0 <= curr_hour < 9:
+        return random.choice(morning)
+    elif 9 <= curr_hour < 14:
+        return random.choice(midday)
+    elif 14 <= curr_hour < 19:
+        return random.choice(afternoon)
+    else:
+        return random.choice(evening)
+
 def check_new(arg_dict):
     if arg_dict:
         if "prev_conv_date" not in arg_dict or arg_dict["prev_conv_date"] is None:
-            return HIGHSCORE, {}
+            var_update = {'time_of_day_stat': update_time_of_day_ack_variable()}
+            return HIGHSCORE, var_update
     return 0, {}
 
 def check_infreq(arg_dict):
     if arg_dict:
         if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
-            delta = datetime.today() - old_datetime
+            curr_time = datetime.now(pytz.timezone('US/Eastern'))
+            delta = curr_time - old_datetime
             if delta.days >= 7:
-                return HIGHSCORE, {}
+                var_update = {'time_of_day_stat': update_time_of_day_ack_variable(curr_time.hour)}
+                return HIGHSCORE, var_update
     return 0, {}
 
 def check_freq(arg_dict):
     if arg_dict:
         if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
-            delta = datetime.today() - old_datetime
+            curr_time = datetime.now(pytz.timezone('US/Eastern'))
+            delta = curr_time - old_datetime
             if delta.days < 7:
-                return HIGHSCORE, {}
+                var_update = {'time_of_day_stat': update_time_of_day_ack_variable(curr_time.hour)}
+                return HIGHSCORE, var_update
     return 0, {}
 
 def is_new_user(arg_dict, score, vars):
@@ -60,7 +86,7 @@ def is_new_user(arg_dict, score, vars):
     if score == HIGHSCORE:
         score, vars = check_new(arg_dict)
         if score == HIGHSCORE:
-            return HIGHSCORE, {}
+            return HIGHSCORE, vars
     return 0, {}
 
 def is_infreq_user(arg_dict, score, vars):
@@ -68,7 +94,7 @@ def is_infreq_user(arg_dict, score, vars):
     if score == HIGHSCORE:
         score, vars = check_infreq(arg_dict)
         if score == HIGHSCORE:
-            return HIGHSCORE, {}
+            return HIGHSCORE, vars
     return 0, {}
 
 def is_freq_user(arg_dict, score, vars):
@@ -76,7 +102,7 @@ def is_freq_user(arg_dict, score, vars):
     if score == HIGHSCORE:
         score, vars = check_freq(arg_dict)
         if score == HIGHSCORE:
-            return HIGHSCORE, {}
+            return HIGHSCORE, vars
     return 0, {}
 
 
@@ -108,7 +134,13 @@ component.add_transition(
 
 component.add_transition(
     'start_new', 'receive_name',
-    None, {standard_opening + " What can I call you?"}
+    None,
+    {standard_opening + " What can I call you?",
+     standard_opening + " What name would you like to me to call you?",
+     standard_opening + " What name would you like to me to use for you?",
+     standard_opening + " May I have your name?",
+     standard_opening + " What should I call you?"
+     }
 )
 
 component.add_transition(
@@ -128,14 +160,16 @@ component.add_transition(
 
 component.add_transition(
     'got_name', 'how_are_you',
-    None, {"Nice to meet you, $username. " + inquire_feeling:0.999, "Nice to meet you. " + inquire_feeling:0.001}
+    None,
+    {"Nice to meet you, $username. " + time_acknowledgement + inquire_feeling:0.999,
+     "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}
 )
 
 component.add_transition(
     'start_freq', 'how_are_you',
     None,
-    {standard_opening + " Welcome back, $username. " + inquire_feeling: 0.999,
-     standard_opening + " Welcome back, im excited to talk to you again. " + inquire_feeling: 0.001},
+    {standard_opening + " Welcome back, $username. " + time_acknowledgement + inquire_feeling: 0.999,
+     standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 0.001},
     evaluation_transition=is_freq_user
 
 )
@@ -143,8 +177,8 @@ component.add_transition(
 component.add_transition(
     'start_infreq', 'how_are_you',
     None,
-    {standard_opening + " Its good to see you again, $username, its been a while since we last chatted. " + inquire_feeling: 0.999,
-     standard_opening + " Its good to see you again, its been a while since we last chatted. " + inquire_feeling: 0.001},
+    {standard_opening + " Its good to see you again, $username, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.999,
+     standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001},
     evaluation_transition=is_infreq_user
 )
 
@@ -363,7 +397,7 @@ if __name__ == '__main__':
             arg_dict3["request_type"] = "LaunchRequest"
             arg_dict4["request_type"] = "LaunchRequest"
 
-        using = arg_dict2
+        using = arg_dict4
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3
