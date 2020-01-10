@@ -1,4 +1,4 @@
-from src.dialogue_flow import DialogueFlow, HIGHSCORE
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow, HIGHSCORE
 from datetime import datetime
 from modules.data import names, positive_indicators, negative_indicators, feelings_positive, \
                     feelings_negative, feelings_neutral, downers, uppers, negative, negation

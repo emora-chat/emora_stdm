@@ -1,4 +1,4 @@
-from src.knowledge_base import KnowledgeBase
+from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 
 
 def test_constructor():

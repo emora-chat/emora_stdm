@@ -1,5 +1,5 @@
-from src.dialogue_flow import DialogueTransition, DialogueFlow
-from src.knowledge_base import KnowledgeBase
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueTransition, DialogueFlow
+from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 
 df = DialogueFlow()
 df._kb = KnowledgeBase([

@@ -1,4 +1,4 @@
-from src.dialogue_flow import DialogueFlow
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('how_are_you')
 

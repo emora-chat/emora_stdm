@@ -1,4 +1,4 @@
-from src.dialogue_flow import DialogueFlow
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 if __name__ == '__main__':
     df = DialogueFlow('start')
