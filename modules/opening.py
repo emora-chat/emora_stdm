@@ -1,4 +1,5 @@
-from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow, HIGHSCORE
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
 from datetime import datetime
 from modules.data import names, positive_indicators, negative_indicators, feelings_positive, \
                     feelings_negative, feelings_neutral, downers, uppers, negative, negation
@@ -28,13 +29,13 @@ for arc in arcs:
 def check_launch_request(arg_dict):
     if arg_dict:
         if arg_dict["request_type"] == "LaunchRequest":
-            return HIGHSCORE, {}
+            return dt.HIGHSCORE, {}
     return 0, {}
 
 def check_new(arg_dict):
     if arg_dict:
         if "prev_conv_date" not in arg_dict or arg_dict["prev_conv_date"] is None:
-            return HIGHSCORE, {}
+            return dt.HIGHSCORE, {}
     return 0, {}
 
 def check_infreq(arg_dict):
@@ -43,7 +44,7 @@ def check_infreq(arg_dict):
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
             delta = datetime.today() - old_datetime
             if delta.days >= 7:
-                return HIGHSCORE, {}
+                return dt.HIGHSCORE, {}
     return 0, {}
 
 def check_freq(arg_dict):
@@ -52,31 +53,31 @@ def check_freq(arg_dict):
             old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
             delta = datetime.today() - old_datetime
             if delta.days < 7:
-                return HIGHSCORE, {}
+                return dt.HIGHSCORE, {}
     return 0, {}
 
-def is_new_user(arg_dict, score, vars):
+def is_new_user(utterance, arg_dict, score):
     score, vars = check_launch_request(arg_dict)
-    if score == HIGHSCORE:
+    if score == dt.HIGHSCORE:
         score, vars = check_new(arg_dict)
-        if score == HIGHSCORE:
-            return HIGHSCORE, {}
+        if score == dt.HIGHSCORE:
+            return dt.HIGHSCORE, {}
     return 0, {}
 
-def is_infreq_user(arg_dict, score, vars):
+def is_infreq_user(utterance, arg_dict, score):
     score, vars = check_launch_request(arg_dict)
-    if score == HIGHSCORE:
+    if score == dt.HIGHSCORE:
         score, vars = check_infreq(arg_dict)
-        if score == HIGHSCORE:
-            return HIGHSCORE, {}
+        if score == dt.HIGHSCORE:
+            return dt.HIGHSCORE, {}
     return 0, {}
 
-def is_freq_user(arg_dict, score, vars):
+def is_freq_user(utterance, arg_dict, score):
     score, vars = check_launch_request(arg_dict)
-    if score == HIGHSCORE:
+    if score == dt.HIGHSCORE:
         score, vars = check_freq(arg_dict)
-        if score == HIGHSCORE:
-            return HIGHSCORE, {}
+        if score == dt.HIGHSCORE:
+            return dt.HIGHSCORE, {}
     return 0, {}
 
 

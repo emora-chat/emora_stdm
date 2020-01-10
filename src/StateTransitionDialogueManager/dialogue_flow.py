@@ -1,6 +1,7 @@
 from structpy.graph.labeled_digraph import MapMultidigraph as Graph
 from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 from src.StateTransitionDialogueManager.utilities import all_grams, random_choice
+from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition
 
 
 class DialogueFlow:
@@ -23,6 +24,9 @@ class DialogueFlow:
             vars = {}
         self._vars = vars
 
+    def update_vars(self, vars):
+        self._vars.update(vars)
+
     def state(self):
         return self._state
 
@@ -31,6 +35,11 @@ class DialogueFlow:
 
     def reset(self):
         self._state = self._initial_state
+
+    def start_module(self, state, vars=None):
+        self._state = state
+        if vars:
+            self._vars.update(vars)
 
     def graph(self):
         return self._graph
