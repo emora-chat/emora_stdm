@@ -63,20 +63,24 @@ class DialogueFlow:
                     return False, ont
         return True, None
 
-    def add_transition(self, source, target, nlu, nlg, settings='',evaluation_transition=None):
-        transition_expression = "%s -> %s"%(source, target)
+    def check_transition_valid(self, source, target, nlu, nlg):
+        transition_expression = "%s -> %s" % (source, target)
         if not self.graph().has_node(source):
-            raise MissingStateException('(%s): state "%s" does not exist'%(transition_expression,source))
+            raise MissingStateException('(%s): state "%s" does not exist' % (transition_expression, source))
         if not self.graph().has_node(target):
-            raise MissingStateException('(%s): state "%s" does not exist'%(transition_expression,target))
+            raise MissingStateException('(%s): state "%s" does not exist' % (transition_expression, target))
         valid, missing = self.check_ontology_references_exist(nlu)
         if not valid:
-            raise MissingOntologyException('(%s): %s expression is using a non-existent ontology reference "%s"'%(transition_expression,'nlu',missing))
+            raise MissingOntologyException('(%s): %s expression is using a non-existent ontology reference "%s"' % (
+            transition_expression, 'nlu', missing))
         for nlg_expression in nlg:
             valid, missing = self.check_ontology_references_exist(nlg_expression)
             if not valid:
-                raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (transition_expression,nlg_expression, missing))
+                raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (
+                    transition_expression, nlg_expression, missing))
 
+    def add_transition(self, source, target, nlu, nlg, settings='',evaluation_transition=None):
+        self.check_transition_valid(source, target, nlu, nlg)
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)
         transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_transition)
@@ -137,9 +141,12 @@ class DialogueFlow:
         return rings
 
     def query(self, query, filter):
-        rings = self.get_kb_rings(query)
-        result = self.knowledge_base().attribute(rings)
-        return result
+        try:
+            rings = self.get_kb_rings(query)
+            result = self.knowledge_base().attribute(rings)
+            return result
+        except KeyError as e:
+            raise MissingKnowledgeException("Executing query '%s' failed because %s does not exist in knowledge base"%(query,str(e).replace("KeyError: ","")))
 
     def add_module(self, module, namespace):
         module = deepcopy(module)
