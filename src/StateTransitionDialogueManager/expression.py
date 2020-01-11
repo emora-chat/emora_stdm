@@ -16,9 +16,9 @@ negation: "-" term | "-" literal
 regex: "/" REGEX "/"
 REGEX: /[a-z A-Z0-9\_(+*)\-\\\^?!={}\[\]:;<>#]+/
 literal: " "* (WORD " ")* WORD ","? " "*
-WORD: /[a-zA-Z0-9$&:#_]+/
+WORD: /[a-zA-Z0-9$&:#_.]+/
 assign: "%" VAR "=" (term | literal)
-VAR: /[a-zA-Z0-9_]+/
+VAR: /[a-zA-Z0-9_.]+/
 """
 
 _expression_parser = Lark(_expression_grammar, start='root')

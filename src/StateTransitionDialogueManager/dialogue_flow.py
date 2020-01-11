@@ -2,7 +2,7 @@ from structpy.graph.labeled_digraph import MapMultidigraph as Graph
 from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 from src.StateTransitionDialogueManager.utilities import all_grams, random_choice
 from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition
-
+from copy import deepcopy
 
 class DialogueFlow:
 
@@ -35,11 +35,6 @@ class DialogueFlow:
 
     def reset(self):
         self._state = self._initial_state
-
-    def start_module(self, state, vars=None):
-        self._state = state
-        if vars:
-            self._vars.update(vars)
 
     def graph(self):
         return self._graph
@@ -114,5 +109,22 @@ class DialogueFlow:
         rings = self.get_kb_rings(query)
         result = self.knowledge_base().attribute(rings)
         return result
+
+    def add_module(self, module, namespace):
+        module = deepcopy(module)
+        for source, target, transition in module.graph().arcs():
+            transition.set_namespace(namespace)
+            transition.set_dialogue_flow(self)
+            self.graph().add(transition.source(), transition.target(), transition)
+        for source, target, relation in module.knowledge_base().arcs():
+            if source.startswith('&'):
+                source = '&' + namespace + '.' + source[1:]
+            if target.startswith('&'):
+                target = '&' + namespace + '.' + target[1:]
+            self.knowledge_base().add(source, target, relation)
+        # .extend(jump_states) - something like this
+
+
+
 
 

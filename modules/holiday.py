@@ -2,13 +2,9 @@ from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('prestart')
 
-arcs = [
-    ('feeling_positive', 'feeling', 'type'),
-    ('feeling_negative', 'feeling', 'type'),
-    ('family_sinular', 'family_all', 'type'),
-    ('family_plural', 'family_all', 'type')
-]
-anyfamily = ['singularfamily', 'pluralfamily']
+arcs = []
+
+anyfamily = ['&singularfamily', '&pluralfamily']
 singularfamily = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
                   'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
                   'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
@@ -37,23 +33,23 @@ like = ['like', 'enjoy']
 winteractivity = ['ski', 'skiing', 'snowboard', 'snowboarding', 'sled', 'sledding']
 fun = ['fun', 'exciting', 'enjoyable']
 
-arcs.extend([(a, 'affirmative', 'type') for a in affirmative])
-arcs.extend([(q, 'yn_qw', 'type') for q in yn_qw])
-arcs.extend([(f, 'feelings_positive', 'type') for f in feelings_positive])
-arcs.extend([(f, 'feelings_negative', 'type') for f in feelings_negative])
-arcs.extend([(q, 'question_word', 'type') for q in q_word])
-arcs.extend([(x, 'holiday_t', 'type') for x in holiday])
-arcs.extend([(x, 'feelings_relax', 'type') for x in feelings_relax])
-arcs.extend([(x, 'unsure', 'type') for x in unsure])
-arcs.extend([(x, 'activity', 'type') for x in activity])
-arcs.extend([(x, 'item', 'type') for x in item])
-arcs.extend([(x, 'negative', 'type') for x in negative])
-arcs.extend([(x, 'like', 'type') for x in like])
-arcs.extend([(x, 'winteractivity', 'type') for x in winteractivity])
-arcs.extend([(x, 'fun', 'type') for x in fun])
-arcs.extend([(x, 'singularfamily', 'type') for x in singularfamily])
-arcs.extend([(x, 'pluralfamily', 'type') for x in pluralfamily])
-arcs.extend([(x, 'anyfamily', 'type') for x in anyfamily])
+arcs.extend([(a, '&affirmative', 'type') for a in affirmative])
+arcs.extend([(q, '&yn_qw', 'type') for q in yn_qw])
+arcs.extend([(f, '&feelings_positive', 'type') for f in feelings_positive])
+arcs.extend([(f, '&feelings_negative', 'type') for f in feelings_negative])
+arcs.extend([(q, '&question_word', 'type') for q in q_word])
+arcs.extend([(x, '&holiday_t', 'type') for x in holiday])
+arcs.extend([(x, '&feelings_relax', 'type') for x in feelings_relax])
+arcs.extend([(x, '&unsure', 'type') for x in unsure])
+arcs.extend([(x, '&activity', 'type') for x in activity])
+arcs.extend([(x, '&item', 'type') for x in item])
+arcs.extend([(x, '&negative', 'type') for x in negative])
+arcs.extend([(x, '&like', 'type') for x in like])
+arcs.extend([(x, '&winteractivity', 'type') for x in winteractivity])
+arcs.extend([(x, '&fun', 'type') for x in fun])
+arcs.extend([(x, '&singularfamily', 'type') for x in singularfamily])
+arcs.extend([(x, '&pluralfamily', 'type') for x in pluralfamily])
+arcs.extend([(x, '&anyfamily', 'type') for x in anyfamily])
 arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
@@ -65,7 +61,7 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start',
-    '&holiday_t', []
+    '&holiday_t', {}
 )
 
 # start: are you excited for the holidays

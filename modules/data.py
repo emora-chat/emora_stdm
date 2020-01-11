@@ -1,5 +1,5 @@
-positive_indicators = ['feelings_positive','uppers']
-negative_indicators = ['feelings_negative','downers']
+positive_indicators = ['&feelings_positive','&uppers']
+negative_indicators = ['&feelings_negative','&downers']
 feelings_positive = ['happy', 'excited', 'joyful', 'joy', 'thrilled', 'ready', 'good',
                      'great', 'fantastic', 'wonderful', 'cheerful', 'cheery', 'well', 'upbeat']
 feelings_negative = ['sad', 'nervous', 'stress', 'stressed', 'stressful', 'worried',

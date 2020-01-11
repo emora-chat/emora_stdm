@@ -12,16 +12,16 @@ transition_out = "What would you like to talk about today?"
 
 arcs = []
 
-arcs.extend([(f, 'feelings_positive', 'type') for f in feelings_positive])
-arcs.extend([(f, 'feelings_negative', 'type') for f in feelings_negative])
-arcs.extend([(f, 'feelings_neutral', 'type') for f in feelings_neutral])
-arcs.extend([(f, 'downers', 'type') for f in downers])
-arcs.extend([(f, 'uppers', 'type') for f in uppers])
-arcs.extend([(f, 'negative', 'type') for f in negative])
-arcs.extend([(f, 'positive_indicators', 'type') for f in positive_indicators])
-arcs.extend([(f, 'negative_indicators', 'type') for f in negative_indicators])
-arcs.extend([(f, 'negation', 'type') for f in negation])
-arcs.extend([(x, 'names', 'type') for x in names])
+arcs.extend([(f, '&feelings_positive', 'type') for f in feelings_positive])
+arcs.extend([(f, '&feelings_negative', 'type') for f in feelings_negative])
+arcs.extend([(f, '&feelings_neutral', 'type') for f in feelings_neutral])
+arcs.extend([(f, '&downers', 'type') for f in downers])
+arcs.extend([(f, '&uppers', 'type') for f in uppers])
+arcs.extend([(f, '&negative', 'type') for f in negative])
+arcs.extend([(f, '&positive_indicators', 'type') for f in positive_indicators])
+arcs.extend([(f, '&negative_indicators', 'type') for f in negative_indicators])
+arcs.extend([(f, '&negation', 'type') for f in negation])
+arcs.extend([(x, '&names', 'type') for x in names])
 arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)

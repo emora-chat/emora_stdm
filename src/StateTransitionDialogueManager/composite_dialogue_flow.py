@@ -4,7 +4,7 @@ class CompositeDialogueFlow():
     def __init__(self, controller_init, controller_init_namespace, modules=None):
         self._controller = controller_init
         self._controller_namespace = controller_init_namespace
-        if modules: # {string namespace: DialogueFlow}
+        if modules: # {string _namespace: DialogueFlow}
             self._modules = modules
         else:
             self._modules = {}
@@ -32,7 +32,7 @@ class CompositeDialogueFlow():
     def add_transition(self, source, target, nlu, nlg, settings='', evaluation_transition=None):
         source_module_str, source_state_str = source.split(".")
         source_module_df = self.modules()[source_module_str]
-        target_module_str, target_state_str = target.split(".") # todo - enforcement checking of whether target exists has to be done here
+        target_module_str, target_state_str = target.split(".") # todo - enforcement checking of whether _target exists has to be done here
         source_module_df.add_transition(source_state_str, target, nlu, nlg, settings, evaluation_transition)
 
     def user_transition(self, utterance=None):
