@@ -3,8 +3,8 @@ from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 
 df = DialogueFlow()
 df._kb = KnowledgeBase([
-            ('bird', 'animal', 'type'),
-            ('dog', 'animal', 'type'),
+            ('bird', '&animal', 'type'),
+            ('dog', '&animal', 'type'),
             ('bird', 'wings', 'has'),
             ('bird', 'tail', 'has'),
             ('dog', 'tail', 'has'),
@@ -70,12 +70,7 @@ def test_kb_nlu():
     assert not result[0]
 
 def test_unsure_answer():
-    arcs = [
-        ('feeling_positive', 'feeling', 'type'),
-        ('feeling_negative', 'feeling', 'type'),
-        ('family_sinular', 'family_all', 'type'),
-        ('family_plural', 'family_all', 'type')
-    ]
+    arcs = []
     family = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
               'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
               'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
@@ -100,17 +95,17 @@ def test_unsure_answer():
     activity = ['watching']
     item = ['movie', 'movies', 'show', 'shows', 'tv', 'television']
 
-    arcs.extend([(a, 'affirmative', 'type') for a in affirmative])
-    arcs.extend([(q, 'yn_qw', 'type') for q in yn_qw])
-    arcs.extend([(f, 'feelings_positive', 'type') for f in feelings_positive])
-    arcs.extend([(f, 'feelings_negative', 'type') for f in feelings_negative])
-    arcs.extend([(q, 'question_word', 'type') for q in q_word])
-    arcs.extend([(x, 'holiday', 'type') for x in holiday])
-    arcs.extend([(x, 'feelings_relax', 'type') for x in feelings_relax])
-    arcs.extend([(x, 'unsure', 'type') for x in unsure])
-    arcs.extend([(x, 'activity', 'type') for x in activity])
-    arcs.extend([(x, 'item', 'type') for x in item])
-    arcs.extend([(x, 'negative', 'type') for x in negative])
+    arcs.extend([(a, '&affirmative', 'type') for a in affirmative])
+    arcs.extend([(q, '&yn_qw', 'type') for q in yn_qw])
+    arcs.extend([(f, '&feelings_positive', 'type') for f in feelings_positive])
+    arcs.extend([(f, '&feelings_negative', 'type') for f in feelings_negative])
+    arcs.extend([(q, '&question_word', 'type') for q in q_word])
+    arcs.extend([(x, '&holiday', 'type') for x in holiday])
+    arcs.extend([(x, '&feelings_relax', 'type') for x in feelings_relax])
+    arcs.extend([(x, '&unsure', 'type') for x in unsure])
+    arcs.extend([(x, '&activity', 'type') for x in activity])
+    arcs.extend([(x, '&item', 'type') for x in item])
+    arcs.extend([(x, '&negative', 'type') for x in negative])
 
     df2 = DialogueFlow()
     df2._kb = KnowledgeBase(arcs)
