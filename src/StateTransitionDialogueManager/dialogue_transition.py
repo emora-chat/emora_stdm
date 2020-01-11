@@ -47,6 +47,12 @@ class DialogueTransition:
     def target(self):
         return self._target
 
+    def settings(self):
+        return self._settings
+
+    def is_error_transition(self):
+        return 'e' in self.settings()
+
     def set_dialogue_flow(self, df):
         self._dialogue_flow = df
 

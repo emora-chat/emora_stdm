@@ -162,7 +162,33 @@ class DialogueFlow:
             self.knowledge_base().add(source, target, relation)
         # .extend(jump_states) - something like this
 
+    def check_error_transitions_complete(self):
+        for node in self.graph().nodes():
+            error_trans = False
+            for source, target, label in self.graph().arcs_out(node):
+                if label.is_error_transition():
+                    error_trans = True
+            if not error_trans:
+                raise MissingErrorStateException('state "%s" is missing an error transition'%node)
 
+    def run(self, external_args_dict=None):
+        #self.check_error_transitions_complete() # todo - need to be able to specify user vs system states (system states dont need error transitions bc not dependent on nlu from user)
+
+        if external_args_dict:
+            self.vars().update({key: val for key, val in external_args_dict.items() if val is not None})
+
+        i = input('U: ')
+        while True:
+            confidence = self.user_transition(i) / 10 - 0.3
+            print(self.state(), self.vars())
+            if self.state() == "end":
+                break
+
+            print('({}) '.format(confidence), self.system_transition())
+            if self.state() == "end":
+                print(self.state(), self.vars())
+                break
+            i = input('U: ')
 
 
 

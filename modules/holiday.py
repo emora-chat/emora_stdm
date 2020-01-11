@@ -54,6 +54,11 @@ arcs.extend([])
 for arc in arcs:
     component.knowledge_base().add(*arc)
 
+states = ['prestart', 'start', 'feelings_q', 'feelings_pos', 'feelings_pos_reason',
+          'activities', 'parties', 'family', 'gifts', 'atmosphere', 'food', 'vacation',
+          'feelings_neg', 'feelings_unsure', 'end', 'garbage']
+component.add_states(states)
+
 # pre start
 component.add_transition(
     'prestart', 'prestart', None, {'x'}, settings='e'
@@ -133,8 +138,10 @@ component.add_transition(
 # gifts
 component.add_transition(
     'feelings_pos_reason', 'gifts',
-    '({giving,give,receiving,receive,getting,get,open,opening,wrap,wrapping,unwrap,unwrapping},'
-    '{gift,gifts,present,presents})',
+    '{'
+    '({giving,give,receiving,receive,getting,get,open,opening,wrap,wrapping,unwrap,unwrapping},{gift,gifts,present,presents}),'
+    '({gift,gifts,present,presents})'
+    '}',
     {'i like shopping for my friends and family'}
 )
 
@@ -234,12 +241,4 @@ component.add_transition(
 )
 
 if __name__ == '__main__':
-    i = input('U: ')
-    while True:
-        confidence = component.user_transition(i) / 10 - 0.3
-        print(component.state(), component.vars())
-        print('({}) '.format(confidence), component.system_transition())
-        if component.state() == "end":
-            print(component.state(), component.vars())
-            break
-        i = input('U: ')
+    component.run()
