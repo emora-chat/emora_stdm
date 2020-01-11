@@ -80,6 +80,14 @@ def is_freq_user(utterance, arg_dict, score):
             return dt.HIGHSCORE, {}
     return 0, {}
 
+states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
+          'missed_name', 'acknowledge_name', 'got_name', 'how_are_you',
+          'feeling_pos', 'feeling_neg', 'feeling_neutral', 'unrecognized_emotion',
+          'decline_share', 'end', 'acknowledge_pos', 'acknowledge_neg',
+          'acknowledge_neutral', 'share_pos', 'share_neg', 'misunderstood',
+          'acknowledge_share_pos', 'acknowledge_share_neg', 'acknowledge_decline_share',
+          'garbage']
+component.add_states(states)
 
 # pre start
 component.add_transition(

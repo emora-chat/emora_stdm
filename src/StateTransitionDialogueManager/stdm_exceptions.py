@@ -1,0 +1,3 @@
+
+class MissingStateException(Exception):
+    pass

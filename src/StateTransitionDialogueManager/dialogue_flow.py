@@ -2,6 +2,7 @@ from structpy.graph.labeled_digraph import MapMultidigraph as Graph
 from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 from src.StateTransitionDialogueManager.utilities import all_grams, random_choice
 from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition
+from src.StateTransitionDialogueManager.stdm_exceptions import MissingStateException
 from copy import deepcopy
 
 class DialogueFlow:
@@ -45,7 +46,19 @@ class DialogueFlow:
     def set_initial_state(self, state):
         self._initial_state = state
 
+    def add_state(self, state):
+        self.graph().add(state)
+
+    def add_states(self, states):
+        for state in states:
+            self.add_state(state)
+
     def add_transition(self, source, target, nlu, nlg, settings='',evaluation_transition=None):
+        if not self.graph().has_node(source):
+            raise MissingStateException("state %s does not exist"%source)
+        if not self.graph().has_node(target):
+            raise MissingStateException("state %s does not exist"%target)
+
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)
         transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_transition)
