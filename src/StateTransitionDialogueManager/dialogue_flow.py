@@ -2,8 +2,10 @@ from structpy.graph.labeled_digraph import MapMultidigraph as Graph
 from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 from src.StateTransitionDialogueManager.utilities import all_grams, random_choice
 from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition
-from src.StateTransitionDialogueManager.stdm_exceptions import MissingStateException
+from src.StateTransitionDialogueManager.stdm_exceptions import MissingStateException,\
+    MissingOntologyException, MissingKnowledgeException, MissingErrorStateException
 from copy import deepcopy
+import regex
 
 class DialogueFlow:
 
@@ -53,11 +55,27 @@ class DialogueFlow:
         for state in states:
             self.add_state(state)
 
+    def check_ontology_references_exist(self, string):
+        if string:
+            ont_matches = regex.findall(DialogueTransition._ont_capture, string)
+            for ont in ont_matches:
+                if len(self.knowledge_base().subtypes(ont)) == 0:
+                    return False, ont
+        return True, None
+
     def add_transition(self, source, target, nlu, nlg, settings='',evaluation_transition=None):
+        transition_expression = "%s -> %s"%(source, target)
         if not self.graph().has_node(source):
-            raise MissingStateException("state %s does not exist"%source)
+            raise MissingStateException('(%s): state "%s" does not exist'%(transition_expression,source))
         if not self.graph().has_node(target):
-            raise MissingStateException("state %s does not exist"%target)
+            raise MissingStateException('(%s): state "%s" does not exist'%(transition_expression,target))
+        valid, missing = self.check_ontology_references_exist(nlu)
+        if not valid:
+            raise MissingOntologyException('(%s): %s expression is using a non-existent ontology reference "%s"'%(transition_expression,'nlu',missing))
+        for nlg_expression in nlg:
+            valid, missing = self.check_ontology_references_exist(nlg_expression)
+            if not valid:
+                raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (transition_expression,nlg_expression, missing))
 
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)

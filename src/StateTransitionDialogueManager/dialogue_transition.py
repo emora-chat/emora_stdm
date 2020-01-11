@@ -172,7 +172,7 @@ class DialogueTransition:
     def _ontology_selection(self, utterance):
         ont_matches = regex.findall(DialogueTransition._ont_capture, utterance)
         for ont_lookup in ont_matches:
-            ont_options = self._dialogue_flow.knowledge_base().subtypes(ont_lookup[1:].strip())
+            ont_options = self._dialogue_flow.knowledge_base().subtypes(ont_lookup.strip())
             if ont_options:
                 replacement = random.choice(ont_options)
                 utterance = utterance.replace(ont_lookup, replacement)
