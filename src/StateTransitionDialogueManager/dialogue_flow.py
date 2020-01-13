@@ -113,7 +113,8 @@ class DialogueFlow:
             score, utterance, vars = transition.eval_system_transition(self._vars)
             choices[(transition, utterance, Dict(vars), target)] = score
         transition, utterance, vars_update, next_state = random_choice(choices)
-        transition.select_function()
+        if transition.select_function is not None:
+            transition.select_function()
         transition.downweight()
         for choice in choices:
             if choice[0] is not transition:
