@@ -16,6 +16,9 @@ class DialogueTransition:
     HIGHSCORE = 10
     LOWSCORE = 3
 
+    UPWEIGHT = 1
+    DOWNWEIGHT = 1
+
     def __init__(self, dialogue_flow, source, target, nlu, nlg,
                  settings='', eval_function=None, select_function=None):
         self._dialogue_flow = dialogue_flow
@@ -68,17 +71,29 @@ class DialogueTransition:
     def set_dialogue_flow(self, df):
         self._dialogue_flow = df
 
+    def upweight(self):
+        self._nlg_score += DialogueTransition.UPWEIGHT
+
+    def downweight(self):
+        self._nlg_score = 0
+
+    def get_nlg_score(self):
+        return self._nlg_score
+
+    def set_nlg_score(self, score):
+        self._nlg_score = score
+
     def _update_settings(self):
         if 'e' in self._settings:
-            self.nlu_score = DialogueTransition.LOWSCORE
-            self.nlu_min = 1
-            self.nlg_score = DialogueTransition.LOWSCORE
-            self.nlg_min = 0
+            self._nlu_score = DialogueTransition.LOWSCORE
+            self._nlu_min = 1
+            self._nlg_score = DialogueTransition.LOWSCORE
+            self._nlg_min = 0
         else:
-            self.nlu_score = DialogueTransition.HIGHSCORE
-            self.nlu_min = 1
-            self.nlg_score = DialogueTransition.HIGHSCORE
-            self.nlg_min = 1
+            self._nlu_score = DialogueTransition.HIGHSCORE
+            self._nlu_min = 1
+            self._nlg_score = DialogueTransition.HIGHSCORE
+            self._nlg_min = 1
 
     def _insert_namespace(self, string, namespace):
         if string:
@@ -121,9 +136,9 @@ class DialogueTransition:
             # actually do the match, run _eval_function if specified
             match, vars = self._match(utterance, re)
             if match:
-                score = self.nlu_score
+                score = self._nlu_score
         elif 'e' in self._settings:
-            score = self.nlu_score
+            score = self._nlu_score
         if self._eval_function:
             score, vars = self._eval_function(utterance, {**state_vars, **vars}, score)
         return score, vars
@@ -163,7 +178,7 @@ class DialogueTransition:
                     choices[response] = self._nlg[choice]
             if len(choices) == 0:
                 return 0, '', vars
-            return self.nlg_score, random_choice(choices), vars
+            return self._nlg_score, random_choice(choices), vars
 
     def _variable_with_knowledge_selection(self, utterance):
         vars = {}
@@ -199,8 +214,11 @@ class DialogueTransition:
     def _add_nlg_options(self, nlg_collection):
         if isinstance(nlg_collection, set):
             # calculate uniform probabilities
-            nlg_collection = {item: 1/len(nlg_collection) for item in nlg_collection}
-        return nlg_collection
+            return {item: 1/len(nlg_collection) for item in nlg_collection}
+        elif isinstance(nlg_collection, dict):
+            return nlg_collection
+        else:
+            raise Exception('nlg specification must be a set or dictionary')
 
     def _match(self, text, re):
         if re is None:

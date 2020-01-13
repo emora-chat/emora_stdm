@@ -5,8 +5,8 @@ from src.StateTransitionDialogueManager.dialogue_transition import DialogueTrans
 from src.StateTransitionDialogueManager.stdm_exceptions import MissingStateException,\
     MissingOntologyException, MissingKnowledgeException, MissingErrorStateException
 from copy import deepcopy
-import regex
-
+import regex, json
+from collections import defaultdict
 
 class DialogueFlow:
 
@@ -113,6 +113,10 @@ class DialogueFlow:
             score, utterance, vars = transition.eval_system_transition(self._vars)
             choices[(transition, utterance, Dict(vars), target)] = score
         transition, utterance, vars_update, next_state = random_choice(choices)
+        transition.downweight()
+        for choice in choices:
+            if choice[0] is not transition:
+                choice[0].upweight()
         self._vars.update(vars_update)
         self._state = next_state
         if self._state in self._state_update_functions:
@@ -191,6 +195,17 @@ class DialogueFlow:
                 print(self.state(), self.vars())
                 break
             i = input('U: ')
+
+    def nlg_transition_scores_to_json_string(self):
+        transition_scores = defaultdict(dict)
+        for source, target, transition in self.graph().arcs():
+            transition_scores[source][target] = transition.get_nlg_score()
+        return json.dumps(transition_scores)
+
+    def load_nlg_transition_scores(self, transition_json_string):
+        transition_scores = json.loads(transition_json_string)
+        for source, target, transition in self.graph().arcs():
+            transition.set_nlg_score(transition_scores[source][target])
 
 
 
