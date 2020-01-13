@@ -7,6 +7,7 @@ from src.StateTransitionDialogueManager.stdm_exceptions import MissingStateExcep
 from copy import deepcopy
 import regex
 
+
 class DialogueFlow:
 
     def __init__(self, initial_state=None):

@@ -10,6 +10,8 @@ df._kb = KnowledgeBase([
             ('scarlett johansson', 'black widow', 'plays')
         ])
 
+df.add_states(list('xy12345678'))
+
 def test_simple_nlg():
     t = DialogueTransition(
         None, 'x', 'y',

@@ -2,6 +2,8 @@
 from structpy.graph.labeled_digraph import MapMultidigraph
 from structpy.graph import Database
 from structpy.graph.traversal import preset as traversal
+import json
+from collections import defaultdict
 
 Graph = Database(MapMultidigraph)
 
@@ -50,9 +52,7 @@ class KnowledgeBase(Graph):
         :param rings: dict<str: node,
                            tuple<
                                  bool: negated,
-                                 list<tuple<bool: reversed, str: relation>>
-                                >
-                          >
+                                 list<tuple<bool: reversed, str: relation>>>>
         :return: set<str: node>
         """
         result = None
@@ -90,3 +90,23 @@ class KnowledgeBase(Graph):
                     return partial
         return False
 
+    def to_json(self):
+        ontology_arcs = defaultdict(list)
+        relation_arcs = list()
+        for s, o, r in self.arcs():
+            if r == _type:
+                ontology_arcs[o].append(s)
+            else:
+                relation_arcs.append([s, r, o])
+        return json.dumps({'ontology': ontology_arcs, 'predicates': relation_arcs})
+
+    def load_json(self, json_string):
+        d = json.loads(json_string)
+        ontology = d['ontology']
+        relations = d['predicates']
+        for k, l in ontology.items():
+            for e in l:
+                self.add(e, k, _type)
+        for relation in relations:
+            s, r, o = tuple(relation)
+            self.add(s, o, r)

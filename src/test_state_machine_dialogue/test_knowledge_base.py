@@ -46,5 +46,22 @@ def test_attribute():
     }) == {'scarlett johansson'}
 
 
+def test_json():
+    kb = KnowledgeBase()
+    kb.add_type('bird', 'animal')
+    kb.add_type('bird', 'flying')
+    kb.add_type('animal', 'living')
+    kb.add_type('dog', 'animal')
+    kb.add('dog', 'bark', 'sound')
+    kb.add('bark', 'annoying', 'is')
+    saved = kb.to_json()
+
+    kb2 = KnowledgeBase()
+    kb2.load_json(saved)
+    assert kb2.types('bird') == {'animal', 'flying', 'living'}
+    assert kb2.subtypes('animal') == {'bird', 'dog'}
+    assert kb2.has_arc('bark', 'annoying', 'is')
+    assert kb2.has_arc('dog', 'bark', 'sound')
+
 
 

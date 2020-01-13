@@ -9,6 +9,10 @@ df._kb = KnowledgeBase([
             ('bird', 'tail', 'has'),
             ('dog', 'tail', 'has'),
         ])
+holiday_states = ['prestart', 'start', 'feelings_q', 'feelings_pos', 'feelings_pos_reason',
+          'activities', 'parties', 'family', 'gifts', 'atmosphere', 'food', 'vacation',
+          'feelings_neg', 'feelings_unsure', 'end', 'garbage']
+df.add_states(list('123456789') + ['10'] + holiday_states)
 
 def test_basic_nlu():
     df.add_transition('1', '2', 'this {is, was} a test', ['testing one two three'])
@@ -108,6 +112,7 @@ def test_unsure_answer():
     arcs.extend([(x, '&negative', 'type') for x in negative])
 
     df2 = DialogueFlow()
+    df2.add_states(list('123456789') + ['10'] + holiday_states)
     df2._kb = KnowledgeBase(arcs)
 
     # yes
