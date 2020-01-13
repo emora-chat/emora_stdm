@@ -27,7 +27,6 @@ def update_time_of_day_ack_variable(curr_hour = None):
     midday = ['its the middle of the day for me', 'its the middle of my day here']
     afternoon = ['im reaching the end of the afternoon here', 'its been a long day for me']
     evening = ['its getting dark where I live', 'its getting pretty late for me here']
-    print(curr_hour, type(curr_hour))
     if 0 <= curr_hour < 9:
         return random.choice(morning)
     elif 9 <= curr_hour < 14:
@@ -96,7 +95,8 @@ states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
           'decline_share', 'end', 'acknowledge_pos', 'acknowledge_neg',
           'acknowledge_neutral', 'share_pos', 'share_neg', 'misunderstood',
           'acknowledge_share_pos', 'acknowledge_share_neg', 'acknowledge_decline_share',
-          'garbage', 'feeling_pos_and_received_how_are_you']
+          'garbage', 'feeling_pos_and_received_how_are_you', 'feeling_neg_and_received_how_are_you',
+          'feeling_neutral_and_received_how_are_you']
 component.add_states(states)
 
 # pre start
@@ -173,26 +173,6 @@ component.add_transition(
      standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001}
 )
 
-feeling_pos_exp = """
-{
-<-&negation, (&feelings_positive)>,
-(&negation, &feelings_negative)
-}
-"""
-
-feeling_neg_exp = """
-{
-<-&negation, (&feelings_negative)>,
-(&negation, {&feelings_positive,&feelings_neutral})
-}
-"""
-
-feeling_neutral_exp = """
-{
-<-&negation, (&feelings_neutral)>
-}
-"""
-
 receive_how_are_you = """
 {
 (how are you), 
@@ -204,37 +184,80 @@ receive_how_are_you = """
 }
 """
 
-feelings_pos_and_receive_how_are_you = """
+feelings_pos_and_not_received_how_are_you = """
+{
+<-&negation, -(%s), (&feelings_positive)>,
+(&negation, -(%s), &feelings_negative)
+}
+"""%(receive_how_are_you,receive_how_are_you)
+
+component.add_transition(
+    'how_are_you', 'feeling_pos',
+    feelings_pos_and_not_received_how_are_you,
+    {"im good"}
+)
+
+feelings_neg_and_not_received_how_are_you = """
+{
+<-&negation, -(%s), (&feelings_negative)>,
+(&negation, -(%s), {&feelings_positive,&feelings_neutral})
+}
+"""%(receive_how_are_you,receive_how_are_you)
+
+component.add_transition(
+    'how_are_you', 'feeling_neg',
+    feelings_neg_and_not_received_how_are_you,
+    {"im bad"}
+)
+
+feelings_neutral_and_not_received_how_are_you = """
+{
+<-&negation, -(%s), (&feelings_neutral)>
+}
+"""%(receive_how_are_you)
+
+component.add_transition(
+    'how_are_you', 'feeling_neutral',
+    feelings_neutral_and_not_received_how_are_you,
+    {"im ok"}
+)
+
+feelings_pos_and_received_how_are_you = """
 {
 <-&negation, (&feelings_positive), (%s)>,
 (&negation, &feelings_negative, (%s))
 }
 """%(receive_how_are_you,receive_how_are_you)
 
-print(feelings_pos_and_receive_how_are_you)
-
-component.add_transition(
-    'how_are_you', 'feeling_pos',
-    feeling_pos_exp,
-    {"im good"}
-)
-
-component.add_transition(
-    'how_are_you', 'feeling_neg',
-    feeling_neg_exp,
-    {"im bad"}
-)
-
-component.add_transition(
-    'how_are_you', 'feeling_neutral',
-    feeling_neutral_exp,
-    {"im ok"}
-)
-
 component.add_transition(
     'how_are_you', 'feeling_pos_and_received_how_are_you',
-    feelings_pos_and_receive_how_are_you,
+    feelings_pos_and_received_how_are_you,
     {"im good. how are you"}
+)
+
+feelings_neg_and_received_how_are_you = """
+{
+<-&negation, (&feelings_negative), (%s)>,
+(&negation, {&feelings_positive,&feelings_neutral}, (%s))
+}
+"""%(receive_how_are_you,receive_how_are_you)
+
+component.add_transition(
+    'how_are_you', 'feeling_neg_and_received_how_are_you',
+    feelings_neg_and_received_how_are_you,
+    {"im bad. how are you"}
+)
+
+feelings_neutral_and_received_how_are_you = """
+{
+<-&negation, (&feelings_neutral), (%s)>
+}
+"""%(receive_how_are_you)
+
+component.add_transition(
+    'how_are_you', 'feeling_neutral_and_received_how_are_you',
+    feelings_neutral_and_received_how_are_you,
+    {"im bad. how are you"}
 )
 
 component.add_transition(
@@ -248,7 +271,9 @@ component.add_transition(
     'how_are_you', 'decline_share',
     '{'
     '<-&negation, ({talk, discuss, share})>,'
-    '(&negative)'
+    '(&negative),'
+    '<{dont,do not}, know>,'
+    '<not, sure>'
     '}',
     {"i dont want to talk about it"}
 )
@@ -279,9 +304,21 @@ component.add_transition(
 )
 
 component.add_transition(
+    'feeling_neg_and_received_how_are_you', 'acknowledge_neg',
+    None,
+    {"Im doing ok today, but Im sorry you are not having a great day. If you don't mind talking about it, what happened?"}
+)
+
+component.add_transition(
     'feeling_neutral', 'acknowledge_neutral',
     None,
     {"That's understandable. Is there anything in particular that made you feel this way?"}
+)
+
+component.add_transition(
+    'feeling_neutral_and_received_how_are_you', 'acknowledge_neutral',
+    None,
+    {"That's understandable. Im having an okay day too. Is there anything in particular that made you feel this way?"}
 )
 
 # expand REGEX

@@ -4,7 +4,7 @@ from structpy import I
 from lark import Lark, Transformer
 
 _expression_grammar = r"""
-root: expression
+root: "\n"? expression "\n"?
 expression: literal | (term | literal term | (literal ",")+ literal
                     | literal term literal | term literal)+
 term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex | assign) ","? " "* "\n"?

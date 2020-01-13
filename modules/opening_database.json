@@ -46,7 +46,8 @@
         "&feelings_neutral": [
             "okay",
             "ok",
-            "fine"
+            "fine",
+            "alright"
         ],
         "&feelings_positive": [
             "well",
@@ -23712,7 +23713,7 @@
             "&downers"
         ],
         "&positive_indicators": [
-            "&feelings_positive",
+            "&feelingspositive",
             "&uppers"
         ],
         "&uppers": [
