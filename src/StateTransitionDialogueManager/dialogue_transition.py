@@ -37,7 +37,7 @@ class DialogueTransition:
             self._re = self._compile_nlu(self._nlu)
         self._update_settings()
         self._eval_function = eval_function
-        self._select_function = select_function
+        self.select_function = select_function
 
     def _join_nlu_list(self, nlu_list):
         s = ""
