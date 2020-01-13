@@ -56,12 +56,13 @@ class DialogueFlow:
         for state in states:
             self.add_state(state)
 
-    def check_ontology_references_exist(self, string):
-        if string:
-            ont_matches = regex.findall(DialogueTransition._ont_capture, string)
-            for ont in ont_matches:
-                if len(self.knowledge_base().subtypes(ont)) == 0:
-                    return False, ont
+    def check_ontology_references_exist(self, pattern_list):
+        if pattern_list:
+            for pattern in pattern_list:
+                ont_matches = regex.findall(DialogueTransition._ont_capture, pattern)
+                for ont in ont_matches:
+                    if len(self.knowledge_base().subtypes(ont)) == 0:
+                        return False, ont
         return True, None
 
     def check_transition_valid(self, source, target, nlu, nlg):

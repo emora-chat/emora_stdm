@@ -12,10 +12,10 @@ df._kb = KnowledgeBase([
 holiday_states = ['prestart', 'start', 'feelings_q', 'feelings_pos', 'feelings_pos_reason',
           'activities', 'parties', 'family', 'gifts', 'atmosphere', 'food', 'vacation',
           'feelings_neg', 'feelings_unsure', 'end', 'garbage']
-df.add_states(list('123456789') + ['10'] + holiday_states)
+df.add_states(list('123456789') + ['10','11','12', '13', '14'] + holiday_states)
 
 def test_basic_nlu():
-    df.add_transition('1', '2', 'this {is, was} a test', ['testing one two three'])
+    df.add_transition('1', '2', 'this {is, was} a test', {'testing one two three'})
     result = df.get_transition('1', '2').eval_user_transition('this is a test')
     assert result[0]
     result = df.get_transition('1', '2').eval_user_transition('this was a test')
@@ -25,7 +25,7 @@ def test_basic_nlu():
 
 
 def test_var_capturing_nlu():
-    df.add_transition('3', '4', 'this {is, was} a %obj={test, win, case}', ['testing one two three'])
+    df.add_transition('3', '4', 'this {is, was} a %obj={test, win, case}', {'testing one two three'})
     result = df.get_transition('3', '4').eval_user_transition('this is a test')
     assert result[0]
     assert result[1]['obj'] == 'test'
@@ -37,7 +37,7 @@ def test_var_capturing_nlu():
 
 
 def test_var_setting_nlu():
-    df.add_transition('5', '6', 'this {is, was} a $obj', ['testing one two three'])
+    df.add_transition('5', '6', 'this {is, was} a $obj', {'testing one two three'})
     result = df.get_transition('5', '6').eval_user_transition('this was a test', {'obj': 'test'})
     assert result[0]
     result = df.get_transition('5', '6').eval_user_transition('this was a test', {'obj': 'fail'})
@@ -47,7 +47,7 @@ def test_var_setting_nlu():
 def test_virtual_nlu():
     df.add_transition('7', '8',
         'this (&animal) is cool',
-        ['this thing is cool']
+        {'this thing is cool'}
     )
     result = df.get_transition('7', '8').eval_user_transition('this bird is cool')
     assert result[0]
@@ -60,7 +60,7 @@ def test_virtual_nlu():
 def test_kb_nlu():
     df.add_transition('9', '10',
         'this $animal has, %adapt=#$animal:has#',
-        ['this thing is cool']
+        {'this thing is cool'}
     )
     vars = {'animal': 'bird'}
     result = df.get_transition('9', '10').eval_user_transition('this bird has wings', vars)
@@ -118,7 +118,7 @@ def test_unsure_answer():
     # yes
     df2.add_transition('feelings_q', 'feelings_pos',
         '({&affirmative, &feelings_positive})',
-        ['i am very excited']
+        {'i am very excited'}
     )
 
     vars = {}
@@ -128,9 +128,32 @@ def test_unsure_answer():
     # not sure
     df2.add_transition('feelings_q', 'feelings_unsure',
         '&unsure',
-        ['i dont know']
+        {'i dont know'}
     )
 
     vars = {}
     result = df2.get_transition('feelings_q', 'feelings_unsure').eval_user_transition('i dont know', vars)
     assert result[0]
+
+def test_nlu_list():
+    df.add_transition('11','12',['this {is,was} {fun,exciting}', 'that {is,was} {horrible,sad}'], {'sure'})
+
+    result = df.get_transition('11', '12').eval_user_transition('that was horrible')
+    assert result[0]
+
+    result = df.get_transition('11', '12').eval_user_transition('this is fun')
+    assert result[0]
+
+    result = df.get_transition('11', '12').eval_user_transition('this was not horrible')
+    assert not result[0]
+
+    df.add_transition('13', '14', ['<bee, boo, bop>', '{beep, boop}'], {'sure'})
+
+    result = df.get_transition('13', '14').eval_user_transition('beep')
+    assert result[0]
+
+    result = df.get_transition('13', '14').eval_user_transition('bee boo bop')
+    assert result[0]
+
+    result = df.get_transition('13', '14').eval_user_transition('this was not horrible')
+    assert not result[0]

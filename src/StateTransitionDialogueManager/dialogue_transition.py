@@ -22,7 +22,10 @@ class DialogueTransition:
         self._namespace = None
         self._source = source
         self._target = target
-        self._nlu = nlu
+        if isinstance(nlu, list):
+            self._nlu = '{' + self._join_nlu_list(nlu) + '}'
+        else:
+            self._nlu = nlu
         self._nlg = self._add_nlg_options(nlg)  # dictionary of utterance: prob
         self._settings = settings
         self._re = None
@@ -32,6 +35,15 @@ class DialogueTransition:
         self._update_settings()
         self._eval_function = eval_function
         self._select_function = select_function
+
+    def _join_nlu_list(self, nlu_list):
+        s = ""
+        for nlu in nlu_list:
+            if nlu[0] not in '[<{/':
+                s += '(%s), '%nlu
+            else:
+                s += nlu + ', '
+        return s[:-2]
 
     def _compile_nlu(self, nlu):
         self._re_compiled = None
