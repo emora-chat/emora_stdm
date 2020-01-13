@@ -96,7 +96,7 @@ states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
           'decline_share', 'end', 'acknowledge_pos', 'acknowledge_neg',
           'acknowledge_neutral', 'share_pos', 'share_neg', 'misunderstood',
           'acknowledge_share_pos', 'acknowledge_share_neg', 'acknowledge_decline_share',
-          'garbage']
+          'garbage', 'feeling_pos_and_received_how_are_you']
 component.add_states(states)
 
 # pre start
@@ -173,30 +173,68 @@ component.add_transition(
      standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001}
 )
 
+feeling_pos_exp = """
+{
+<-&negation, (&feelings_positive)>,
+(&negation, &feelings_negative)
+}
+"""
+
+feeling_neg_exp = """
+{
+<-&negation, (&feelings_negative)>,
+(&negation, {&feelings_positive,&feelings_neutral})
+}
+"""
+
+feeling_neutral_exp = """
+{
+<-&negation, (&feelings_neutral)>
+}
+"""
+
+receive_how_are_you = """
+{
+(how are you), 
+(how you doing),
+(what about you),
+(whats up with you),
+(how you are),
+[you]
+}
+"""
+
+feelings_pos_and_receive_how_are_you = """
+{
+<-&negation, (&feelings_positive), (%s)>,
+(&negation, &feelings_negative, (%s))
+}
+"""%(receive_how_are_you,receive_how_are_you)
+
+print(feelings_pos_and_receive_how_are_you)
+
 component.add_transition(
     'how_are_you', 'feeling_pos',
-    '{'
-    '<-&negation, (&feelings_positive)>,'
-    '(&negation, &feelings_negative)'
-    '}',
+    feeling_pos_exp,
     {"im good"}
 )
 
 component.add_transition(
     'how_are_you', 'feeling_neg',
-    '{'
-    '<-&negation, (&feelings_negative)>,'
-    '(&negation, {&feelings_positive,&feelings_neutral})'
-    '}',
+    feeling_neg_exp,
     {"im bad"}
 )
 
 component.add_transition(
     'how_are_you', 'feeling_neutral',
-    '{'
-    '<-&negation, (&feelings_neutral)>'
-    '}',
+    feeling_neutral_exp,
     {"im ok"}
+)
+
+component.add_transition(
+    'how_are_you', 'feeling_pos_and_received_how_are_you',
+    feelings_pos_and_receive_how_are_you,
+    {"im good. how are you"}
 )
 
 component.add_transition(
@@ -218,7 +256,7 @@ component.add_transition(
 component.add_transition(
     'unrecognized_emotion', 'end',
     None,
-    {"Hmm, I'm not sure what you mean."},
+    {"Hmm, I'm not sure what you mean. " + transition_out},
     settings = 'e'
 )
 
@@ -226,6 +264,12 @@ component.add_transition(
     'feeling_pos', 'acknowledge_pos',
     None,
     {"Im glad to hear that. What has caused your good mood?"}
+)
+
+component.add_transition(
+    'feeling_pos_and_received_how_are_you', 'acknowledge_pos',
+    None,
+    {"Im glad to hear that. I am also doing well. What has caused your good mood?"}
 )
 
 component.add_transition(

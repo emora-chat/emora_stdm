@@ -225,6 +225,7 @@ class DialogueTransition:
             return True, {}
         expression = re
         self._re_compiled = regex.compile(expression)
+        print(re)
         match = self._re_compiled.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:
             return None, {}
