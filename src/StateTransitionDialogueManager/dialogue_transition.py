@@ -7,11 +7,11 @@ from src.StateTransitionDialogueManager.utilities import all_grams, random_choic
 
 class DialogueTransition:
 
-    _var_capture = r'\$[a-zA-Z 0-9_.]+'
-    _ont_capture = r'&[a-zA-Z 0-9_.]+'
+    _var_capture = r'\$[a-zA-Z0-9_.]+'
+    _ont_capture = r'&[a-zA-Z0-9_.]+'
     _query_capture = r'#[^#]*#'
-    _var_query_capture = r'\%[a-zA-Z 0-9_.]+=#[^#]*#'
-    _var_setting_capture = r'\%[a-zA-Z 0-9_.]+'
+    _var_query_capture = r'\%[a-zA-Z0-9_.]+=#[^#]*#'
+    _var_setting_capture = r'\%[a-zA-Z0-9_.]+'
 
     HIGHSCORE = 10
     LOWSCORE = 3

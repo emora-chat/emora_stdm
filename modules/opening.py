@@ -10,7 +10,7 @@ component = DialogueFlow('prestart')
 
 standard_opening = "Hi this is an Alexa Prize Socialbot."
 inquire_feeling = "How are you today?"
-time_acknowledgement = "$time_of_day_stat. "
+time_acknowledgement = "$time_of_day_stat . "
 transition_out = "What would you like to talk about today?"
 
 
@@ -170,14 +170,14 @@ component.add_transition(
 component.add_transition(
     'got_name', 'how_are_you',
     None,
-    {"Nice to meet you, $username. " + time_acknowledgement + inquire_feeling:0.999,
+    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling:0.999,
      "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}
 )
 
 component.add_transition(
     'start_freq', 'how_are_you',
     None,
-    {standard_opening + " Welcome back, $username. " + time_acknowledgement + inquire_feeling: 0.999,
+    {standard_opening + " Welcome back, $username . " + time_acknowledgement + inquire_feeling: 0.999,
      standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 0.001},
     evaluation_transition=is_freq_user
 
@@ -186,7 +186,7 @@ component.add_transition(
 component.add_transition(
     'start_infreq', 'how_are_you',
     None,
-    {standard_opening + " Its good to see you again, $username, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.999,
+    {standard_opening + " Its good to see you again, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.999,
      standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001},
     evaluation_transition=is_infreq_user
 )
