@@ -12,6 +12,20 @@ system or user turns.
 initializes a new `DialogueFlow` object with `'start'` as the 
 initial state of the state machine.
 
+All states must be specified before they are used in a transition by calling the `.add_state(state)`
+method. Each state is defined as a string literal like the following:
+
+`
+dialogue_manager.add_state('start')
+`
+
+Alternatively, multiple states can be added at once using the `.add_states(states)` method where `states`
+is a list of string literals, like the following:
+
+`
+dialogue_manager.add_states(['feelings_pos', 'feelings_pos_reason'])
+`
+
 To add transitions, use:
 ```.add_transition(source, target, NLU, NLG_list)``` method like the 
 following:
@@ -29,6 +43,14 @@ of natural language expressions given by a user that satisfy the
 transition (see below), and the fourth argument is a list of natural 
 language expressions that the system selects as a response when
 taking this transition during its turn.
+
+If you want to define a function that is used to evaluate satisfaction of the transition, instead of
+(or in addition to) the natural language expressions, you can pass the function name in as the 
+optional fifth parameter `evaluation_function` of the `.add_transition` method.
+
+Similarly, if you want to define a function that is ran upon selection of a transition, such as
+to update the current variables (see below), you can pass the function name in as the 
+optional sixth parameter `selection_function` of the `.add_transition` method.
 
 A user turn can be taken, updating state, using
 ```
@@ -144,18 +166,46 @@ dialogue manager that allow you to write more generalizable
 transitions. 
 
 The Knowledge Base and Ontology are modeled as a unified (single)
-directed graph. You can add to them using:
+directed graph. You specify the knowledge and ontology elements you 
+need by updating the `database.json` file.
+
+The Knowledge Base is defined as a list of predicates, 
+where a predicate is stored as a list `[subject, relation, object]`.
+
 ```
-dialogue_manager.knowledge_base().add(subject, object, relation)
+'predicates': [
+    ['dog', 'sound', 'bark'],
+    ['bark', 'quality', 'annoying'],
+    ['scarlett johansson', 'plays', 'black widow']
+]
 ```
 
-If you want to add to the ontology, simply:
+The Ontology is defined as a mapping between categories and a list of elements of that category. 
+The category string must always begin with the ampersand symbol: `&`.
+
 ```
-dialogue_manager.knowledge_base().add(subject, object, 'type')
+'ontology': {
+    '&feeling': ['sad', 'happy', 'angry'],
+    '&animal': ['dog', 'cat', 'bird']
+}
 ```
 
-The ontology will automatically recognize the 'type' relation
-as having a transitive property.
+Taking these two structures together, the final `database.json` for this example would look 
+like the following:
+
+```
+{
+'predicates': [
+        ['dog', 'sound', 'bark'],
+        ['bark', 'quality', 'annoying'],
+        ['scarlett johansson', 'plays', 'black widow']
+    ],
+'ontology': {
+        '&feeling': ['sad', 'happy', 'angry'],
+        '&animal': ['dog', 'cat', 'bird']
+    }
+}
+```
 
 ### Ontology reference
 ```
@@ -166,9 +216,9 @@ subtype of the referenced node can be matched in the expression.
 
 ### Knowledge base reference
 ```
-'a dog can |dog:sound|'
+'a dog can #dog:sound#'
 ```
-substrings within '||' reference a set of nodes in the knowledge
+substrings encapsulated within `##` reference a set of nodes in the knowledge
 graph. The set is created by starting at the node defined before
 the initial `:`, then traversing arcs labeled by each subsequent
 term following `:`. In this case, all nodes related to "dog" by
@@ -177,7 +227,7 @@ dog can bark" and "a dog can growl" might be matched if "bark" and
 "growl" were present in the knowledge graph.
 
 ```
-'a dog is |dog:sound:quality|'
+'a dog is #dog:sound:quality#'
 ```
 knowledge base expressions can chain multiple predicates together.
 suppose the predicates `sound(dog, bark)` and `quality(bark, annoying)`
@@ -185,7 +235,7 @@ were present in the knowledge base. The expression would match
 "a dog is annoying"
 
 ```
-'black widow is played by |black widow:/plays|'
+'black widow is played by #black widow:/plays#'
 ```
 using `/` reverses the direction of a knowledge graph relation. If
 `plays(scarlett johansson, black widow)` is present in the KB, then
@@ -193,7 +243,7 @@ the above expression matches "black widow is played by scarlett
 johansson"
 
 ```
-'a %a=&animal, can |$a:sound|'
+'a %a=&animal, can #$a:sound#'
 ```
 knowledge graph expressions can be built using veriable references.
 Together with ontology reference, highly generalizable expressions

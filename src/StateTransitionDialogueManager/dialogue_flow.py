@@ -81,11 +81,11 @@ class DialogueFlow:
                 raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (
                     transition_expression, nlg_expression, missing))
 
-    def add_transition(self, source, target, nlu, nlg, settings='',evaluation_transition=None):
+    def add_transition(self, source, target, nlu, nlg, settings='',evaluation_function=None,selection_function=None):
         self.check_transition_valid(source, target, nlu, nlg)
         if self._graph.has_arc(source, target):
             self._graph.remove_arc(source, target)
-        transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_transition)
+        transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_function, selection_function)
         self._graph.add(source, target, transition)
 
     def set_transition_nlg_score(self, source, target, score):
