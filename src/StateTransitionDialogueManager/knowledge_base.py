@@ -98,7 +98,7 @@ class KnowledgeBase(Graph):
                 ontology_arcs[o].append(s)
             else:
                 relation_arcs.append([s, r, o])
-        return json.dumps({'ontology': ontology_arcs, 'predicates': relation_arcs})
+        return json.dumps({'ontology': ontology_arcs, 'predicates': relation_arcs}, indent=4, sort_keys=True)
 
     def load_json(self, json_string):
         d = json.loads(json_string)

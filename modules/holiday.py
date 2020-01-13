@@ -1,58 +1,8 @@
 from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('prestart')
-
-arcs = []
-
-anyfamily = ['&singularfamily', '&pluralfamily']
-singularfamily = ['brother', 'mother', 'son', 'daughter', 'sister', 'father',
-                  'dad', 'mom', 'grandma', 'grandpa', 'wife', 'husband',
-                  'niece', 'nephew', 'aunt', 'uncle', 'cousin', 'grandson',
-                  'granddaughter']
-pluralfamily = ['brothers', 'sons', 'daughters', 'sisters',
-                'grandparents', 'parents', 'siblings', 'kids', 'children',
-                'cousins', 'aunts', 'uncles', 'grandchildren', 'grandsons',
-                'granddaughters', 'family', 'relatives']
-feelings_positive = ['happy', 'excited', 'joyful', 'joy', 'thrilled', 'ready']
-feelings_negative = ['sad', 'nervous', 'stress', 'stressed', 'stressful', 'worried',
-                     'anxious', 'scared', 'fearful', 'annoyed', 'bothered',
-                     'terrible', 'horrible', 'awful', 'depressed', 'lonely',
-                     'disgusted', 'crazy', 'insane']
-feelings_relax = ['relax', 'decompress', 'calm down', 'chill out']
-holiday = ['christmas', 'new year', 'new years', 'christmas eve', 'hanukkah', 'kwanzaa',
-           'holiday', 'holidays', 'winter break', 'winter vacation', 'new years', 'end of the year']
-yn_qw = ['do', 'is', 'are', 'was', 'were', 'did', 'will']
-q_word = ['what', 'when', 'where', 'why', 'how', 'who']
-affirmative = ['yes', 'yeah', 'yea', 'of course', 'sure', 'yep', 'yup', 'absolutely',
-               'you bet', 'right']
-negative = ['no', 'nope', 'absolutely not', 'of course not']
-unsure = ['dont know', 'uncertain', 'not sure']
-activity = ['watching']
-item = ['movie', 'movies', 'show', 'shows', 'tv', 'television']
-like = ['like', 'enjoy']
-winteractivity = ['ski', 'skiing', 'snowboard', 'snowboarding', 'sled', 'sledding']
-fun = ['fun', 'exciting', 'enjoyable']
-
-arcs.extend([(a, '&affirmative', 'type') for a in affirmative])
-arcs.extend([(q, '&yn_qw', 'type') for q in yn_qw])
-arcs.extend([(f, '&feelings_positive', 'type') for f in feelings_positive])
-arcs.extend([(f, '&feelings_negative', 'type') for f in feelings_negative])
-arcs.extend([(q, '&question_word', 'type') for q in q_word])
-arcs.extend([(x, '&holiday_t', 'type') for x in holiday])
-arcs.extend([(x, '&feelings_relax', 'type') for x in feelings_relax])
-arcs.extend([(x, '&unsure', 'type') for x in unsure])
-arcs.extend([(x, '&activity', 'type') for x in activity])
-arcs.extend([(x, '&item', 'type') for x in item])
-arcs.extend([(x, '&negative', 'type') for x in negative])
-arcs.extend([(x, '&like', 'type') for x in like])
-arcs.extend([(x, '&winteractivity', 'type') for x in winteractivity])
-arcs.extend([(x, '&fun', 'type') for x in fun])
-arcs.extend([(x, '&singularfamily', 'type') for x in singularfamily])
-arcs.extend([(x, '&pluralfamily', 'type') for x in pluralfamily])
-arcs.extend([(x, '&anyfamily', 'type') for x in anyfamily])
-arcs.extend([])
-for arc in arcs:
-    component.knowledge_base().add(*arc)
+with open('modules/holiday_database.json', 'r') as json_file:
+    component.knowledge_base().load_json(json_file.read())
 
 states = ['prestart', 'start', 'feelings_q', 'feelings_pos', 'feelings_pos_reason',
           'activities', 'parties', 'family', 'gifts', 'atmosphere', 'food', 'vacation',

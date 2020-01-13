@@ -3,32 +3,16 @@ from src.StateTransitionDialogueManager.dialogue_transition import DialogueTrans
 from datetime import datetime
 import pytz
 import random
-from modules.data import names, positive_indicators, negative_indicators, feelings_positive, \
-                    feelings_negative, feelings_neutral, downers, uppers, negative, negation
 
 component = DialogueFlow('prestart')
+with open('modules/opening_database.json', 'r') as json_file:
+    component.knowledge_base().load_json(json_file.read())
 
 standard_opening = "Hi this is an Alexa Prize Socialbot."
 inquire_feeling = "How are you today?"
 time_acknowledgement = "$time_of_day_stat . "
 transition_out = "What would you like to talk about today?"
 
-
-arcs = []
-
-arcs.extend([(f, '&feelings_positive', 'type') for f in feelings_positive])
-arcs.extend([(f, '&feelings_negative', 'type') for f in feelings_negative])
-arcs.extend([(f, '&feelings_neutral', 'type') for f in feelings_neutral])
-arcs.extend([(f, '&downers', 'type') for f in downers])
-arcs.extend([(f, '&uppers', 'type') for f in uppers])
-arcs.extend([(f, '&negative', 'type') for f in negative])
-arcs.extend([(f, '&positive_indicators', 'type') for f in positive_indicators])
-arcs.extend([(f, '&negative_indicators', 'type') for f in negative_indicators])
-arcs.extend([(f, '&negation', 'type') for f in negation])
-arcs.extend([(x, '&names', 'type') for x in names])
-arcs.extend([])
-for arc in arcs:
-    component.knowledge_base().add(*arc)
 
 def check_launch_request(arg_dict):
     if arg_dict:
@@ -124,21 +108,21 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start_new',
-    None, {}, evaluation_transition=is_new_user
+    None, {}, evaluation_function=is_new_user
 )
 
 # start: infrequent user
 
 component.add_transition(
     'prestart', 'start_infreq',
-    None, {}, evaluation_transition=is_infreq_user
+    None, {}, evaluation_function=is_infreq_user
 )
 
 # start: frequent user
 
 component.add_transition(
     'prestart', 'start_freq',
-    None, {}, evaluation_transition=is_freq_user
+    None, {}, evaluation_function=is_freq_user
 )
 
 component.add_transition(
@@ -178,8 +162,7 @@ component.add_transition(
     'start_freq', 'how_are_you',
     None,
     {standard_opening + " Welcome back, $username . " + time_acknowledgement + inquire_feeling: 0.999,
-     standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 0.001},
-    evaluation_transition=is_freq_user
+     standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 0.001}
 
 )
 
@@ -187,8 +170,7 @@ component.add_transition(
     'start_infreq', 'how_are_you',
     None,
     {standard_opening + " Its good to see you again, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.999,
-     standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001},
-    evaluation_transition=is_infreq_user
+     standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001}
 )
 
 component.add_transition(
