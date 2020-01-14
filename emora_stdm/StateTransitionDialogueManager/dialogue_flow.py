@@ -17,6 +17,7 @@ class DialogueFlow:
         self._state = self._initial_state
         self._vars = {}
         self._state_update_functions = {}
+        self._state_selection_functions = {}
         self._jump_states = {}
         self._back_states = []
 
@@ -88,17 +89,32 @@ class DialogueFlow:
         transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_function, selection_function)
         self._graph.add(source, target, transition)
 
+    def add_state_selection_function(self, state_name, function):
+        if not self.graph().has_node(state_name):
+            raise MissingStateException('You are trying to add function "%s" to state "%s" and the state does not exist'%(function.__name__,state_name))
+        self._state_selection_functions[state_name] = function
+
+    def _default_state_selection(self, utterance, graph_arcs):
+        best_transition, best_score, next_state, vars_update = None, None, None, None
+        for source, target, transition in graph_arcs:
+            score, vars = transition.eval_user_transition(utterance, self._vars)
+            if best_score is None or score > best_score:
+                best_transition, best_score, next_state, vars_update = transition, score, target, vars
+        return best_transition, best_score, next_state, vars_update
+
     def set_transition_nlg_score(self, source, target, score):
         self._graph.arc(source, target).nlg_score = score
 
     def user_transition(self, utterance=None):
-        best_score, next_state, vars_update = None, None, None
-        for source, target, transition in self._graph.arcs_out(self._state):
-            score, vars = transition.eval_user_transition(utterance, self._vars)
-            if best_score is None or score > best_score:
-                best_score, next_state, vars_update = score, target, vars
+        graph_arcs = self._graph.arcs_out(self._state)
+        if self._state not in self._state_selection_functions:
+            transition, best_score, next_state, vars_update = self._default_state_selection(utterance, graph_arcs)
+        else:
+            transition, best_score, next_state, vars_update = self._state_selection_functions[self._state](self, utterance, graph_arcs)
         self._vars.update(vars_update)
         self._state = next_state
+        if transition.select_function is not None:
+            transition.select_function(utterance, self._state, self._vars)
         if self._state in self._state_update_functions:
             self._state_update_functions[self._state](self)
         return best_score
@@ -114,7 +130,7 @@ class DialogueFlow:
             choices[(transition, utterance, Dict(vars), target)] = score
         transition, utterance, vars_update, next_state = random_choice(choices)
         if transition.select_function is not None:
-            transition.select_function()
+            transition.select_function(utterance, self._state, self._vars)
         transition.downweight()
         for choice in choices:
             if choice[0] is not transition:
@@ -205,9 +221,10 @@ class DialogueFlow:
         return json.dumps(transition_scores)
 
     def load_nlg_transition_scores(self, transition_json_string):
-        transition_scores = json.loads(transition_json_string)
-        for source, target, transition in self.graph().arcs():
-            transition.set_nlg_score(transition_scores[source][target])
+        if transition_json_string is not None:
+            transition_scores = json.loads(transition_json_string)
+            for source, target, transition in self.graph().arcs():
+                transition.set_nlg_score(transition_scores[source][target])
 
 
 

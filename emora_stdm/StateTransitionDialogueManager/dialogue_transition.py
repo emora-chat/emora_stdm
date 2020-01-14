@@ -33,16 +33,22 @@ class DialogueTransition:
         self._settings = settings
         self._re = None
         if nlu:
+            #print('--NEXT--')
+            #print('NLU = ', self._nlu)
             self._re_compiled = None
             self._re = self._compile_nlu(self._nlu)
+            #print('RE = ', self._re)
         self._update_settings()
         self._eval_function = eval_function
         self.select_function = select_function
 
+    def _first_char_is_not_group_specifier(self, nlu):
+        return nlu.strip()[0] not in '[<{/'
+
     def _join_nlu_list(self, nlu_list):
         s = ""
         for nlu in nlu_list:
-            if nlu[0] not in '[<{/':
+            if self._first_char_is_not_group_specifier(nlu):
                 s += '(%s), '%nlu
             else:
                 s += nlu + ', '
@@ -51,7 +57,7 @@ class DialogueTransition:
     def _compile_nlu(self, nlu):
         self._re_compiled = None
         expstring = nlu
-        if nlu[0] not in '-[<{/':
+        if self._first_char_is_not_group_specifier(nlu):
             expstring = '({})'.format(nlu)
         tree = _expression_parser.parse(expstring)
         return _ExpressionReducer().transform(tree)
@@ -224,6 +230,7 @@ class DialogueTransition:
         if re is None:
             return True, {}
         expression = re
+        #print(self.source(), '-', self.target(), ' ==> ', re)
         self._re_compiled = regex.compile(expression)
         match = self._re_compiled.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:

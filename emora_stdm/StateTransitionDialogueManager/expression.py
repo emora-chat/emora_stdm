@@ -4,16 +4,16 @@ from structpy import I
 from lark import Lark, Transformer
 
 _expression_grammar = r"""
-root: expression
+root: "\n"? expression "\n"?
 expression: literal | (term | literal term | (literal ",")+ literal
                     | literal term literal | term literal)+
-term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex | assign) ","? " "*
-flex_seq: "(" expression ")" 
-sequence: "[" expression "]"
-conjunction: "<" expression ">"
-disjunction: "{" expression "}"
+term: " "* (flex_seq | sequence | conjunction | disjunction | negation | regex | assign) ","? " "* "\n"?
+flex_seq: "(" "\n"? expression "\n"? ")" 
+sequence: "[" "\n"? expression "\n"? "]"
+conjunction: "<" "\n"? expression "\n"? ">"
+disjunction: "{" "\n"? expression "\n"? "}"
 negation: "-" term | "-" literal
-regex: "/" REGEX "/"
+regex: "/" "\n"? REGEX "\n"? "/"
 REGEX: /[a-z A-Z0-9\_(+*)\-\\\^?!={}\[\]:;<>#]+/
 literal: " "* (WORD " ")* WORD ","? " "*
 WORD: /[a-zA-Z0-9$&:#_.]+/

@@ -1,7 +1,14 @@
 from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+import os
 
 component = DialogueFlow('prestart')
-with open('modules/holiday_database.json', 'r') as json_file:
+data_file = ""
+cwd = os.getcwd()
+if 'emora_stdm' in cwd:
+    data_file = os.path.join(cwd, 'modules','holiday_database.json')
+else:
+    data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'holiday_database.json')
+with open(data_file, 'r') as json_file:
     component.knowledge_base().load_json(json_file.read())
 
 states = ['prestart', 'start', 'feelings_q', 'feelings_pos', 'feelings_pos_reason',
