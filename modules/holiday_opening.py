@@ -1,5 +1,6 @@
-from emora_stdm.modules import component as opening
-from emora_stdm.modules import component as holiday
+from src.StateTransitionDialogueManager.composite_dialogue_flow import CompositeDialogueFlow
+from modules.opening import component as opening
+from modules.holiday import component as holiday
 
 if __name__ == '__main__':
     opening.add_module(holiday, 'holiday')

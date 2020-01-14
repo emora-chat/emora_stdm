@@ -6,8 +6,8 @@ http://www.cs.cmu.edu/Groups/AI/util/areas/nlp/corpora/names/
 http://antirez.com/misc/female-names.txt
 """
 
-from emora_stdm.StateTransitionDialogueManager import DialogueFlow
-from emora_stdm.StateTransitionDialogueManager import DialogueTransition as dt
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
 from datetime import datetime
 import pytz
 import random

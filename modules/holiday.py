@@ -1,4 +1,4 @@
-from emora_stdm.StateTransitionDialogueManager import DialogueFlow
+from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 import os
 
 component = DialogueFlow('prestart')
