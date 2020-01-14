@@ -1,3 +1,11 @@
+"""
+https://github.com/arineng/arincli/blob/master/lib/male-first-names.txt
+https://github.com/arineng/arincli/blob/master/lib/female-first-names.txt
+https://www.ssa.gov/OACT/babynames/limits.html
+http://www.cs.cmu.edu/Groups/AI/util/areas/nlp/corpora/names/
+http://antirez.com/misc/female-names.txt
+"""
+
 from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
 from datetime import datetime
@@ -106,26 +114,33 @@ def is_negative_sentiment(utterance, arg_dict, score):
     else:
         return 0, {}
 
+def save_female_gender(utterance, new_state, arg_dict):
+    arg_dict.update({"gender":"female"})
+
+def save_male_gender(utterance, new_state, arg_dict):
+    arg_dict.update({"gender":"male"})
+
 def how_are_you_state_selection(df, utterance, graph_arcs):
-    best_score, next_state, vars_update = None, None, None
-    matches, vars_dict = defaultdict(dict), defaultdict(dict)
+    best_transition, best_score, next_state, vars_update = None, None, None, None
+    matches, vars_dict, transitions_dict = defaultdict(dict), defaultdict(dict), defaultdict(dict)
     for source, target, transition in graph_arcs:
         score, vars = transition.eval_user_transition(utterance, df.vars())
         if score > 0:
             matches[source][target] = score
             vars_dict[source][target] = vars
+            transitions_dict[source][target] = transition
     if len(matches) > 0:
         best_score = max([score for source in matches for target, score in matches[source].items()])
         for source in matches:
             for target, score in matches[source].items():
                 if score == best_score and ('neutral' in target or 'decline' in target):
-                    return best_score, target, vars_dict[source][target]
+                    return transitions_dict[source][target], best_score, target, vars_dict[source][target]
                 elif score == best_score:
-                    best_score, next_state, vars_update = score, target, vars_dict[source][target]
-    return best_score, next_state, vars_update
+                    best_transition, best_score, next_state, vars_update = transitions_dict[source][target], score, target, vars_dict[source][target]
+    return best_transition, best_score, next_state, vars_update
 
 states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
-          'missed_name', 'acknowledge_name', 'got_name', 'how_are_you',
+          'missed_name', 'acknowledge_name', 'got_female_name', 'got_male_name', 'how_are_you',
           'feeling_pos', 'feeling_neg', 'feeling_neutral', 'unrecognized_emotion',
           'decline_share', 'end', 'acknowledge_pos', 'acknowledge_neg',
           'acknowledge_neutral', 'share_pos', 'share_neg', 'misunderstood',
@@ -183,12 +198,28 @@ component.add_transition(
 )
 
 component.add_transition(
-    'receive_name', 'got_name',
-    '(%username=&names)', {"i am an alexa prize socialbot"}
+    'receive_name', 'got_female_name',
+    '(%username=&female_names)',
+    {"i am an alexa prize socialbot"},
+    selection_function=save_female_gender
 )
 
 component.add_transition(
-    'got_name', 'how_are_you',
+    'receive_name', 'got_male_name',
+    '(%username=&male_names)',
+    {"i am an alexa prize socialbot"},
+    selection_function=save_male_gender
+)
+
+component.add_transition(
+    'got_female_name', 'how_are_you',
+    None,
+    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling:0.999,
+     "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}
+)
+
+component.add_transition(
+    'got_male_name', 'how_are_you',
     None,
     {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling:0.999,
      "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}

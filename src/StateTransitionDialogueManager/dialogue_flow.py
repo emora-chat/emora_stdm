@@ -95,12 +95,12 @@ class DialogueFlow:
         self._state_selection_functions[state_name] = function
 
     def _default_state_selection(self, utterance, graph_arcs):
-        best_score, next_state, vars_update = None, None, None
+        best_transition, best_score, next_state, vars_update = None, None, None, None
         for source, target, transition in graph_arcs:
             score, vars = transition.eval_user_transition(utterance, self._vars)
             if best_score is None or score > best_score:
-                best_score, next_state, vars_update = score, target, vars
-        return best_score, next_state, vars_update
+                best_transition, best_score, next_state, vars_update = transition, score, target, vars
+        return best_transition, best_score, next_state, vars_update
 
     def set_transition_nlg_score(self, source, target, score):
         self._graph.arc(source, target).nlg_score = score
@@ -108,11 +108,13 @@ class DialogueFlow:
     def user_transition(self, utterance=None):
         graph_arcs = self._graph.arcs_out(self._state)
         if self._state not in self._state_selection_functions:
-            best_score, next_state, vars_update = self._default_state_selection(utterance, graph_arcs)
+            transition, best_score, next_state, vars_update = self._default_state_selection(utterance, graph_arcs)
         else:
-            best_score, next_state, vars_update = self._state_selection_functions[self._state](self, utterance, graph_arcs)
+            transition, best_score, next_state, vars_update = self._state_selection_functions[self._state](self, utterance, graph_arcs)
         self._vars.update(vars_update)
         self._state = next_state
+        if transition.select_function is not None:
+            transition.select_function(utterance, self._state, self._vars)
         if self._state in self._state_update_functions:
             self._state_update_functions[self._state](self)
         return best_score
@@ -128,7 +130,7 @@ class DialogueFlow:
             choices[(transition, utterance, Dict(vars), target)] = score
         transition, utterance, vars_update, next_state = random_choice(choices)
         if transition.select_function is not None:
-            transition.select_function()
+            transition.select_function(utterance, self._state, self._vars)
         transition.downweight()
         for choice in choices:
             if choice[0] is not transition:
