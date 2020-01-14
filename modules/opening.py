@@ -89,6 +89,22 @@ def is_freq_user(utterance, arg_dict, score):
             return dt.HIGHSCORE, vars
     return 0, {}
 
+def is_positive_sentiment(utterance, arg_dict, score):
+    if score > 0:
+        return score, {}
+    if arg_dict["pos_sentiment"]:
+        return dt.HIGHSCORE, {}
+    else:
+        return 0, {}
+
+def is_negative_sentiment(utterance, arg_dict, score):
+    if score > 0:
+        return score, {}
+    if not arg_dict["pos_sentiment"]:
+        return dt.HIGHSCORE, {}
+    else:
+        return 0, {}
+
 states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
           'missed_name', 'acknowledge_name', 'got_name', 'how_are_you',
           'feeling_pos', 'feeling_neg', 'feeling_neutral', 'unrecognized_emotion',
@@ -194,7 +210,8 @@ feelings_pos_and_not_received_how_are_you = """
 component.add_transition(
     'how_are_you', 'feeling_pos',
     feelings_pos_and_not_received_how_are_you,
-    {"im good"}
+    {"im good"},
+    evaluation_function=is_positive_sentiment
 )
 
 feelings_neg_and_not_received_how_are_you = """
@@ -207,7 +224,8 @@ feelings_neg_and_not_received_how_are_you = """
 component.add_transition(
     'how_are_you', 'feeling_neg',
     feelings_neg_and_not_received_how_are_you,
-    {"im bad"}
+    {"im bad"},
+    evaluation_function=is_negative_sentiment
 )
 
 feelings_neutral_and_not_received_how_are_you = """
@@ -457,12 +475,19 @@ component.add_transition(
 )
 
 if __name__ == '__main__':
+    from allennlp.predictors.predictor import Predictor
+    predictor = Predictor.from_path(
+        "https://s3-us-west-2.amazonaws.com/allennlp/models/sst-2-basic-classifier-glove-2019.06.27.tar.gz")
+
     i = input('U: ')
     while True:
-        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah"}
-        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah"}
-        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None}
-        arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently."}
+        results = predictor.predict(sentence=i)
+        pos_sentiment = (results['label'] == '1')
+        print(results)
+        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
+        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
+        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None, "pos_sentiment": pos_sentiment}
+        arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.", "pos_sentiment": pos_sentiment}
         if i == "hello":
             arg_dict["request_type"] = "LaunchRequest"
             arg_dict2["request_type"] = "LaunchRequest"
