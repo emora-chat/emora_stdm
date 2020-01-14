@@ -1,5 +1,5 @@
-from src.StateTransitionDialogueManager.dialogue_flow import DialogueTransition, DialogueFlow
-from src.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
+from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueTransition, DialogueFlow
+from emora_stdm.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 
 def test_nlg_score_update():
 

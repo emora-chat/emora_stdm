@@ -1,5 +1,76 @@
 # State Transition Dialogue Manager
 
+## Quickstart example
+
+```python
+from emora_stdm import DialogueFlow
+
+# create a new dialogue manager and specify start state
+df = DialogueFlow(initial_state='begin')
+
+# add type-subtype relations to the ontology
+# (abstract types should be marked with '&')
+df.knowledge_base().add_type('dog', '&animal')
+df.knowledge_base().add_type('cat', '&animal')
+
+# load knowledge base contents from json
+# (see Knowledge Base and Ontology section)
+with open('kb.json', 'r') as f:
+    df.knowledge_base().load_json(f.read())
+
+# define all states of the dialogue state machine
+df.add_states([
+    'begin',
+    'pet_chat_state',
+    'movie_chat_state',
+])
+
+# add transitions to the dialogue state machine
+df.add_transition(
+    'begin', 'movie_chat_state',
+    [
+        '({movie, movies, film, films})'
+    ],
+    {
+        'i like movies',
+        'i watch movies'
+    }
+)
+
+df.add_transition(
+    'begin', 'pet_chat_state',
+    [
+        'i have a &animal'
+    ],
+    {
+        'i have a dog'
+    }
+)
+
+df.add_transition(
+    'movie_chat_state', 'begin',
+    [], {'cool'}, settings='e'
+)
+
+df.add_transition(
+    'pet_chat_state', 'begin',
+    [], {'pets are great'}, settings='e'
+)
+
+df.add_transition(
+    'begin', 'begin', [], {}, settings='e'
+)
+
+# validate the DialogueFlow
+df.check_error_transitions_complete()
+
+# talk to your dialogue agent in a loop
+while True:
+    i = input('U: ')
+    df.user_transition(i)
+    print('S:', df.system_transition())
+```
+
 Defines a dialogue management framework based on state machines and 
 regular expressions. 
 

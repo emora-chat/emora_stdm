@@ -1,4 +1,4 @@
-from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 component = DialogueFlow('prestart')
 with open('modules/holiday_database.json', 'r') as json_file:

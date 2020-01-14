@@ -2,7 +2,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
-     name='emora_stdm',
+     name='emora-stdm',
      version='1.0',
      scripts=[],
      author="James Finch",
@@ -12,6 +12,11 @@ setuptools.setup(
    long_description_content_type="text/markdown",
      url="https://github.com/emora-chat/EmoraSTDM.git",
      packages=setuptools.find_packages(),
+     install_requires=[
+         "structpy==0.2",
+         "lark-parser",
+         "regex"
+     ],
      classifiers=[
          "Programming Language :: Python :: 3",
          "License :: OSI Approved :: MIT License",

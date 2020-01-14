@@ -1,5 +1,5 @@
-from src.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
-from src.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
+from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from emora_stdm.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
 from datetime import datetime
 import pytz
 import random
