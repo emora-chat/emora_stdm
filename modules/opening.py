@@ -3,6 +3,7 @@ from src.StateTransitionDialogueManager.dialogue_transition import DialogueTrans
 from datetime import datetime
 import pytz
 import random
+from collections import defaultdict
 
 component = DialogueFlow('prestart')
 with open('modules/opening_database.json', 'r') as json_file:
@@ -105,6 +106,24 @@ def is_negative_sentiment(utterance, arg_dict, score):
     else:
         return 0, {}
 
+def how_are_you_state_selection(df, utterance, graph_arcs):
+    best_score, next_state, vars_update = None, None, None
+    matches, vars_dict = defaultdict(dict), defaultdict(dict)
+    for source, target, transition in graph_arcs:
+        score, vars = transition.eval_user_transition(utterance, df.vars())
+        if score > 0:
+            matches[source][target] = score
+            vars_dict[source][target] = vars
+    if len(matches) > 0:
+        best_score = max([score for source in matches for target, score in matches[source].items()])
+        for source in matches:
+            for target, score in matches[source].items():
+                if score == best_score and ('neutral' in target or 'decline' in target):
+                    return best_score, target, vars_dict[source][target]
+                elif score == best_score:
+                    best_score, next_state, vars_update = score, target, vars_dict[source][target]
+    return best_score, next_state, vars_update
+
 states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
           'missed_name', 'acknowledge_name', 'got_name', 'how_are_you',
           'feeling_pos', 'feeling_neg', 'feeling_neutral', 'unrecognized_emotion',
@@ -154,17 +173,18 @@ component.add_transition(
 
 component.add_transition(
     'receive_name', 'missed_name',
-    None, {"i dont want to tell you"}
+    None, {"i dont want to tell you"},
+    settings='e'
 )
 
 component.add_transition(
     'missed_name', 'acknowledge_name',
-    None, {"Its very nice to meet you."}
+    None, {"Ok well its very nice to meet you. " + time_acknowledgement + inquire_feeling}
 )
 
 component.add_transition(
     'receive_name', 'got_name',
-    '%username=&names', {"i am an alexa prize socialbot"}
+    '(%username=&names)', {"i am an alexa prize socialbot"}
 )
 
 component.add_transition(
@@ -288,13 +308,16 @@ component.add_transition(
 component.add_transition(
     'how_are_you', 'decline_share',
     '{'
-    '<-&negation, ({talk, discuss, share})>,'
-    '(&negative),'
+    '(&negation, ({talk, talking, discuss, discussing, share, sharing, tell, telling, say, saying})),'
+    '[&fillers, &negative],'
+    '[&negative]'
     '<{dont,do not}, know>,'
     '<not, sure>'
     '}',
     {"i dont want to talk about it"}
 )
+
+component.add_state_selection_function('how_are_you', how_are_you_state_selection)
 
 component.add_transition(
     'unrecognized_emotion', 'end',
@@ -349,20 +372,20 @@ component.add_transition(
 )
 
 component.add_transition(
-    'acknowledge_neutral', 'share_pos',
-    '{'
-    '<-&negation, (&positive_indicators)>'
-    '}',
-    {"i just had a good day with my family yesterday"}
-)
-
-component.add_transition(
     'acknowledge_neg', 'share_neg',
     '{'
     '(&negation, &positive_indicators),'
     '(&negative_indicators)'
     '}',
     {"i didnt sleep well last night"}
+)
+
+component.add_transition(
+    'acknowledge_neutral', 'share_pos',
+    '{'
+    '<-&negation, (&positive_indicators)>'
+    '}',
+    {"i just had a good day with my family yesterday"}
 )
 
 component.add_transition(
@@ -374,31 +397,30 @@ component.add_transition(
     {"i didnt sleep well last night"}
 )
 
+decline_share_exp = """
+{
+(&negation, ({talk, discuss, share})),
+[&fillers, &negative],
+[&negative]
+}
+"""
+
+
 component.add_transition(
     'acknowledge_pos', 'decline_share',
-    '{'
-    '<-&negation, ({talk, discuss, share})>,'
-    '(&negative)'
-    '}'
-    ,
+    decline_share_exp,
     {"i dont want to talk about it"}
 )
 
 component.add_transition(
     'acknowledge_neg', 'decline_share',
-    '{'
-    '<-&negation, ({talk, discuss, share})>,'
-    '(&negative)'
-    '}',
+    decline_share_exp,
     {"i dont want to talk about it"}
 )
 
 component.add_transition(
     'acknowledge_neutral', 'decline_share',
-    '{'
-    '<-&negation, ({talk, discuss, share})>,'
-    '(&negative)'
-    '}',
+    decline_share_exp,
     {"i dont want to talk about it"}
 )
 
@@ -479,22 +501,40 @@ if __name__ == '__main__':
     predictor = Predictor.from_path(
         "https://s3-us-west-2.amazonaws.com/allennlp/models/sst-2-basic-classifier-glove-2019.06.27.tar.gz")
 
+    arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah", "pos_sentiment": True}
+    arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah", "pos_sentiment": True}
+    arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None, "pos_sentiment": True}
+    arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.", "pos_sentiment": True}
+    arg_dict["request_type"] = "LaunchRequest"
+    arg_dict2["request_type"] = "LaunchRequest"
+    arg_dict3["request_type"] = "LaunchRequest"
+    arg_dict4["request_type"] = "LaunchRequest"
+
+    using = arg_dict4
+    component.vars().update({key: val for key, val in using.items() if val is not None})
+    confidence = component.user_transition("hello") / 10 - 0.3
+    print(component.state(), component.vars())
+    if component.state() == "end":
+        exit()
+    print('({}) '.format(confidence), component.system_transition())
+    if component.state() == "end":
+        print(component.state(), component.vars())
+        exit()
     i = input('U: ')
+
     while True:
         results = predictor.predict(sentence=i)
         pos_sentiment = (results['label'] == '1')
         print(results)
-        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
-        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
-        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None, "pos_sentiment": pos_sentiment}
-        arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.", "pos_sentiment": pos_sentiment}
-        if i == "hello":
-            arg_dict["request_type"] = "LaunchRequest"
-            arg_dict2["request_type"] = "LaunchRequest"
-            arg_dict3["request_type"] = "LaunchRequest"
-            arg_dict4["request_type"] = "LaunchRequest"
 
-        using = arg_dict4
+        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
+        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah",
+                     "pos_sentiment": pos_sentiment}
+        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None, "pos_sentiment": pos_sentiment}
+        arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.",
+                     "pos_sentiment": pos_sentiment}
+
+
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3

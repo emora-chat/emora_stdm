@@ -41,7 +41,10 @@
             "anxious",
             "lonely",
             "scared",
-            "been better"
+            "been better",
+            "pooped",
+            "poopy",
+            "like poop"
         ],
         "&feelings_neutral": [
             "okay",
@@ -23700,7 +23703,8 @@
             "shouldnt",
             "didnt",
             "dont",
-            "do not"
+            "do not",
+            "never"
         ],
         "&negative": [
             "of course not",
@@ -23713,7 +23717,7 @@
             "&downers"
         ],
         "&positive_indicators": [
-            "&feelingspositive",
+            "&feelings_positive",
             "&uppers"
         ],
         "&uppers": [
@@ -23726,6 +23730,13 @@
             "birth",
             "marriage",
             "promotion"
+        ],
+        "&fillers": [
+            "well",
+            "um",
+            "uh",
+            "ok",
+            "actually"
         ]
     },
     "predicates": []

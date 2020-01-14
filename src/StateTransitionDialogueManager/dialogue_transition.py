@@ -230,7 +230,7 @@ class DialogueTransition:
         if re is None:
             return True, {}
         expression = re
-        #print('MATCHING \n', re)
+        #print(self.source(), '-', self.target(), ' ==> ', re)
         self._re_compiled = regex.compile(expression)
         match = self._re_compiled.match(text + ' ')
         if match is None or match.span()[0] == match.span()[1]:
