@@ -573,7 +573,7 @@ if __name__ == '__main__':
         arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.",
                      "pos_sentiment": pos_sentiment}
 
-
+        using = arg_dict4
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3
