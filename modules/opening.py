@@ -11,10 +11,17 @@ from src.StateTransitionDialogueManager.dialogue_transition import DialogueTrans
 from datetime import datetime
 import pytz
 import random
+import os
 from collections import defaultdict
 
 component = DialogueFlow('prestart')
-with open('modules/opening_database.json', 'r') as json_file:
+data_file = ""
+cwd = os.getcwd()
+if 'StateTransitionDialogueManager' in cwd:
+    data_file = os.path.join(cwd, 'modules','opening_database.json')
+else:
+    data_file = os.path.join(cwd, 'StateTransitionDialogueManager', 'modules', 'opening_database.json')
+with open(data_file, 'r') as json_file:
     component.knowledge_base().load_json(json_file.read())
 
 standard_opening = "Hi this is an Alexa Prize Socialbot."
