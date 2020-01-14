@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/EmoraSTDM.iml" filepath="$PROJECT_DIR$/.idea/EmoraSTDM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../emora-stdm/.idea/emora-stdm.iml" filepath="$PROJECT_DIR$/../emora-stdm/.idea/emora-stdm.iml" />
     </modules>
   </component>
 </project>

@@ -18,8 +18,8 @@ from collections import defaultdict
 component = DialogueFlow('prestart')
 data_file = ""
 cwd = os.getcwd()
-if 'emora_stdm' in cwd:
-    data_file = os.path.join(cwd, 'modules','opening_database.json')
+if 'app' in cwd and 'deploy' in cwd:
+    data_file = os.path.join(cwd, 'emora-stdm', 'emora_stdm', 'modules','opening_database.json')
 else:
     data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'opening_database.json')
 with open(data_file, 'r') as json_file:
@@ -48,7 +48,7 @@ def update_time_of_day_ack_variable(curr_hour = None):
         return random.choice(morning)
     elif 9 <= curr_hour < 14:
         return random.choice(midday)
-    elif 14 <= curr_hour < 19:
+    elif 14 <= curr_hour < 17:
         return random.choice(afternoon)
     else:
         return random.choice(evening)
