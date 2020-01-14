@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/EmoraSTDM.iml" filepath="$PROJECT_DIR$/.idea/EmoraSTDM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/StateTransitionDialogueManager.iml" filepath="$PROJECT_DIR$/.idea/StateTransitionDialogueManager.iml" />
     </modules>
   </component>
 </project>
