@@ -221,9 +221,10 @@ class DialogueFlow:
         return json.dumps(transition_scores)
 
     def load_nlg_transition_scores(self, transition_json_string):
-        transition_scores = json.loads(transition_json_string)
-        for source, target, transition in self.graph().arcs():
-            transition.set_nlg_score(transition_scores[source][target])
+        if transition_json_string is not None:
+            transition_scores = json.loads(transition_json_string)
+            for source, target, transition in self.graph().arcs():
+                transition.set_nlg_score(transition_scores[source][target])
 
 
 
