@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: emora-stdm
-Version: 1.0
+Version: 0.9
 Summary: Library for creating state-machine-based chatbots.
 Home-page: https://github.com/emora-chat/EmoraSTDM.git
 Author: James Finch
