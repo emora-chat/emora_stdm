@@ -18,7 +18,7 @@ from collections import defaultdict
 component = DialogueFlow('prestart')
 data_file = ""
 cwd = os.getcwd()
-if 'app' in cwd and 'deploy' in cwd:
+if '/app' in cwd and '/deploy/' in cwd:
     data_file = os.path.join(cwd, 'emora-stdm', 'emora_stdm', 'modules','opening_database.json')
 else:
     data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'opening_database.json')
