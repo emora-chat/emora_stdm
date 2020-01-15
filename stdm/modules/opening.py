@@ -16,7 +16,6 @@ import random
 from collections import defaultdict
 
 component = DialogueFlow('prestart')
-data_file = ""
 cwd = os.getcwd()
 data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules','opening_database.json')
 with open(data_file, 'r') as json_file:
@@ -106,7 +105,7 @@ def is_freq_user(utterance, arg_dict, score):
 def is_positive_sentiment(utterance, arg_dict, score):
     if score > 0:
         return score, {}
-    if arg_dict["pos_sentiment"]:
+    if "pos_sentiment" in arg_dict and arg_dict["pos_sentiment"]:
         return dt.HIGHSCORE, {}
     else:
         return 0, {}
@@ -114,7 +113,7 @@ def is_positive_sentiment(utterance, arg_dict, score):
 def is_negative_sentiment(utterance, arg_dict, score):
     if score > 0:
         return score, {}
-    if not arg_dict["pos_sentiment"]:
+    if "pos_sentiment" in arg_dict and not arg_dict["pos_sentiment"]:
         return dt.HIGHSCORE, {}
     else:
         return 0, {}
