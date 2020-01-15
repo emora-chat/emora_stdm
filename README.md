@@ -1,6 +1,19 @@
 # State Transition Dialogue Manager
 
-## Quickstart example
+Defines a dialogue management framework based on state machines and 
+regular expressions. 
+
+## Installation
+
+Users install using `pip install emora_stdm`
+
+Developers install using:
+```
+git clone https://github.com/emora-chat/emora_stdm.git
+pip install -r emora_stdm/requirements.txt
+```
+
+## Example usage
 
 ```python
 from emora_stdm import DialogueFlow
@@ -70,9 +83,6 @@ while True:
     df.user_transition(i)
     print('S:', df.system_transition())
 ```
-
-Defines a dialogue management framework based on state machines and 
-regular expressions. 
 
 Class `DialogueFlow` is the main class to initialize. It defines
 a state machine that drives natural language conversation. State
