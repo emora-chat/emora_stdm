@@ -60,7 +60,7 @@ def check_new(arg_dict):
 def check_infreq(arg_dict):
     if arg_dict:
         if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
-            old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
+            old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f%z')
             curr_time = datetime.now(pytz.timezone('US/Eastern'))
             delta = curr_time - old_datetime
             if delta.days >= 7:
@@ -71,7 +71,7 @@ def check_infreq(arg_dict):
 def check_freq(arg_dict):
     if arg_dict:
         if "prev_conv_date" in arg_dict and arg_dict["prev_conv_date"] is not None:
-            old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f')
+            old_datetime = datetime.strptime(arg_dict["prev_conv_date"], '%Y-%m-%d %H:%M:%S.%f%z')
             curr_time = datetime.now(pytz.timezone('US/Eastern'))
             delta = curr_time - old_datetime
             if delta.days < 7:
@@ -570,10 +570,10 @@ if __name__ == '__main__':
         pos_sentiment = (results['label'] == '1')
         print(results)
 
-        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881", "username": "sarah", "pos_sentiment": pos_sentiment}
-        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": "sarah",
+        arg_dict = {"prev_conv_date": "2020-1-8 16:55:33.562881-0500", "username": "sarah", "pos_sentiment": pos_sentiment}
+        arg_dict2 = {"prev_conv_date": "2019-12-12 16:55:33.562881-0500", "username": "sarah",
                      "pos_sentiment": pos_sentiment}
-        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881", "username": None, "pos_sentiment": pos_sentiment}
+        arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881-0500", "username": None, "pos_sentiment": pos_sentiment}
         arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.",
                      "pos_sentiment": pos_sentiment}
 
