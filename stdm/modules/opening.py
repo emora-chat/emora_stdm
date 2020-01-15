@@ -204,8 +204,17 @@ component.add_transition(
 )
 
 component.add_transition(
-    'missed_name', 'acknowledge_name',
-    None, {"Ok well its very nice to meet you. " + time_acknowledgement + inquire_feeling}
+    'missed_name', 'how_are_you',
+    None,
+    {"Ok well its very nice to meet you. " + time_acknowledgement + inquire_feeling: 0.2,
+     "I am glad to meet you.  " + time_acknowledgement + inquire_feeling: 0.2,
+     "Well its nice to meet you. " + time_acknowledgement + inquire_feeling: 0.2,
+     "Ok I am very glad to meet you. " + time_acknowledgement + inquire_feeling: 0.2,
+     "Ok well its very nice to meet you. " + inquire_feeling: 0.05,
+     "I am glad to meet you.  " + inquire_feeling: 0.05,
+     "Well its very nice to meet you. " + inquire_feeling: 0.05,
+     "Ok I am very glad to meet you. " + inquire_feeling: 0.05
+     }
 )
 
 component.add_transition(
@@ -225,30 +234,62 @@ component.add_transition(
 component.add_transition(
     'got_female_name', 'how_are_you',
     None,
-    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling:0.999,
-     "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}
+    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok well its very nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "I am glad to meet you, $username .  " + time_acknowledgement + inquire_feeling: 500,
+     "Well its nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok I am very glad to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok well its very nice to meet you, $username . " + inquire_feeling: 100,
+     "I am glad to meet you, $username .  " + inquire_feeling: 100,
+     "Ok I am very glad to meet you . " + inquire_feeling: 1,
+     "Nice to meet you . " + time_acknowledgement + inquire_feeling: 1}
 )
 
 component.add_transition(
     'got_male_name', 'how_are_you',
     None,
-    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling:0.999,
-     "Nice to meet you. " + time_acknowledgement + inquire_feeling:0.001}
+    {"Nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok well its very nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "I am glad to meet you, $username .  " + time_acknowledgement + inquire_feeling: 500,
+     "Well its nice to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok I am very glad to meet you, $username . " + time_acknowledgement + inquire_feeling: 500,
+     "Ok well its very nice to meet you, $username . " + inquire_feeling: 100,
+     "I am glad to meet you, $username .  " + inquire_feeling: 100,
+     "Ok I am very glad to meet you . " + inquire_feeling: 1,
+     "Nice to meet you . " + time_acknowledgement + inquire_feeling: 1}
 )
 
 component.add_transition(
     'start_freq', 'how_are_you',
     None,
-    {standard_opening + " Welcome back, $username . " + time_acknowledgement + inquire_feeling: 0.999,
-     standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 0.001}
+    {standard_opening + " Welcome back, $username . " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Welcome back, $username . I am glad to be talking to you again. " + time_acknowledgement + inquire_feeling:500,
+     standard_opening + " Glad to see you back, $username . " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Happy to see you back, $username . " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Happy to talk to you again, $username . " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Happy to talk to you again. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Welcome back, im excited to talk to you again. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Glad to see you back. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Happy to see you back. " + time_acknowledgement + inquire_feeling: 1
+     }
 
 )
 
 component.add_transition(
     'start_infreq', 'how_are_you',
     None,
-    {standard_opening + " Its good to see you again, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.999,
-     standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 0.001}
+    {standard_opening + " Its good to see you again, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Im happy to have the chance to talk again, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Welcome back, $username , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Its good to see you again, $username , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Im happy to have the chance to talk again, $username , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Welcome back, $username , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 500,
+     standard_opening + " Im happy to have the chance to talk again , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Welcome back , its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Its good to see you again , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Im happy to have the chance to talk again , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Welcome back , we havent talked in a while. " + time_acknowledgement + inquire_feeling: 1,
+     standard_opening + " Its good to see you again, its been a while since we last chatted. " + time_acknowledgement + inquire_feeling: 1}
 )
 
 receive_how_are_you = """
@@ -371,37 +412,94 @@ component.add_transition(
 component.add_transition(
     'feeling_pos', 'acknowledge_pos',
     None,
-    {"Im glad to hear that. What has caused your good mood?"}
+    {"Im glad to hear that. What has caused your good mood?",
+     "Thats good to hear. What has caused your good mood?",
+     "Im glad to hear that. Why are you in such a good mood?",
+     "Thats good to hear. Why are you in such a good mood?",
+     "Thats good to hear. If you dont mind, can you tell me more about it?",
+     "Im glad to hear that. If you dont mind, can you tell me more about it?"}
 )
 
 component.add_transition(
     'feeling_pos_and_received_how_are_you', 'acknowledge_pos',
     None,
-    {"Im glad to hear that. I am also doing well. What has caused your good mood?"}
+    {"Im glad to hear that. I am also doing well. What has caused your good mood?",
+     "Im glad to hear that. I am also doing well. What has caused your good mood?",
+      "Thats good to hear. I am also doing well. What has caused your good mood?",
+      "Im glad to hear that. I am also doing well. Why are you in such a good mood?",
+      "Thats good to hear. I am also doing well. Why are you in such a good mood?",
+      "Thats good to hear. I am also doing well. If you dont mind, can you tell me more about it?",
+      "Im glad to hear that. I am also doing well. If you dont mind, can you tell me more about it?",
+      "Im glad to hear that. I am good too. What has caused your good mood?",
+     "Im glad to hear that. I am good too. What has caused your good mood?",
+      "Thats good to hear. I am good too. What has caused your good mood?",
+      "Im glad to hear that. I am good too. Why are you in such a good mood?",
+      "Thats good to hear. I am good too. Why are you in such a good mood?",
+      "Thats good to hear. I am good too. If you dont mind, can you tell me more about it?",
+      "Im glad to hear that. I am good too. If you dont mind, can you tell me more about it?"
+     }
 )
 
 component.add_transition(
     'feeling_neg', 'acknowledge_neg',
     None,
-    {"Im sorry thats how you feel today. If you don't mind talking about it, what happened?"}
+    {"Im sorry thats how you feel today. If you don't mind talking about it, what happened?",
+     "Im sorry thats how you feel today. If you don't mind talking about it, why has it been so bad?",
+     "Im sorry thats how you feel today. If you don't mind talking about it, what has made it such an unpleasant day for you?",
+     "I was hoping for a better day for you. If you don't mind talking about it, what happened?",
+     "I was hoping for a better day for you. If you don't mind talking about it, why has it been so bad?",
+     "I was hoping for a better day for you. If you don't mind talking about it, what has made it such an unpleasant day for you?"
+     }
 )
 
 component.add_transition(
     'feeling_neg_and_received_how_are_you', 'acknowledge_neg',
     None,
-    {"Im doing ok today, but Im sorry you are not having a great day. If you don't mind talking about it, what happened?"}
+    {"Im doing ok today, but Im sorry you are not having a great day. If you don't mind talking about it, what happened?",
+     "Im doing ok today, but Im sorry thats how you feel today. If you don't mind talking about it, what happened?",
+     "Im doing ok today, but Im sorry thats how you feel today. If you don't mind talking about it, why has it been so bad?",
+     "Im doing ok today, but Im sorry thats how you feel today. If you don't mind talking about it, what has made it such an unpleasant day for you?",
+     "Im doing ok today, but I was hoping for a better day for you. If you don't mind talking about it, what happened?",
+     "Im doing ok today, but I was hoping for a better day for you. If you don't mind talking about it, why has it been so bad?",
+     "Im doing ok today, but I was hoping for a better day for you. If you don't mind talking about it, what has made it such an unpleasant day for you?",
+     "Im alright, but Im sorry you are not having a great day. If you don't mind talking about it, what happened?",
+     "Im alright, but Im sorry thats how you feel today. If you don't mind talking about it, what happened?",
+     "Im alright, but Im sorry thats how you feel today. If you don't mind talking about it, why has it been so bad?",
+     "Im alright, but Im sorry thats how you feel today. If you don't mind talking about it, what has made it such an unpleasant day for you?",
+     "Im alright, but I was hoping for a better day for you. If you don't mind talking about it, what happened?",
+     "Im alright, but I was hoping for a better day for you. If you don't mind talking about it, why has it been so bad?",
+     "Im alright, but I was hoping for a better day for you. If you don't mind talking about it, what has made it such an unpleasant day for you?"
+     }
 )
 
 component.add_transition(
     'feeling_neutral', 'acknowledge_neutral',
     None,
-    {"That's understandable. Is there anything in particular that made you feel this way?"}
+    {"That's understandable. Is there anything in particular that made you feel this way?",
+     "I get that. Is there anything in particular that made you feel this way?",
+     "Thats ok. Is there anything in particular that made you feel this way?",
+     "That's understandable. Do you want to tell me more about it?",
+     "I get that. Do you want to tell me more about it?",
+     "Thats ok. Do you want to tell me more about it?"
+     }
 )
 
 component.add_transition(
     'feeling_neutral_and_received_how_are_you', 'acknowledge_neutral',
     None,
-    {"That's understandable. Im having an okay day too. Is there anything in particular that made you feel this way?"}
+    {"That's understandable. Im having an alright day too. Is there anything in particular that made you feel this way?",
+     "I get that. Im having an alright day too. Is there anything in particular that made you feel this way?",
+     "Thats ok. Im having an alright day too. Is there anything in particular that made you feel this way?",
+     "That's understandable. Im having an alright day too. Do you want to tell me more about it?",
+     "I get that. Im having an alright day too. Do you want to tell me more about it?",
+     "Thats ok. Im having an alright day too. Do you want to tell me more about it?",
+     "That's understandable. Im having an okay day too. Is there anything in particular that made you feel this way?",
+     "I get that. Im having an okay day too. Is there anything in particular that made you feel this way?",
+     "Thats ok. Im having an okay day too. Is there anything in particular that made you feel this way?",
+     "That's understandable. Im having an okay day too. Do you want to tell me more about it?",
+     "I get that. Im having an okay day too. Do you want to tell me more about it?",
+     "Thats ok. Im having an okay day too. Do you want to tell me more about it?"
+     }
 )
 
 # expand REGEX
@@ -490,25 +588,35 @@ component.add_transition(
 component.add_transition(
     'misunderstood', 'end',
     None,
-    {"Thanks for sharing that with me. " + transition_out}
+    {"Thanks for sharing that with me. " + transition_out,
+     "Gotcha. " + transition_out,
+     "Ok I see. " + transition_out}
 )
 
 component.add_transition(
     'share_pos', 'acknowledge_share_pos',
     None,
-    {"Sounds really nice, thanks for sharing that with me. I love hearing about your life. " + transition_out}
+    {"Sounds really nice, thanks for sharing that with me. I love hearing about your life. " + transition_out,
+     "I think that sounds pretty good. I love hearing about your life, thanks for sharing. " + transition_out,
+     "Gotcha, I love hearing about your life, thanks for sharing. " + transition_out,
+     "Ok good to know, I love hearing about your life, thanks for sharing. " + transition_out}
 )
 
 component.add_transition(
     'share_neg', 'acknowledge_share_neg',
     None,
-    {"I think that sounds really unfortunate, I hope it gets better for you soon. " + transition_out}
+    {"I think that sounds really unfortunate, I hope it gets better for you soon. " + transition_out,
+     "Well, I do hope better days are ahead for you. " + transition_out,
+     "Some days are worse than others, but I know you will have good days coming. " + transition_out,
+     }
 )
 
 component.add_transition(
     'decline_share', 'acknowledge_decline_share',
     None,
-    {"That's ok, I'm happy to talk about other things too. " + transition_out}
+    {"That's ok, I'm happy to talk about other things too. " + transition_out,
+     "Gotcha, lets talk about something else. " + transition_out,
+     "I see, I think we could move on to something else then. " + transition_out}
 )
 
 component.add_transition(
