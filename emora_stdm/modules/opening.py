@@ -19,7 +19,7 @@ component = DialogueFlow('prestart')
 data_file = ""
 cwd = os.getcwd()
 if '/app' in cwd and '/deploy/' in cwd:
-    data_file = os.path.join(cwd, 'emora-stdm', 'emora_stdm', 'modules','opening_database.json')
+    data_file = os.path.join(cwd, 'emora_stdm', 'emora_stdm', 'modules','opening_database.json')
 else:
     data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'opening_database.json')
 with open(data_file, 'r') as json_file:
