@@ -1,5 +1,4 @@
-from stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
-from stdm.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
+from emora_stdm import DialogueFlow, KnowledgeBase
 
 df = DialogueFlow()
 df._kb = KnowledgeBase([

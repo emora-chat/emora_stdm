@@ -1,8 +1,8 @@
 from structpy.graph.labeled_digraph import MapMultidigraph as Graph
-from stdm.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
-from stdm.StateTransitionDialogueManager.utilities import all_grams, random_choice
-from stdm.StateTransitionDialogueManager.dialogue_transition import DialogueTransition
-from stdm.StateTransitionDialogueManager.stdm_exceptions import MissingStateException,\
+from emora_stdm import KnowledgeBase
+from emora_stdm import all_grams, random_choice
+from emora_stdm import DialogueTransition
+from emora_stdm import MissingStateException,\
     MissingOntologyException, MissingKnowledgeException, MissingErrorStateException
 from copy import deepcopy
 import regex, json

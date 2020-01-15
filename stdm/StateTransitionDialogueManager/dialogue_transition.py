@@ -1,8 +1,8 @@
 
 import regex
 import random
-from stdm.StateTransitionDialogueManager.expression import _ExpressionReducer, _expression_parser
-from stdm.StateTransitionDialogueManager.utilities import all_grams, random_choice
+from emora_stdm import _ExpressionReducer, _expression_parser
+from emora_stdm import all_grams, random_choice
 
 
 class DialogueTransition:

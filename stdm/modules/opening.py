@@ -6,22 +6,19 @@ https://www.ssa.gov/OACT/babynames/limits.html
 http://www.cs.cmu.edu/Groups/AI/util/areas/nlp/corpora/names/
 http://antirez.com/misc/female-names.txt
 """
-
-from stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
-from stdm.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
+import os
+from emora_stdm import DialogueFlow
+from emora_stdm import DialogueTransition as dt
 from datetime import datetime
 import pytz
 import random
-import os
+
 from collections import defaultdict
 
 component = DialogueFlow('prestart')
 data_file = ""
 cwd = os.getcwd()
-if '/app' in cwd and '/deploy/' in cwd:
-    data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules','opening_database.json')
-else:
-    data_file = os.path.join(cwd, 'stdm', 'modules', 'opening_database.json')
+data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules','opening_database.json')
 with open(data_file, 'r') as json_file:
     component.knowledge_base().load_json(json_file.read())
 
