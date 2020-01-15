@@ -1,4 +1,4 @@
-from emora_stdm.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
+from stdm.StateTransitionDialogueManager.knowledge_base import KnowledgeBase
 
 
 def test_constructor():

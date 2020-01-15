@@ -7,8 +7,8 @@ http://www.cs.cmu.edu/Groups/AI/util/areas/nlp/corpora/names/
 http://antirez.com/misc/female-names.txt
 """
 
-from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
-from emora_stdm.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
+from stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from stdm.StateTransitionDialogueManager.dialogue_transition import DialogueTransition as dt
 from datetime import datetime
 import pytz
 import random
@@ -19,9 +19,9 @@ component = DialogueFlow('prestart')
 data_file = ""
 cwd = os.getcwd()
 if '/app' in cwd and '/deploy/' in cwd:
-    data_file = os.path.join(cwd, 'emora_stdm', 'emora_stdm', 'modules','opening_database.json')
+    data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules','opening_database.json')
 else:
-    data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'opening_database.json')
+    data_file = os.path.join(cwd, 'stdm', 'modules', 'opening_database.json')
 with open(data_file, 'r') as json_file:
     component.knowledge_base().load_json(json_file.read())
 
@@ -137,14 +137,21 @@ def how_are_you_state_selection(df, utterance, graph_arcs):
             matches[source][target] = score
             vars_dict[source][target] = vars
             transitions_dict[source][target] = transition
+    preference = ['feeling_neutral_and_received_how_are_you',
+                  'feeling_neutral',
+                  'feeling_pos_and_received_how_are_you',
+                  'feeling_neg_and_received_how_are_you']
     if len(matches) > 0:
+        for pref in preference:
+            if pref in matches[source].keys():
+                return transitions_dict[source][pref], matches[source][pref], pref, vars_dict[source][pref]
+
         best_score = max([score for source in matches for target, score in matches[source].items()])
         for source in matches:
             for target, score in matches[source].items():
-                if score == best_score and ('neutral' in target or 'decline' in target):
-                    return transitions_dict[source][target], best_score, target, vars_dict[source][target]
-                elif score == best_score:
+                if score == best_score:
                     best_transition, best_score, next_state, vars_update = transitions_dict[source][target], score, target, vars_dict[source][target]
+                    return best_transition, best_score, next_state, vars_update
     return best_transition, best_score, next_state, vars_update
 
 states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',

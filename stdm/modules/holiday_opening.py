@@ -1,5 +1,5 @@
-from emora_stdm.modules.opening import component as opening
-from emora_stdm.modules.holiday import component as holiday
+from stdm.modules.opening import component as opening
+from stdm.modules.holiday import component as holiday
 
 if __name__ == '__main__':
     opening.add_module(holiday, 'holiday')
