@@ -1,6 +1,19 @@
 # State Transition Dialogue Manager
 
-## Quickstart example
+Defines a dialogue management framework based on state machines and 
+regular expressions. 
+
+## Installation
+
+Users install using `pip install emora_stdm`
+
+Developers install using:
+```
+git clone https://github.com/emora-chat/emora_stdm.git
+pip install -r emora_stdm/requirements.txt
+```
+
+## Example usage
 
 ```python
 from emora_stdm import DialogueFlow
@@ -71,9 +84,6 @@ while True:
     print('S:', df.system_transition())
 ```
 
-Defines a dialogue management framework based on state machines and 
-regular expressions. 
-
 Class `DialogueFlow` is the main class to initialize. It defines
 a state machine that drives natural language conversation. State
 transitions in the state machine (alternately) represent either 
@@ -135,7 +145,9 @@ dialogue_manager.system_transition()
 ```
 
 
-## NLU Expressions
+# Transition Documentation
+
+## Transition NLU
 
 Strings created for transition NLU define a set of user expressions
 that satisfy the transition by compiling into regular expressions.
@@ -178,7 +190,7 @@ of the utterance due to limitations in regex.
 ```
 matches as long as the utterance contains all terms inside `()`,
 and the terms are ordered properly within the utterance. Matches
-in the example include "hi bob how are you", but not "how are you 
+in the example include "oh hi bob how are you", but not "how are you 
 bob"
 
 ### Inflexible sequence
@@ -221,7 +233,7 @@ variable exists, the expression as a whole returns with no match.
 The example would match "why are you good today" if `f="good"`, 
 but would not match if `f="bad"`
 
-## If NLU debugging gets tricky
+### If NLU debugging gets tricky
 For a precise understanding of the NLU expressions you produce,
 you can view the compiled python regex like so:
 ```
@@ -229,6 +241,22 @@ print(dialogue_manager.graph().arc(source, target).re)
 ```
 And then debug at https://regex101.com/ (make sure to switch to
 python regexes)
+
+## Transition NLG
+
+The typical case of writing a system response is to simply define a literal:
+
+`i think so too`
+
+However, NLG expressions can also reference variables:
+
+`i really like $topic as well`
+
+If a referenced variable exists in the dialogue context (i.e. has previously
+been assigned to in the dialogue history), the value of the variable will 
+replace the variable reference when the system selects this response. Note
+that a NLG transition will not be selected unless all of its variable 
+references have assigned values from the dialogue context.
 
 ## Knowledge base and ontology
 
@@ -285,7 +313,10 @@ like the following:
 Using a prepended `&` references a node in the ontology. Any 
 subtype of the referenced node can be matched in the expression.
 
+As of this writing only NLU expressions support ontology references.
+
 ### Knowledge base reference
+
 ```
 'a dog can #dog:sound#'
 ```
@@ -296,6 +327,8 @@ term following `:`. In this case, all nodes related to "dog" by
 a "sound" arc are valid matches. For example, the utterances "a
 dog can bark" and "a dog can growl" might be matched if "bark" and
 "growl" were present in the knowledge graph.
+
+Both NLU and NLG expressions support knowledge base references.
 
 ```
 'a dog is #dog:sound:quality#'
@@ -314,10 +347,9 @@ the above expression matches "black widow is played by scarlett
 johansson"
 
 ```
-'a %a=&animal, can #$a:sound#'
+'a $animal, can %sound=#$animal:makes_sound#'
 ```
-knowledge graph expressions can be built using veriable references.
-Together with ontology reference, highly generalizable expressions
-can be written. Given an appropriately constructed KB and ontology,
-this example might match "a cow can moo", "a dog can bark", and
-everything in between.
+knowledge graph expressions can be built using variable references.
+Additionally, you can assign a variable to the result of a 
+knowledge base reference. Given an appropriately constructed knowledge 
+base, the above example might match "a cow can moo" or "a duck can quack".
