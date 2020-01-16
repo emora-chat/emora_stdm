@@ -184,7 +184,11 @@ class DialogueTransition:
                     choices[response] = self._nlg[choice]
             if len(choices) == 0:
                 return 0, '', vars
-            return self._nlg_score, random_choice(choices), vars
+            chosen = random_choice(choices)
+            if chosen is None:
+                return 0, '', vars
+            else:
+                return self._nlg_score, chosen, vars
 
     def _variable_with_knowledge_selection(self, utterance):
         vars = {}

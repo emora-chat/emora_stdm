@@ -10,7 +10,7 @@ from collections import defaultdict
 
 class DialogueFlow:
 
-    def __init__(self, initial_state=None):
+    def __init__(self, initial_state=None, name=None):
         self._graph = Graph()
         self._kb = KnowledgeBase()
         self._initial_state = initial_state
@@ -20,6 +20,12 @@ class DialogueFlow:
         self._state_selection_functions = {}
         self._jump_states = {}
         self._back_states = []
+        self._original_state_transition_scores_json = None
+        self._name = name
+
+    def finalize_dialogue_flow(self):
+        print("finalizing dialogue flow... ", self._name)
+        self._original_state_transition_scores_json = self.nlg_transition_scores_to_json_string()
 
     def vars(self):
         return self._vars
@@ -40,6 +46,8 @@ class DialogueFlow:
 
     def reset(self):
         self._state = self._initial_state
+        self.load_nlg_transition_scores(self._original_state_transition_scores_json)
+        self._vars = {}
 
     def graph(self):
         return self._graph
@@ -128,13 +136,19 @@ class DialogueFlow:
         for source, target, transition in self._graph.arcs_out(self._state):
             score, utterance, vars = transition.eval_system_transition(self._vars)
             choices[(transition, utterance, Dict(vars), target)] = score
-        transition, utterance, vars_update, next_state = random_choice(choices)
+        chosen = random_choice(choices)
+        if chosen is not None:
+            transition, utterance, vars_update, next_state = chosen[0], chosen[1], chosen[2], chosen[3]
+        else:
+            raise Exception("No valid system transition found")
         if transition.select_function is not None:
             transition.select_function(utterance, self._state, self._vars)
-        transition.downweight()
-        for choice in choices:
-            if choice[0] is not transition:
-                choice[0].upweight()
+        if len(choices) > 1:
+            # if more than one choice, apply weighting update to reduce repetition
+            transition.downweight()
+            for choice in choices:
+                if choice[0] is not transition:
+                    choice[0].upweight()
         self._vars.update(vars_update)
         self._state = next_state
         if self._state in self._state_update_functions:
@@ -225,6 +239,8 @@ class DialogueFlow:
             transition_scores = json.loads(transition_json_string)
             for source, target, transition in self.graph().arcs():
                 transition.set_nlg_score(transition_scores[source][target])
+        else:
+            print("WARNING: transition_json_string for load_nlg_transition_scores is None")
 
 
 

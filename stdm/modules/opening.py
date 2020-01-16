@@ -15,7 +15,7 @@ import random
 
 from collections import defaultdict
 
-component = DialogueFlow('prestart')
+component = DialogueFlow('prestart', 'opening')
 cwd = os.getcwd()
 data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules','opening_database.json')
 with open(data_file, 'r') as json_file:
@@ -646,7 +646,10 @@ component.add_transition(
     'end', 'end', None, {'x'}, settings='e'
 )
 
+component.finalize_dialogue_flow()
+
 if __name__ == '__main__':
+
     from allennlp.predictors.predictor import Predictor
     predictor = Predictor.from_path(
         "https://s3-us-west-2.amazonaws.com/allennlp/models/sst-2-basic-classifier-glove-2019.06.27.tar.gz")
@@ -659,8 +662,10 @@ if __name__ == '__main__':
     arg_dict2["request_type"] = "LaunchRequest"
     arg_dict3["request_type"] = "LaunchRequest"
     arg_dict4["request_type"] = "LaunchRequest"
+    arg_dict5 = {'request_type': 'LaunchRequest', 'prev_conv_date': '2020-01-16 10:28:26.946645-0500',
+                 'username': 'jane'}
 
-    using = arg_dict4
+    using = arg_dict5
     component.vars().update({key: val for key, val in using.items() if val is not None})
     confidence = component.user_transition("hello") / 10 - 0.3
     print(component.state(), component.vars())
@@ -683,8 +688,10 @@ if __name__ == '__main__':
         arg_dict3 = {"prev_conv_date": "2019-12-12 16:55:33.562881-0500", "username": None, "pos_sentiment": pos_sentiment}
         arg_dict4 = {"prev_conv_date": None, "stat": "Ive met quite a few people with your name recently.",
                      "pos_sentiment": pos_sentiment}
+        arg_dict5 = {'prev_conv_date': '2020-01-16 10:28:26.946645-0500', 'username': 'jane', "pos_sentiment": pos_sentiment}
 
-        using = arg_dict4
+
+        using = arg_dict5
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3

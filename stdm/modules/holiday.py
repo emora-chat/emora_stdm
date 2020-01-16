@@ -1,7 +1,7 @@
 from emora_stdm import DialogueFlow
 import os
 
-component = DialogueFlow('prestart')
+component = DialogueFlow('prestart', 'holiday')
 data_file = ""
 cwd = os.getcwd()
 data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules', 'holiday_database.json')
@@ -193,6 +193,8 @@ component.add_transition(
 component.add_transition(
     'end', 'end', None, {'x'}, settings='e'
 )
+
+component.finalize_dialogue_flow()
 
 if __name__ == '__main__':
     component.run()

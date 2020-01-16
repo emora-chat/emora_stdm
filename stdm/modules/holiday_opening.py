@@ -1,12 +1,14 @@
 from stdm.modules.opening import component as opening
 from stdm.modules.holiday import component as holiday
 
-if __name__ == '__main__':
-    opening.add_module(holiday, 'holiday')
-    opening.add_transition("acknowledge_share_pos", "holiday.start", '&holiday.holiday_t', [])
-    opening.add_transition("acknowledge_share_neg", "holiday.start", '&holiday.holiday_t', [])
-    opening.add_transition("acknowledge_decline_share", "holiday.start", '&holiday.holiday_t', [])
+opening.add_module(holiday, 'holiday')
+opening.add_transition("acknowledge_share_pos", "holiday.start", '&holiday.holiday_t', [])
+opening.add_transition("acknowledge_share_neg", "holiday.start", '&holiday.holiday_t', [])
+opening.add_transition("acknowledge_decline_share", "holiday.start", '&holiday.holiday_t', [])
 
+opening.finalize_dialogue_flow()
+
+if __name__ == '__main__':
 
     i = input('U: ')
     while True:
