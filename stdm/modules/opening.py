@@ -298,8 +298,7 @@ receive_how_are_you = """
 (how you doing),
 (what about you),
 (whats up with you),
-(how you are),
-[you]
+(how you are)
 }
 """
 
