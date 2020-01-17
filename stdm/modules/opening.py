@@ -157,12 +157,12 @@ states = ['prestart', 'start_new', 'start_infreq', 'start_freq', 'receive_name',
           'acknowledge_neutral', 'share_pos', 'share_neg', 'misunderstood',
           'acknowledge_share_pos', 'acknowledge_share_neg', 'acknowledge_decline_share',
           'garbage', 'feeling_pos_and_received_how_are_you', 'feeling_neg_and_received_how_are_you',
-          'feeling_neutral_and_received_how_are_you']
+          'feeling_neutral_and_received_how_are_you', 'start_error']
 component.add_states(states)
 
 # pre start
 component.add_transition(
-    'prestart', 'prestart', None, {'x'}, settings='e'
+    'prestart', 'start_error', None, {'Hi this is an Alexa Prize Socialbot. What would you like to talk about today'}, settings='e'
 )
 
 # start: new user
@@ -184,6 +184,13 @@ component.add_transition(
 component.add_transition(
     'prestart', 'start_freq',
     None, {}, evaluation_function=is_freq_user
+)
+
+# start: error
+component.add_transition(
+    'start_error', 'how_are_you',
+    None,
+    {standard_opening + " I am happy to be talking to you. " + inquire_feeling}
 )
 
 component.add_transition(
@@ -663,8 +670,9 @@ if __name__ == '__main__':
     arg_dict4["request_type"] = "LaunchRequest"
     arg_dict5 = {'request_type': 'LaunchRequest', 'prev_conv_date': '2020-01-16 10:28:26.946645-0500',
                  'username': 'jane'}
+    arg_dict6 = {}
 
-    using = arg_dict5
+    using = arg_dict6
     component.vars().update({key: val for key, val in using.items() if val is not None})
     confidence = component.user_transition("hello") / 10 - 0.3
     print(component.state(), component.vars())
@@ -690,7 +698,7 @@ if __name__ == '__main__':
         arg_dict5 = {'prev_conv_date': '2020-01-16 10:28:26.946645-0500', 'username': 'jane', "pos_sentiment": pos_sentiment}
 
 
-        using = arg_dict5
+        using = arg_dict6
         component.vars().update({key: val for key, val in using.items() if val is not None})
 
         confidence = component.user_transition(i) / 10 - 0.3

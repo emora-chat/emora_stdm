@@ -143,12 +143,12 @@ class DialogueFlow:
             raise Exception("No valid system transition found")
         if transition.select_function is not None:
             transition.select_function(utterance, self._state, self._vars)
-        if len(choices) > 1:
-            # if more than one choice, apply weighting update to reduce repetition
-            transition.downweight()
-            for choice in choices:
-                if choice[0] is not transition:
-                    choice[0].upweight()
+        if len(choices) > 1: # if more than one choice, apply weighting update to reduce repetition
+            if 'e' not in transition.settings(): # only do weight updating to non-error transition
+                transition.downweight()
+                for choice in choices:
+                    if choice[0] is not transition and 'e' not in choice[0].settings():
+                        choice[0].upweight()
         self._vars.update(vars_update)
         self._state = next_state
         if self._state in self._state_update_functions:
