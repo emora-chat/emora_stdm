@@ -14,7 +14,7 @@ class DialogueTransition:
     _var_setting_capture = r'\%[a-zA-Z0-9_.]+'
 
     HIGHSCORE = 10
-    LOWSCORE = 3
+    ERRORSCORE = 3
 
     UPWEIGHT = 1
     DOWNWEIGHT = 1
@@ -91,9 +91,9 @@ class DialogueTransition:
 
     def _update_settings(self):
         if 'e' in self._settings:
-            self._nlu_score = DialogueTransition.LOWSCORE
+            self._nlu_score = DialogueTransition.ERRORSCORE
             self._nlu_min = 1
-            self._nlg_score = DialogueTransition.LOWSCORE
+            self._nlg_score = DialogueTransition.ERRORSCORE
             self._nlg_min = 0
         else:
             self._nlu_score = DialogueTransition.HIGHSCORE
