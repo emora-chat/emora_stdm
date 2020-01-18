@@ -20,10 +20,12 @@ class DialogueFlow:
         self._state_selection_functions = {}
         self._jump_states = {}
         self._back_states = []
+        self._nlu_multihop = set()
+        self._nlg_multihop = set()
         self._original_state_transition_scores_json = None
         self._name = name
 
-    def finalize_dialogue_flow(self):
+    def finalize(self):
         print("finalizing dialogue flow... ", self._name)
         self._original_state_transition_scores_json = self.nlg_transition_scores_to_json_string()
 
@@ -64,6 +66,12 @@ class DialogueFlow:
     def add_states(self, states):
         for state in states:
             self.add_state(state)
+
+    def set_nlu_multihop_tag(self, state):
+        self._nlu_multihop.add(state)
+
+    def set_nlg_multihop_tag(self, state):
+        self._nlg_multihop.add(state)
 
     def check_ontology_references_exist(self, pattern_list):
         if pattern_list:
@@ -127,7 +135,7 @@ class DialogueFlow:
             self._state_update_functions[self._state](self)
         return best_score
 
-    def system_transition(self):
+    def _onehop_system_transition(self):
         class Dict(dict):
             def __hash__(self):
                 return hash(id(self))
@@ -143,8 +151,8 @@ class DialogueFlow:
             raise Exception("No valid system transition found")
         if transition.select_function is not None:
             transition.select_function(utterance, self._state, self._vars)
-        if len(choices) > 1: # if more than one choice, apply weighting update to reduce repetition
-            if 'e' not in transition.settings(): # only do weight updating to non-error transition
+        if len(choices) > 1:  # if more than one choice, apply weighting update to reduce repetition
+            if 'e' not in transition.settings():  # only do weight updating to non-error transition
                 transition.downweight()
                 for choice in choices:
                     if choice[0] is not transition and 'e' not in choice[0].settings():
@@ -153,6 +161,12 @@ class DialogueFlow:
         self._state = next_state
         if self._state in self._state_update_functions:
             self._state_update_functions[self._state](self)
+        return utterance
+
+    def system_transition(self):
+        utterance = self._onehop_system_transition()
+        while (self.state() in self._nlg_multihop):
+            utterance += " " + self._onehop_system_transition()
         return utterance
 
     def register_state_update_function(self, state, function_ptr):

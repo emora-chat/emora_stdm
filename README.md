@@ -77,6 +77,9 @@ df.add_transition(
 # validate the DialogueFlow
 df.check_error_transitions_complete()
 
+# finalize the DialogueFlow
+df.finalize()
+
 # talk to your dialogue agent in a loop
 while True:
     i = input('U: ')
@@ -132,6 +135,12 @@ optional fifth parameter `evaluation_function` of the `.add_transition` method.
 Similarly, if you want to define a function that is ran upon selection of a transition, such as
 to update the current variables (see below), you can pass the function name in as the 
 optional sixth parameter `selection_function` of the `.add_transition` method.
+
+Once you are finished adding transitions and before you use the Dialogue Flow you just created, 
+you must call the `finalize()` method in order to properly 
+initialize your newly created Dialogue Flow object:
+
+`dialogue_manager.finalize()`
 
 A user turn can be taken, updating state, using
 ```

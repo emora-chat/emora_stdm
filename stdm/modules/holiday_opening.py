@@ -6,7 +6,7 @@ opening.add_transition("acknowledge_share_pos", "holiday.start", '&holiday.holid
 opening.add_transition("acknowledge_share_neg", "holiday.start", '&holiday.holiday_t', [])
 opening.add_transition("acknowledge_decline_share", "holiday.start", '&holiday.holiday_t', [])
 
-opening.finalize_dialogue_flow()
+opening.finalize()
 
 if __name__ == '__main__':
 

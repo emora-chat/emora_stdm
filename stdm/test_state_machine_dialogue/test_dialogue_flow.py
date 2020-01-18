@@ -108,3 +108,30 @@ def test_nlg_score_save_load():
         assert df2.get_transition('start', '3').get_nlg_score() == 1
     else:
         assert False
+
+def test_multihop_nlg():
+    df = DialogueFlow('start')
+    df._kb = KnowledgeBase()
+    df.add_states(list('12345678') + ['start'])
+
+    df.add_transition('start', '1', None, {'start to 1'})
+    df.add_transition('1', '2', None, {'start to 2'})
+    df.add_transition('2', '3', None, {'start to 3'})
+
+    df.finalize()
+
+    utterance = df.system_transition()
+    assert utterance == 'start to 1'
+    assert df.state() == '1'
+
+    df.reset()
+    df.set_nlg_multihop_tag('1')
+    utterance = df.system_transition()
+    assert utterance == "start to 1 start to 2"
+    assert df.state() == '2'
+
+    df.reset()
+    df.set_nlg_multihop_tag('2')
+    utterance = df.system_transition()
+    assert utterance == "start to 1 start to 2 start to 3"
+    assert df.state() == '3'

@@ -652,7 +652,7 @@ component.add_transition(
     'end', 'end', None, {'x'}, settings='e'
 )
 
-component.finalize_dialogue_flow()
+component.finalize()
 
 if __name__ == '__main__':
 
