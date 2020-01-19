@@ -1,4 +1,4 @@
-from emora_stdm.StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+from emora_stdm.old_StateTransitionDialogueManager.dialogue_flow import DialogueFlow
 
 if __name__ == '__main__':
     df = DialogueFlow('start')
