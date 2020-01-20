@@ -14,5 +14,5 @@ class UniformStochasticOptions(set):
         set.__init__(self, iterable)
 
     def select(self):
-        return random.choice(self)
+        return random.choice(list(self))
 

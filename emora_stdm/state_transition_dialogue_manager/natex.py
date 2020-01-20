@@ -6,24 +6,34 @@ from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 
 class Natex:
 
-    def __init__(self, expression, macros=None):
+    def __init__(self, expression, vars=None, macros=None):
         self._expression = expression
         self._regex = None
         self._regex_parser = None
+        if vars is None:
+            self._vars = {}
+        else:
+            self._vars = vars
         if macros is None:
             self._macros = {}
         else:
             self._macros = macros
 
-    def match(self, natural_language, macros=None, debugging=False):
+    def match(self, natural_language, vars=None, macros=None, debugging=False):
+        if vars is not None:
+            vars.update(self._vars)
         if macros is not None:
             macros.update(self._macros)
         if self._regex is None:
-            self.compile(Ngrams(natural_language), macros, debugging)
+            self.compile(Ngrams(natural_language), vars, macros, debugging)
         match = regex.match(self._regex, natural_language)
         return match
 
-    def compile(self, ngrams=None, macros=None, debugging=False):
+    def compile(self, ngrams=None, vars=None, macros=None, debugging=False):
+        if vars is not None:
+            vars.update(self._vars)
+        else:
+            vars = self._vars
         if macros is not None:
             macros.update(self._macros)
         else:
@@ -34,10 +44,16 @@ class Natex:
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
-        self._regex = Natex.Compiler(ngrams, macros, debugging).compile(self._expression)
+        self._regex = Natex.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
 
     def regex(self):
         return self._regex
+
+    def expression(self):
+        return self._expression
+
+    def macros(self):
+        return self._macros
 
     def __str__(self):
         return 'Natex({})'.format(self._expression)
@@ -56,6 +72,7 @@ class Natex:
         disjunction: "{" term (","? " "? term)+ "}"
         negation: "-" term
         regex: "/" /[^\/]+/ "/"
+        reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: symbol "(" term (","? " "? term)+ ")" 
         literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
@@ -63,9 +80,10 @@ class Natex:
         """
         parser = Lark(grammar)
 
-        def __init__(self, ngrams, macros, debugging=False):
+        def __init__(self, ngrams, vars, macros, debugging=False):
             self._tree = None
             self._ngrams = ngrams
+            self._vars = vars
             self._macros = macros
             self._assignments = {}
             self._debugging = debugging
@@ -73,7 +91,10 @@ class Natex:
 
         def compile(self, natex):
             self._tree = self.parser.parse(natex)
-            return self.visit(self._tree).children[0]
+            re = self.visit(self._tree).children[0]
+            if self._debugging:
+                print('  {:15} {}'.format('Final', re))
+            return re
 
         def to_strings(self, args):
             strings = []
@@ -131,6 +152,17 @@ class Natex:
             tree.children[0] = arg
             if self._debugging: print('    {:15} {}'.format('Regex', self._current_compilation(self._tree)))
 
+        def reference(self, tree):
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            symbol = args[0]
+            if symbol in self._assignments:
+                value = self._assignments[symbol]
+            else:
+                value = self._vars[symbol]
+            tree.children[0] = value
+            if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
+
         def assignment(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
@@ -144,7 +176,7 @@ class Natex:
             tree.data = 'compiled'
             symbol = args[0]
             macro_args = self.to_sets(args[1:])
-            tree.children[0] = self._macros[symbol](self._ngrams, macro_args)
+            tree.children[0] = self._macros[symbol](self._ngrams, self._vars, self._assignments, macro_args)
             if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
 
         def literal(self, tree):
@@ -170,9 +202,6 @@ class Natex:
             tree.data = 'compiled'
             tree.children[0] = args[0]
 
-        def __str__(self):
-            return  '<NatexCompiler obj {}>'.format(id(self))
-
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
                 def flexible_sequence(self, args):
@@ -189,6 +218,8 @@ class Natex:
                 def regex(self, args):
                     (arg,) = args
                     return str(arg)
+                def reference(self, args):
+                    return '$' + args[0]
                 def assignment(self, args):
                     return '${}={}'.format(*args)
                 def macro(self, args):
