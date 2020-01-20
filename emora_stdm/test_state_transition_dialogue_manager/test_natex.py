@@ -13,9 +13,8 @@ def test_parser():
     print(parser.parse(natex).pretty())
 
 def test_compiler():
-
-    natex = Natex(r'[this is {test, eval} BAR(hello, there) you]')
-    natex.compile({'hello', 'this is', 'this is hello'}, macros, debugging=True)
-    print(natex.regex())
+    print()
+    natex = Natex(r'[this is {test, eval} BAR(hello, there, sir) you]')
+    natex.compile({'hello', 'this is', 'this is hello', 'there'}, macros, debugging=True)
 
 

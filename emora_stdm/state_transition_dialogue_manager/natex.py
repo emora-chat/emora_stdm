@@ -2,13 +2,6 @@
 import regex
 from lark import Lark, Transformer, Tree, Visitor
 
-def step(f):
-    def compilation_step_function(self, args):
-        if self._debugging:
-            print(self._current_compilation())
-        return f(self, args)
-    return compilation_step_function
-
 class Natex:
 
     def __init__(self, expression):
@@ -17,9 +10,16 @@ class Natex:
         self._regex_parser = None
 
     def match(self, natural_language):
-        pass
+        return regex.match(self._regex, natural_language)
 
     def compile(self, ngrams: set, macros: dict, debugging=False):
+        if debugging:
+            print('Natex compilation:')
+            if debugging:
+                print('  {:15} {}'.format('Ngrams', ', '.join(ngrams)))
+                print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
+                print('  {:15} {}'.format('Steps', '-'*30))
+                print('    {:15} {}'.format('Original', self._expression))
         self._regex = Natex.Compiler(ngrams, macros, debugging).compile(self._expression)
 
     def regex(self):
@@ -47,7 +47,7 @@ class Natex:
         literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
         symbol: /[a-z_A-Z.0-9]+/
         """
-        parser = Lark(grammar, propagate_positions=True)
+        parser = Lark(grammar)
 
         def __init__(self, ngrams, macros, debugging=False):
             self._tree = None
@@ -55,11 +55,11 @@ class Natex:
             self._macros = macros
             self._assignments = {}
             self._debugging = debugging
+            self._previous_compile_output = ''
 
         def compile(self, natex):
             self._tree = self.parser.parse(natex)
-            self.visit(self._tree)
-            return self._tree.compilation
+            return self.visit(self._tree).children[0]
 
         def to_strings(self, args):
             strings = []
@@ -67,7 +67,7 @@ class Natex:
                 if isinstance(arg, str):
                     strings.append(arg)
                 elif isinstance(arg, set):
-                    strings.append('|'.join(arg))
+                    strings.append('(?:' + '|'.join(arg) + ')')
             return strings
 
         def to_sets(self, args):
@@ -79,102 +79,116 @@ class Natex:
                     sets.append(arg)
             return sets
 
-        @step
         def flexible_sequence(self, tree):
-            args = tree.children
-            tree.compilation =  '.*?' + '.*?'.join(self.to_strings(args)) + '.*'
-        @step
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] =  '.*?' + '.*?'.join(self.to_strings(args)) + '.*'
+            if self._debugging: print('    {:15} {}'.format('Flex. sequence', self._current_compilation(self._tree)))
+
         def rigid_sequence(self, tree):
-            args = tree.children
-            tree.compilation =  r'\W+'.join(self.to_strings(args))
-        @step
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = r'\W+'.join(self.to_strings(args))
+            if self._debugging: print('    {:15} {}'.format('Rigid sequence', self._current_compilation(self._tree)))
+
         def conjunction(self, tree):
-            args = tree.children
-            tree.compilation =  ''.join(['(?={})'.format(x) for x in self.to_strings(args)])
-        @step
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = ''.join(['(?={})'.format(x) for x in self.to_strings(args)])
+            if self._debugging: print('    {:15} {}'.format('Conjunction', self._current_compilation(self._tree)))
+
         def disjunction(self, tree):
-            args = tree.children
-            tree.compilation =  '(?:{})'.format('|'.join(self.to_strings(args)))
-        @step
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = '(?:{})'.format('|'.join(self.to_strings(args)))
+            if self._debugging: print('    {:15} {}'.format('Disjunction', self._current_compilation(self._tree)))
+
         def negation(self, tree):
-            args = tree.children
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
             (arg,) = self.to_strings(args)
-            tree.compilation =  '(?:(?:(?!.*{}.*$).)+)'.format(arg)
-        @step
+            tree.children[0] = '(?:(?:(?!.*{}.*$).)+)'.format(arg)
+            if self._debugging: print('    {:15} {}'.format('Negation', self._current_compilation(self._tree)))
+
         def regex(self, tree):
-            args = tree.children
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
             (arg,) = self.to_strings(args)
-            tree.compilation =  arg
-        @step
+            tree.children[0] = arg
+            if self._debugging: print('    {:15} {}'.format('Regex', self._current_compilation(self._tree)))
+
         def assignment(self, tree):
-            args = tree.children
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
             self._assignments[args[0]] = args[1]
-            tree.compilation =  args[1]
-        @step
+            tree.children[0] = args[1]
+            if self._debugging: print('    {:15} {}'.format('Assignment', self._current_compilation(self._tree)))
+
         def macro(self, tree):
-            args = tree.children
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
             symbol = args[0]
             macro_args = self.to_sets(args[1:])
-            tree.compilation =  self._macros[symbol](self._ngrams, macro_args)
+            tree.children[0] = self._macros[symbol](self._ngrams, macro_args)
+            if self._debugging: print('    {:15} {}'.format('Macro', self._current_compilation(self._tree)))
 
         def literal(self, tree):
             args = tree.children
+            tree.data = 'compiled'
             (literal,) = args
-            tree.compilation = literal
+            tree.children[0] = literal
 
         def symbol(self, tree):
             args = tree.children
+            tree.data = 'compiled'
             (symbol,) = args
-            tree.compilation = symbol
+            tree.children[0] = symbol
 
         def term(self, tree):
-            args = tree.children
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
             (term,) = args
-            tree.compilation = term
+            tree.children[0] = term
 
         def start(self, tree):
-            args = tree.children
-            tree.compilation = args[0]
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = args[0]
 
         def __str__(self):
             return  '<NatexCompiler obj {}>'.format(id(self))
 
-        def _current_compilation(self):
-            class Printer(Visitor):
-                def get_args(self, args):
-                    processed_args = []
-                    for arg in args:
-                        if hasattr(arg, 'compilation'):
-                            processed_args.append(arg.display)
-                        else:
-                            processed_args
-                def flexible_sequence(self, tree):
-                    tree.display = '[' + ', '.join([str(arg) for arg in args]) + ']'
-                def rigid_sequence(self, tree):
-                    tree.display = '[!' + ', '.join([str(arg) for arg in args]) + ']'
-                def conjunction(self, tree):
-                    tree.display = '<' + ', '.join([str(arg) for arg in args]) + '>'
-                def disjunction(self, tree):
-                    tree.display = '{' + ', '.join([str(arg) for arg in args]) + '}'
-                def negation(self, tree):
+        def _current_compilation(self, tree):
+            class Printer(Transformer):
+                def flexible_sequence(self, args):
+                    return '[' + ', '.join([str(arg) for arg in args]) + ']'
+                def rigid_sequence(self, args):
+                    return '[!' + ', '.join([str(arg) for arg in args]) + ']'
+                def conjunction(self, args):
+                    return '<' + ', '.join([str(arg) for arg in args]) + '>'
+                def disjunction(self, args):
+                    return '{' + ', '.join([str(arg) for arg in args]) + '}'
+                def negation(self, args):
                     (arg,) = args
-                    tree.display = '-' + str(arg)
-                def regex(self, tree):
+                    return '-' + str(arg)
+                def regex(self, args):
                     (arg,) = args
-                    tree.display = str(arg)
-                def assignment(self, tree):
-                    tree.display = '${}={}'.format(*args)
-                def macro(self, tree):
-                    tree.display = args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
-                def literal(self, tree):
-                    tree.display = str(args[0])
-                def symbol(self, tree):
-                    tree.display = str(args[0])
-                def term(self, tree):
-                    tree.display = str(args[0])
-                def start(self, tree):
-                    tree.display = str(args[0])
-            if not isinstance(self._tree, Tree):
-                return str(self._tree)
+                    return str(arg)
+                def assignment(self, args):
+                    return '${}={}'.format(*args)
+                def macro(self, args):
+                    return args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
+                def literal(self, args):
+                    return str(args[0])
+                def symbol(self, args):
+                    return str(args[0])
+                def term(self, args):
+                    return str(args[0])
+                def start(self, args):
+                    return str(args[0])
+                def compiled(self, args):
+                    return str(args[0])
+            if not isinstance(tree, Tree):
+                return str(tree)
             else:
-                return Printer().transform(self._tree)
+                return Printer().transform(tree)
