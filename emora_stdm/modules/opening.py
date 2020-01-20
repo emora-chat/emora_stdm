@@ -166,21 +166,21 @@ component.add_transition(
 
 component.add_transition(
     'prestart', 'start_new',
-    None, {}, evaluation_function=is_new_user
+    None, {}, nlu_processor=is_new_user
 )
 
 # start: infrequent user
 
 component.add_transition(
     'prestart', 'start_infreq',
-    None, {}, evaluation_function=is_infreq_user
+    None, {}, nlu_processor=is_infreq_user
 )
 
 # start: frequent user
 
 component.add_transition(
     'prestart', 'start_freq',
-    None, {}, evaluation_function=is_freq_user
+    None, {}, nlu_processor=is_freq_user
 )
 
 component.add_transition(
@@ -209,14 +209,14 @@ component.add_transition(
     'receive_name', 'got_female_name',
     '(%username=&female_names)',
     {"i am an alexa prize socialbot"},
-    selection_function=save_female_gender
+    post_processor=save_female_gender
 )
 
 component.add_transition(
     'receive_name', 'got_male_name',
     '(%username=&male_names)',
     {"i am an alexa prize socialbot"},
-    selection_function=save_male_gender
+    post_processor=save_male_gender
 )
 
 component.add_transition(
@@ -270,7 +270,7 @@ component.add_transition(
     'how_are_you', 'feeling_pos',
     feelings_pos_and_not_received_how_are_you,
     {"im good"},
-    evaluation_function=is_positive_sentiment
+    nlu_processor=is_positive_sentiment
 )
 
 feelings_neg_and_not_received_how_are_you = """
@@ -284,7 +284,7 @@ component.add_transition(
     'how_are_you', 'feeling_neg',
     feelings_neg_and_not_received_how_are_you,
     {"im bad"},
-    evaluation_function=is_negative_sentiment
+    nlu_processor=is_negative_sentiment
 )
 
 feelings_neutral_and_not_received_how_are_you = """

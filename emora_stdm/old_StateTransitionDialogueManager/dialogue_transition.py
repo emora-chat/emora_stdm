@@ -1,8 +1,14 @@
+from enum import Enum
 
 import regex
 import random
 from emora_stdm.old_StateTransitionDialogueManager.expression import _ExpressionReducer, _expression_parser
 from emora_stdm.old_StateTransitionDialogueManager.utilities import all_grams, random_choice
+
+
+class DialogueTransitionConfiguration(Enum):
+    ERROR = 0
+    GLOBAL = 1
 
 
 class DialogueTransition:

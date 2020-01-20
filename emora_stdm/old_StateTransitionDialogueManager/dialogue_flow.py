@@ -1,12 +1,18 @@
-from structpy.graph.labeled_digraph import MapMultidigraph as Graph
-from emora_stdm.old_StateTransitionDialogueManager.knowledge_base import KnowledgeBase
-from emora_stdm.old_StateTransitionDialogueManager.utilities import all_grams, random_choice
-from emora_stdm.old_StateTransitionDialogueManager.dialogue_transition import DialogueTransition
-from emora_stdm.old_StateTransitionDialogueManager.stdm_exceptions import MissingStateException,\
-    MissingOntologyException, MissingKnowledgeException, MissingErrorStateException
-from copy import deepcopy
-import regex, json
+import json
 from collections import defaultdict
+from copy import deepcopy
+from typing import Union, Set, List, Dict, Callable, Tuple
+
+import regex
+from structpy.graph.labeled_digraph import MapMultidigraph as Graph
+
+from emora_stdm.old_StateTransitionDialogueManager.dialogue_transition import DialogueTransition, \
+    DialogueTransitionConfiguration
+from emora_stdm.old_StateTransitionDialogueManager.knowledge_base import KnowledgeBase
+from emora_stdm.old_StateTransitionDialogueManager.stdm_exceptions import MissingStateException, \
+    MissingOntologyException, MissingKnowledgeException, MissingErrorStateException
+from emora_stdm.old_StateTransitionDialogueManager.utilities import all_grams, random_choice
+
 
 class DialogueFlow:
 
@@ -82,11 +88,21 @@ class DialogueFlow:
                 raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (
                     transition_expression, nlg_expression, missing))
 
-    def add_transition(self, source, target, nlu, nlg, settings='',evaluation_function=None,selection_function=None):
+    def add_transition(self, source: str, target: str, nlu: Union[None, str, List[str]], nlg: Union[None, Set[str], Dict[str, float]], settings: DialogueTransitionConfiguration = None, nlu_processor: Callable[[str, Dict[str, str], float], Tuple[float, Dict[str, Union[str, Set[str]]]]] = None, post_processor: Callable[[str, str, Dict[str, str]], None] = None):
+        """
+        :param source: the name of the source state.
+        :param target: the name of the target state.
+        :param nlu:
+        :param nlg:
+        :param settings:
+        :param nlu_processor:
+        :param post_processor:
+        :return:
+        """
         self.check_transition_valid(source, target, nlu, nlg)
         if self._graph.has_arc(source, target):
-            self._graph.remove_arc(source, target)
-        transition = DialogueTransition(self, source, target, nlu, nlg, settings, evaluation_function, selection_function)
+            self._graph.remove_arc(source, target)  # TODO: BUG missing the 3rd argument
+        transition = DialogueTransition(self, source, target, nlu, nlg, settings, nlu_processor, post_processor)
         self._graph.add(source, target, transition)
 
     def add_state_selection_function(self, state_name, function):
