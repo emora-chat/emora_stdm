@@ -1,4 +1,9 @@
+emora_stdm.egg-info/
+dist/
+venv/
+
 *__pycache__*
 *.idea/*
 *.pyc
 .pytest_cache/*
+
