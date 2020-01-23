@@ -4,7 +4,7 @@ from lark import Lark, Transformer, Tree, Visitor
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 
 
-class Natex:
+class NatexNLU:
 
     def __init__(self, expression, vars=None, macros=None):
         self._expression = expression
@@ -24,9 +24,12 @@ class Natex:
             vars.update(self._vars)
         if macros is not None:
             macros.update(self._macros)
-        if self._regex is None:
+        compiled = self._regex is None
+        if not compiled:
             self.compile(Ngrams(natural_language), vars, macros, debugging)
         match = regex.match(self._regex, natural_language)
+        if not compiled:
+            self._regex = None
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):
@@ -44,7 +47,7 @@ class Natex:
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
-        self._regex = Natex.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
+        self._regex = NatexNLU.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
 
     def regex(self):
         return self._regex
@@ -157,7 +160,7 @@ class Natex:
             tree.data = 'compiled'
             symbol = args[0]
             if symbol in self._assignments:
-                value = self._assignments[symbol]
+                value = self._assignments[symbol]  # todo: fix to use regex backreference
             else:
                 value = self._vars[symbol]
             tree.children[0] = value
@@ -168,7 +171,11 @@ class Natex:
             tree.data = 'compiled'
             self._assignments[args[0]] = args[1]
             value = self.to_strings([args[1]])[0]
-            tree.children[0] = '(?P<{}>{})'.format(args[0], value)
+            if isinstance(value, set):
+                self._vars[args[0]] = value
+                tree.children[0] = value
+            else:
+                tree.children[0] = '(?P<{}>{})'.format(args[0], value)
             if self._debugging: print('    {:15} {}'.format('Assignment', self._current_compilation(self._tree)))
 
         def macro(self, tree):

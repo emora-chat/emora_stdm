@@ -1,11 +1,14 @@
 
-from emora_stdm.state_transition_dialogue_manager.natex import Natex
+from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager.dialogue_transition import DialogueTransition
 
 
-class DialogueFlowNlu:
+class NLU(DialogueTransition):
+
 
     def __init__(self, natex=None, score=None, dialogue_flow=None):
         self._dialogue_flow = dialogue_flow
+
         self._natexes = self._construct_natexes(natex)
         if score is None:
             score = 0.0
@@ -18,7 +21,7 @@ class DialogueFlowNlu:
                 return self._score, match.groupdict()
         return 0.0, {}
 
-    def natex(self):
+    def natexes(self):
         return self._natexes
 
     def score(self):
@@ -36,21 +39,21 @@ class DialogueFlowNlu:
     def _construct_natexes(self, natex):
         if natex is None:
             return []
-        if isinstance(natex, Natex):
+        if isinstance(natex, NatexNLU):
             return [natex]
         elif isinstance(natex, str):
-            return [Natex(natex)]
+            return [NatexNLU(natex)]
         elif isinstance(natex, list):
             for i, natex_option in enumerate(natex):
                 if isinstance(natex_option, str):
-                    natex[i] = Natex(natex_option)
+                    natex[i] = NatexNLU(natex_option)
             return natex
         else:
             raise ValueError(
                 'Could not construct natex list from {}'.format(natex))
 
     def __str__(self):
-        s = 'DialogueFlowNlu({})'.format(
+        s = 'Nlu({})'.format(
             ', '.join([x.expression() for x in self._natexes]))
         return s
 

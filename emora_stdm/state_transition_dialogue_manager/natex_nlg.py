@@ -3,7 +3,7 @@ from lark import Lark, Transformer, Tree, Visitor
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 
 
-class NatexNlg:
+class NatexNLG:
 
     def __init__(self, expression, vars=None, macros=None, ngrams=None):
         self._expression = expression
@@ -36,10 +36,27 @@ class NatexNlg:
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
-        return NatexNlg.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
+        compiler = NatexNLG.Compiler(ngrams, vars, macros, debugging)
+        generation = compiler.compile(self._expression)
+        if self.is_complete(generation):
+            return generation
+        else:
+            return None
+
+    def is_complete(self, string):
+        return True # todo: make this as a check if NLG is complete or if a NatexNLG has no macros,vars,etc.
 
     def ngrams(self):
         return self._ngrams
+
+    def expression(self):
+        return self._expression
+
+    def macros(self):
+        return self._macros
+
+    def vars(self):
+        return self._vars
 
     def __str__(self):
         return 'NatexNlg({})'.format(self._expression)
@@ -76,6 +93,9 @@ class NatexNlg:
             if self._debugging:
                 print('  {:15} {}'.format('Final', generated))
             return generated
+
+        def assignments(self):
+            return self._assignments
 
         def to_strings(self, args):
             strings = []
