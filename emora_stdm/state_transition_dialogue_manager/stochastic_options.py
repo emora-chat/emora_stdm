@@ -27,3 +27,5 @@ class StochasticOptions(dict):
             if r < threshold:
                 return options[i]
         return options[-1]
+
+
