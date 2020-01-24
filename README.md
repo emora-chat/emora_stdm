@@ -4,71 +4,37 @@
 
 ```python
 from emora_stdm import DialogueFlow
+from enum import Enum
 
-# create a new dialogue manager and specify start state
-df = DialogueFlow(initial_state='begin')
+# states are typically represented as an enum
+class State(Enum):
+    START = 0
+    FAM_ANS = 1
+    FAM_Y = 2
+    FAM_N = 3
+    FAM_ERR = 4
+    WHATEV = 5
 
-# add type-subtype relations to the ontology
-# (abstract types should be marked with '&')
-df.knowledge_base().add_type('dog', '&animal')
-df.knowledge_base().add_type('cat', '&animal')
+# initialize the DialogueFlow object, which uses a state-machine to manage dialogue
+df = DialogueFlow(State.START)
 
-# load knowledge base contents from json
-# (see Knowledge Base and Ontology section)
-with open('kb.json', 'r') as f:
-    df.knowledge_base().load_json(f.read())
+# add transitions to create an arbitrary graph for the state machine
+df.add_system_transition(State.START, State.FAM_ANS, '[!do you have a $F={brother, sister, son, daughter, cousin}]')
+df.add_user_transition(State.FAM_ANS, State.FAM_Y, '[{yes, yea, yup, yep, i do, yeah}]')
+df.add_user_transition(State.FAM_ANS, State.FAM_N, '[{no, nope}]')
+df.add_system_transition(State.FAM_Y, State.WHATEV, 'thats great i wish i had a $F')
+df.add_system_transition(State.FAM_N, State.WHATEV, 'ok then')
+df.add_system_transition(State.FAM_ERR, State.WHATEV, 'im not sure i understand')
 
-# define all states of the dialogue state machine
-df.add_states([
-    'begin',
-    'pet_chat_state',
-    'movie_chat_state',
-])
+# each state that will be reached on the user turn should define an error transition if no other transition matches
+df.set_error_successor(State.FAM_ANS, State.FAM_ERR)
+df.set_error_successor(State.WHATEV, State.START)
 
-# add transitions to the dialogue state machine
-df.add_transition(
-    'begin', 'movie_chat_state',
-    [
-        '({movie, movies, film, films})'
-    ],
-    {
-        'i like movies',
-        'i watch movies'
-    }
-)
-
-df.add_transition(
-    'begin', 'pet_chat_state',
-    [
-        'i have a &animal'
-    ],
-    {
-        'i have a dog'
-    }
-)
-
-df.add_transition(
-    'movie_chat_state', 'begin',
-    [], {'cool'}, settings='e'
-)
-
-df.add_transition(
-    'pet_chat_state', 'begin',
-    [], {'pets are great'}, settings='e'
-)
-
-df.add_transition(
-    'begin', 'begin', [], {}, settings='e'
-)
-
-# validate the DialogueFlow
-df.check_error_transitions_complete()
-
-# talk to your dialogue agent in a loop
-while True:
-    i = input('U: ')
-    df.user_transition(i)
-    print('S:', df.system_transition())
+if __name__ == '__main__':
+    # automatic verification of the DialogueFlow's structure (dumps warnings to stdout)
+    df.check()
+    # run the DialogueFlow in interactive mode to test
+    df.run(debugging=True)
 ```
 
 Defines a dialogue management framework based on state machines and 
@@ -79,133 +45,117 @@ a state machine that drives natural language conversation. State
 transitions in the state machine (alternately) represent either 
 system or user turns.
 
-`dialogue_manager = DialogueFlow('start')`
-initializes a new `DialogueFlow` object with `'start'` as the 
+`dialogue_manager = DialogueFlow(start_state)`
+initializes a new `DialogueFlow` object with `start_state` as the 
 initial state of the state machine.
 
-All states must be specified before they are used in a transition by calling the `.add_state(state)`
-method. Each state is defined as a string literal like the following:
-
-`
-dialogue_manager.add_state('start')
-`
-
-Alternatively, multiple states can be added at once using the `.add_states(states)` method where `states`
-is a list of string literals, like the following:
-
-`
-dialogue_manager.add_states(['feelings_pos', 'feelings_pos_reason'])
-`
-
-To add transitions, use:
-```.add_transition(source, target, NLU, NLG_list)``` method like the 
-following:
-```
-dialogue_manager.add_transition(
-    'feelings_pos', 'feelings_pos_reason',
-    '{(what, &feelings_positive, {part, most, best}),'
-    '(you, &feelings_positive)}',
-    ['what excites you the most']
-)
-```
-where the first two arguments are the source and target states of 
+To add transitions, use either:
+```.add_system_transition(source_state, target_state, NatexNLG)``` method to add a system transition,
+ or ```.add_user_transition(source_state, target_state, NatexNLU)``` method to add a user transition.
+ 
+The first two arguments are the source and target states of 
 the transition, the third argument is a string that defines a set 
 of natural language expressions given by a user that satisfy the 
-transition (see below), and the fourth argument is a list of natural 
-language expressions that the system selects as a response when
-taking this transition during its turn.
-
-If you want to define a function that is used to evaluate satisfaction of the transition, instead of
-(or in addition to) the natural language expressions, you can pass the function name in as the 
-optional fifth parameter `evaluation_function` of the `.add_transition` method.
-
-Similarly, if you want to define a function that is ran upon selection of a transition, such as
-to update the current variables (see below), you can pass the function name in as the 
-optional sixth parameter `selection_function` of the `.add_transition` method.
+transition (see NatexNLU/NatexNLG below).
 
 A user turn can be taken, updating state, using
 ```
-dialogue_manager.user_transition(input)
+dialogue_manager.user_turn(input)
 ```
 where input is a string representing the user utterance.
 
 A system turn can be taken using
 ```
-dialogue_manager.system_transition()
+response = dialogue_manager.system_turn()
 ```
 
-
-## NLU Expressions
+## NatexNLU
 
 Strings created for transition NLU define a set of user expressions
 that satisfy the transition by compiling into regular expressions.
-These expressions can be formed using the below constructs, which
-are all arbitrarily nestable and concatenable:
+
+You can also create and test standalone Natex objects:
+```python
+from emora_stdm import NatexNLU, NatexNLG
+
+natex_nlu = NatexNLU('[{hi, hello} you]')
+assert natex_nlu.match('hi there how are you', debugging=True)
+
+natex_nlg = NatexNLG('[!well {hi, hello} there you look {good, fine, great} today]')
+print(natex_nlg.generate(debugging=True))
+```
+
+Natex expressions can be formed using the below constructs, which
+are arbitrarily nestable and concatenable.
 
 ### Literal
 ```
 'hello there'
 ```
-directly match the user utterance "hello there"
+directly match a literal substring
 
 ### Disjunction
 ```
 '{hello there, hi}'
 ```
-matches if the utterance contains any term inside `{}`, in this case 
-"hello there", "hi", "hi hello there", and "oh hi bob" all match
+matches a substring containing exactly one term inside `{}`, in this case 
+"hello there" and "hi" both match.
 
 ### Conjunction
 ```
 '<bob, hi>'
 ```
-matches as long as the utterance contains all terms inside `<>`,
-in this case, "hi bob" and "oh bob hi" both would match, but not
+matches a substring that contains at least all terms inside `<>`,
+in this case, "hi bob" and "oh bob well hi there" both would match, but not
 "hi"
+
+### Flexible sequence
+```
+'[hi, bob, how, you]'
+```
+matches as long as the substring contains all terms inside `[]`,
+and the terms are ordered properly within the utterance. Matches
+in the example include "hi bob how are you", but not "how are you 
+bob". Note that this expression matches any amount of characters
+before and after the requisite sequence.
+
+### Inflexible sequence
+```
+'[!how, are, you]'
+```
+matches an exact sequence of terms with no words inserted between
+terms. The only utterance matching the example is "how are you".
+This construct is helpful with nested constructs inside of it that
+require an exact ordering, with no extra characters between each
+element.
 
 ### Negation
 ```
-i am -bad
+[!i am -bad]
 ```
 prepend `-` to negate the next term in the expression. The example
 will match any expression starting with "i am" where "bad" does NOT
 follow. Note that the scope of the negation extends to the end
-of the utterance due to limitations in regex.
-
-### Flexible sequence
-```
-'(hi, bob, how, you)'
-```
-matches as long as the utterance contains all terms inside `()`,
-and the terms are ordered properly within the utterance. Matches
-in the example include "hi bob how are you", but not "how are you 
-bob"
-
-### Inflexible sequence
-```
-'[how, are, you]'
-```
-matches an exact sequence of terms with no words inserted between
-terms. The only utterance matching the example is "how are you"
+of the substring due to limitations in regex.
 
 ### Regular expression
 ```
 '/[A-Z a-z]+/'
 ```
-substrings within `//` define a python regex
+substrings within `//` define a python regex directly.
 
 ### Nesting
 ```
-'[{hi, hello} (how /is|was/ weekend)]'
+'[!{hi, hello} [how, weekend]]'
 ```
-would match "hi how was your weekend", "oh hello, so how is the
+would match "hi how was your weekend", "oh hello so how is the
 weekend going", ...
 
 ### Variable assignment
 ```
-'i am %f={good, bad}'
+'[!i am $f={good, bad}]'
 ```
-using `%var=` will assign variable `var` to the next term in
+using `$var=` will assign variable `var` to the next term in
 the expression. The variable will persist until overwritten,
 and can be referenced in future NLU or NLG expressions.
 The example would match either "i am good" or "i am bad", and
@@ -214,23 +164,18 @@ on what the user said.
 
 ### Variable reference
 ```
-why are you $f today
+[!why are you $f today]
 ```
 using `$` references a previously assigned variable. If no such
 variable exists, the expression as a whole returns with no match.
 The example would match "why are you good today" if `f="good"`, 
 but would not match if `f="bad"`
 
-## If NLU debugging gets tricky
-For a precise understanding of the NLU expressions you produce,
-you can view the compiled python regex like so:
-```
-print(dialogue_manager.graph().arc(source, target).re)
-```
-And then debug at https://regex101.com/ (make sure to switch to
-python regexes)
+### Macros
 
-## Knowledge base and ontology
+
+
+## Knowledge base and ontology (doc out of date)
 
 The Knowledge Base and Ontology are optional components of the 
 dialogue manager that allow you to write more generalizable

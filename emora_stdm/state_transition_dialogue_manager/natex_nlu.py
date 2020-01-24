@@ -37,7 +37,7 @@ class NatexNLU:
         else:
              macros = self._macros
         if debugging:
-            print('Natex compilation:')
+            print('NatexNLU compilation:')
             print('  {:15} {}'.format('Input', ngrams.text()))
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
             print('  {:15} {}'.format('Vars', ', '.join([k + '=' + str(v) for k, v in vars.items()])))

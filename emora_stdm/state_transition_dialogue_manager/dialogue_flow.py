@@ -42,7 +42,7 @@ class DialogueFlow:
             if self.speaker() == Speaker.SYSTEM:
                 print("S:", self.system_turn(debugging=debugging))
             else:
-                user_input = input("U:")
+                user_input = input("U: ")
                 self.user_turn(user_input, debugging=debugging)
 
     def system_turn(self, debugging=False):
@@ -70,7 +70,7 @@ class DialogueFlow:
             print('Transitioning {} -> {}'.format(self._state, next_state))
             self.set_state(next_state)
         else:
-            next_state = self.data(self._state)['error']
+            next_state = self._graph.data(self._state)['error']
             print('Error transition {} -> {}'.format(self._state, next_state))
             self.set_state(next_state)
         self.set_speaker(Speaker.SYSTEM)
@@ -219,6 +219,9 @@ class DialogueFlow:
 
     def set_state(self, state: Enum):
         self._state = state
+
+    def set_error_successor(self, state, error_successor):
+        self._graph.data(state)['error'] = error_successor
 
     def speaker(self):
         return self._speaker

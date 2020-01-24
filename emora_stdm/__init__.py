@@ -1,3 +1,6 @@
 
-from emora_stdm.old_StateTransitionDialogueManager.dialogue_flow import DialogueFlow, DialogueTransition
-from emora_stdm.old_StateTransitionDialogueManager.knowledge_base import KnowledgeBase
+from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
+from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
+from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
+from emora_stdm.state_transition_dialogue_manager.macro import Macro
