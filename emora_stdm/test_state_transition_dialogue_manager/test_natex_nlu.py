@@ -82,36 +82,48 @@ def HAPPY(ngrams, vars, args):
         vars['SENTIMENT'] = 'happy'
         return {'.*'}
     else:
-        vars['SENTIMENT'] = 'sad'
         return {'-'}
 
 def FIRSTS(ngrams, vars, args):
     firsts = ''
     for arg in args:
-        (fl,) = arg
-        firsts += fl
+        firsts += arg[0]
     return {firsts, firsts[::-1]}
 
-def INTER(ngrams, vars, args):
-    return set.union(args)
+def SET(ngrams, vars, args):
+    return set(args)
 
-macros = {'SIMPLE': SIMPLE, 'HAPPY': HAPPY, 'FIRSTS': FIRSTS, 'INTER': INTER}
+def INTER(ngrams, vars, args):
+    return set.intersection(*args)
+
+macros = {'SIMPLE': SIMPLE, 'HAPPY': HAPPY, 'FIRSTS': FIRSTS, 'INTER': INTER, 'SET': SET}
 
 def test_simple_macro():
-    pass
+    natex = NatexNLU('[!i #SIMPLE]', macros=macros)
+    assert natex.match('i foo')
+    assert natex.match('i bar')
+    assert not natex.match('i err')
+    natex = NatexNLU('[!i #SIMPLE()]', macros=macros)
+    assert natex.match('i foo')
+    assert natex.match('i bar')
+    assert not natex.match('i err')
 
-def test_macro_with_filter():
-    pass
-
-def test_macro_with_reference():
-    pass
+def test_macro_with_args():
+    v = {'X': 'carrot'}
+    natex = NatexNLU('#FIRSTS(apple, banana, $X)', macros=macros)
+    assert natex.match('abc', vars=v, debugging=False)
+    assert natex.match('cba', vars=v)
 
 def test_macro_with_assignment():
-    pass
-
-def test_macro_with_set_assignment():
-    pass
+    v = {}
+    natex = NatexNLU('#HAPPY', macros=macros)
+    assert natex.match('i am good today', vars=v)
+    assert v['SENTIMENT'] == 'happy'
+    assert not natex.match('i am bad')
 
 def test_nested_macro():
-    pass
+    natex = NatexNLU('#INTER(#SET(apple, banana), #SET(apple, orange))', macros=macros)
+    assert natex.match('apple', debugging=False)
+    assert not natex.match('orange')
+
 

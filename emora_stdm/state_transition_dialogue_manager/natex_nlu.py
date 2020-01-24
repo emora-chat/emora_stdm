@@ -74,7 +74,7 @@ class NatexNLU:
         regex: "/" regex_value "/"
         reference: "$" symbol
         assignment: "$" symbol "=" term
-        macro: symbol "(" term (","? " "? term)+ ")" 
+        macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
         literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
@@ -105,15 +105,6 @@ class NatexNLU:
                 elif isinstance(arg, set):
                     strings.append('(?:' + '|'.join(arg) + ')')
             return strings
-
-        def to_sets(self, args):
-            sets = []
-            for arg in args:
-                if isinstance(arg, str):
-                    sets.append({arg})
-                elif isinstance(arg, set):
-                    sets.append(arg)
-            return sets
 
         def flexible_sequence(self, tree):
             args = [x.children[0] for x in tree.children]
@@ -171,20 +162,24 @@ class NatexNLU:
             tree.data = 'compiled'
             self._assignments.add(args[0])
             value = self.to_strings([args[1]])[0]
-            if isinstance(value, set):
-                self._vars[args[0]] = value
-                tree.children[0] = value
-            else:
-                tree.children[0] = '(?P<{}>{})'.format(args[0], value)
+            tree.children[0] = '(?P<{}>{})'.format(args[0], value)
             if self._debugging: print('    {:15} {}'.format('Assignment', self._current_compilation(self._tree)))
 
         def macro(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
             symbol = args[0]
-            macro_args = self.to_sets(args[1:])
-            tree.children[0] = self._macros[symbol](self._ngrams, self._vars, macro_args)
-            if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
+            macro_args = args[1:]
+            if symbol in self._macros:
+                macro = self._macros[symbol]
+                try:
+                    tree.children[0] = macro(self._ngrams, self._vars, macro_args)
+                except Exception as e:
+                    if self._debugging: print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
+                    tree.children[0] = '-'
+                if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
+            else:
+                if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
 
         def literal(self, tree):
             args = tree.children
@@ -207,7 +202,7 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = args[0]
+            tree.children[0] = self.to_strings(args)[0]
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
