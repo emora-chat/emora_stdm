@@ -6,45 +6,39 @@ from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 
 class NatexNLU:
 
-    def __init__(self, expression, vars=None, macros=None):
+    def __init__(self, expression, macros=None):
         self._expression = expression
         self._regex = None
-        self._regex_parser = None
-        if vars is None:
-            self._vars = {}
-        else:
-            self._vars = vars
         if macros is None:
-            self._macros = {}
-        else:
-            self._macros = macros
+            macros = {}
+        self._macros = macros
 
     def match(self, natural_language, vars=None, macros=None, debugging=False):
-        if vars is not None:
-            vars.update(self._vars)
-        if macros is not None:
-            macros.update(self._macros)
-        compiled = self._regex is None
-        if not compiled:
-            self.compile(Ngrams(natural_language), vars, macros, debugging)
-        match = regex.match(self._regex, natural_language)
-        if not compiled:
-            self._regex = None
+        if vars is None:
+            vars = {}
+        original_vars = vars
+        vars = dict(vars)
+        self.compile(Ngrams(natural_language), vars, macros, debugging)
+        match = regex.fullmatch(self._regex, natural_language)
+        if match:
+            vars.update(match.groupdict())
+            original_vars.update(vars)
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):
-        if vars is not None:
-            vars.update(self._vars)
-        else:
-            vars = self._vars
+        if vars is None:
+            vars = {}
         if macros is not None:
-            macros.update(self._macros)
+            for k, v in self._macros:
+                if k not in macros:
+                    macros[k] = v
         else:
-            macros = self._macros
+             macros = self._macros
         if debugging:
             print('Natex compilation:')
-            print('  {:15} {}'.format('Ngrams', ', '.join(ngrams)))
+            print('  {:15} {}'.format('Input', ngrams.text()))
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
+            print('  {:15} {}'.format('Vars', ', '.join([k + '=' + str(v) for k, v in vars.items()])))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
         self._regex = NatexNLU.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
@@ -58,6 +52,9 @@ class NatexNLU:
     def macros(self):
         return self._macros
 
+    def set_macros(self, macros):
+        self._macros = macros
+
     def __str__(self):
         return 'Natex({})'.format(self._expression)
 
@@ -68,18 +65,19 @@ class NatexNLU:
         grammar = r"""
         start: term
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | negation 
-              | regex | assignment | macro | literal
+              | regex | reference | assignment | macro | literal
         flexible_sequence: "[" term (","? " "? term)* "]"
         rigid_sequence: "[!" term (","? " "? term)+ "]"
         conjunction: "<" term (","? " "? term)+ ">"
         disjunction: "{" term (","? " "? term)+ "}"
         negation: "-" term
-        regex: "/" /[^\/]+/ "/"
+        regex: "/" regex_value "/"
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: symbol "(" term (","? " "? term)+ ")" 
         literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
         symbol: /[a-z_A-Z.0-9]+/
+        regex_value: /[^\/]+/
         """
         parser = Lark(grammar)
 
@@ -88,7 +86,7 @@ class NatexNLU:
             self._ngrams = ngrams
             self._vars = vars
             self._macros = macros
-            self._assignments = {}
+            self._assignments = set()
             self._debugging = debugging
             self._previous_compile_output = ''
 
@@ -132,7 +130,7 @@ class NatexNLU:
         def conjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = ''.join(['(?={})'.format(x) for x in self.to_strings(args)])
+            tree.children[0] = ''.join(['.*?(?=.*?{})'.format(x) for x in self.to_strings(args)]) + '.*'
             if self._debugging: print('    {:15} {}'.format('Conjunction', self._current_compilation(self._tree)))
 
         def disjunction(self, tree):
@@ -160,16 +158,18 @@ class NatexNLU:
             tree.data = 'compiled'
             symbol = args[0]
             if symbol in self._assignments:
-                value = self._assignments[symbol]  # todo: fix to use regex backreference
-            else:
+                value = '(?P={})'.format(symbol)
+            elif symbol in self._vars:
                 value = self._vars[symbol]
+            else:
+                value = '_{}_NOT_FOUND_'.format(symbol)
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
         def assignment(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            self._assignments[args[0]] = args[1]
+            self._assignments.add(args[0])
             value = self.to_strings([args[1]])[0]
             if isinstance(value, set):
                 self._vars[args[0]] = value
@@ -183,7 +183,7 @@ class NatexNLU:
             tree.data = 'compiled'
             symbol = args[0]
             macro_args = self.to_sets(args[1:])
-            tree.children[0] = self._macros[symbol](self._ngrams, self._vars, self._assignments, macro_args)
+            tree.children[0] = self._macros[symbol](self._ngrams, self._vars, macro_args)
             if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
 
         def literal(self, tree):

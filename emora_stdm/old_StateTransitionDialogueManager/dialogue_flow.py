@@ -88,7 +88,12 @@ class DialogueFlow:
                 raise MissingOntologyException('(%s): nlg option "%s" is using a non-existent ontology reference "%s"' % (
                     transition_expression, nlg_expression, missing))
 
-    def add_transition(self, source: str, target: str, nlu: Union[None, str, List[str]], nlg: Union[None, Set[str], Dict[str, float]], settings: DialogueTransitionConfiguration = None, nlu_processor: Callable[[str, Dict[str, str], float], Tuple[float, Dict[str, Union[str, Set[str]]]]] = None, post_processor: Callable[[str, str, Dict[str, str]], None] = None):
+    def add_transition(self, source: str, target: str,
+                       nlu: Union[None, str, List[str]],
+                       nlg: Union[None, Set[str], Dict[str, float]],
+                       settings: DialogueTransitionConfiguration = None,
+                       nlu_processor: Callable[[str, Dict[str, str], float], Tuple[float, Dict[str, Union[str, Set[str]]]]] = None,
+                       post_processor: Callable[[str, str, Dict[str, str]], None] = None):
         """
         :param source: the name of the source state.
         :param target: the name of the target state.

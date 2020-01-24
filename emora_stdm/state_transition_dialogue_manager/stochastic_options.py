@@ -2,28 +2,13 @@
 import random
 
 
-def StochasticOptions(iterable):
-    if isinstance(iterable, dict):
-        return WeightedStochasticOptions(iterable)
-    else:
-        return UniformStochasticOptions(iterable)
+class StochasticOptions(dict):
 
-
-class UniformStochasticOptions(set):
-
-    def __init__(self, iterable):
-        set.__init__(self, iterable)
-
-    def select(self):
-        options = list(self)
-        assert len(options) > 0
-        return random.choice(options)
-
-
-class WeightedStochasticOptions(dict):
-
-    def __init__(self, dict_like):
-        dict.__init__(dict_like)
+    def __init__(self, options):
+        if isinstance(options, dict):
+            dict.__init__(self, options)
+        else:
+            dict.__init__(self, {k: 1.0 for k in options})
 
     def select(self):
         options = list(self.keys())
