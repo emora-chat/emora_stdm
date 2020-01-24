@@ -10,6 +10,7 @@ from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.settings import Settings
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
+from emora_stdm.state_transition_dialogue_manager.macro import Macro
 
 Graph = Database(MapMultidigraph)
 
@@ -17,17 +18,20 @@ class Speaker(Enum):
     SYSTEM = 0
     USER = 1
 
+
 class DialogueFlow:
 
     Speaker = Speaker
 
-    def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM):
+    def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM, macros: Dict[str, Macro] =None):
         self._graph = Graph()
         self._initial_state = initial_state
         self._state = initial_state
         self._speaker = initial_speaker
         self._vars = {}
-        self._macros = {}
+        if macros is None:
+            macros = {}
+        self._macros = macros
 
     def run(self, debugging=False):
         """
