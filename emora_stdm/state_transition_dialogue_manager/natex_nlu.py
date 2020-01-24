@@ -66,8 +66,8 @@ class NatexNLU:
         start: term
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | negation 
               | regex | reference | assignment | macro | literal
-        flexible_sequence: "[" term (","? " "? term)* "]"
-        rigid_sequence: "[!" term (","? " "? term)+ "]"
+        flexible_sequence: "[" " "? term (","? " "? term)* "]"
+        rigid_sequence: "[!" " "? term (","? " "? term)+ "]"
         conjunction: "<" term (","? " "? term)+ ">"
         disjunction: "{" term (","? " "? term)+ "}"
         negation: "-" term
@@ -104,6 +104,13 @@ class NatexNLU:
                     strings.append(arg)
                 elif isinstance(arg, set):
                     strings.append('(?:' + '|'.join(arg) + ')')
+                elif isinstance(arg, bool):
+                    if arg:
+                        strings.append('.*')
+                    else:
+                        strings.append('_FALSE_')
+                elif arg is None:
+                    strings.append('')
             return strings
 
         def flexible_sequence(self, tree):
@@ -225,7 +232,7 @@ class NatexNLU:
                 def assignment(self, args):
                     return '${}={}'.format(*args)
                 def macro(self, args):
-                    return args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
+                    return '#' + args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
                 def literal(self, args):
                     return str(args[0])
                 def symbol(self, args):

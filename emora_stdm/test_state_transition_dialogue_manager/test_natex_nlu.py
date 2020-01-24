@@ -80,9 +80,9 @@ def SIMPLE(ngrams, vars, args):
 def HAPPY(ngrams, vars, args):
     if ngrams & {'yay', 'hooray', 'happy', 'good', 'nice', 'love'}:
         vars['SENTIMENT'] = 'happy'
-        return {'.*'}
+        return True
     else:
-        return {'-'}
+        return False
 
 def FIRSTS(ngrams, vars, args):
     firsts = ''
@@ -117,7 +117,7 @@ def test_macro_with_args():
 def test_macro_with_assignment():
     v = {}
     natex = NatexNLU('#HAPPY', macros=macros)
-    assert natex.match('i am good today', vars=v)
+    assert natex.match('i am good today', vars=v, debugging=False)
     assert v['SENTIMENT'] == 'happy'
     assert not natex.match('i am bad')
 
