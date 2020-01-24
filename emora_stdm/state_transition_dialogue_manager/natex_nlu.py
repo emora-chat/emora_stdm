@@ -13,12 +13,14 @@ class NatexNLU:
             macros = {}
         self._macros = macros
 
-    def match(self, natural_language, vars=None, macros=None, debugging=False):
+    def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
         if vars is None:
             vars = {}
         original_vars = vars
         vars = dict(vars)
-        self.compile(Ngrams(natural_language), vars, macros, debugging)
+        if ngrams is None:
+            ngrams = Ngrams(natural_language)
+        self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
         if match:
             vars.update(match.groupdict())

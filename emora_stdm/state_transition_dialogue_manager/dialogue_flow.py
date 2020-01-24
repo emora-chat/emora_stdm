@@ -14,38 +14,62 @@ from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 Graph = Database(MapMultidigraph)
 
 class Speaker(Enum):
-    ERROR = -1
     SYSTEM = 0
     USER = 1
 
-class DialogueFlow(Graph):
+class DialogueFlow:
 
     Speaker = Speaker
 
     def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM):
-        Graph.__init__(self)
+        self._graph = Graph()
         self._initial_state = initial_state
         self._state = initial_state
         self._speaker = initial_speaker
         self._vars = {}
         self._macros = {}
 
-    def system_turn(self):
+    def run(self, debugging=False):
+        """
+        test in interactive mode
+        :return: None
+        """
+        while True:
+            if self.speaker() == Speaker.SYSTEM:
+                print("S:", self.system_turn(debugging=debugging))
+            else:
+                user_input = input("U:")
+                self.user_turn(user_input, debugging=debugging)
+
+    def system_turn(self, debugging=False):
         """
         an entire system turn comprising a single system utterance and
         one or more system transitions
         :return: the natural language system response
         """
-        pass
+        response, next_state = self.system_transition(debugging=debugging)
+        print('Transitioning {} -> {}'.format(self._state, next_state))
+        self.set_state(next_state)
+        self.set_speaker(Speaker.USER)
+        return response
 
-    def user_turn(self, natural_language):
+    def user_turn(self, natural_language, debugging=False):
         """
         an entire user turn comprising one user utterance and
         one or more user transitions
         :param natural_language:
+        :param debugging:
         :return: None
         """
-        pass
+        next_state = self.user_transition(natural_language, debugging=debugging)
+        if next_state:
+            print('Transitioning {} -> {}'.format(self._state, next_state))
+            self.set_state(next_state)
+        else:
+            next_state = self.data(self._state)['error']
+            print('Error transition {} -> {}'.format(self._state, next_state))
+            self.set_state(next_state)
+        self.set_speaker(Speaker.SYSTEM)
 
     def system_transition(self, state: Enum =None, debugging=False):
         """
@@ -56,8 +80,8 @@ class DialogueFlow(Graph):
         if state is None:
             state = self._state
         transition_options = {}
-        for arc in self.arcs_out(state):
-            arc_data = self.arc_data(*arc)
+        for arc in self._graph.arcs_out(state):
+            arc_data = self._graph.arc_data(*arc)
             natex, settings = arc_data['natex'], arc_data['settings']
             vars = HashableDict(self._vars)
             generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
@@ -83,11 +107,11 @@ class DialogueFlow(Graph):
             state = self._state
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
-        for arc in self.arcs_out(state):
-            arc_data = self.arc_data(*arc)
+        for arc in self._graph.arcs_out(state):
+            arc_data = self._graph.arc_data(*arc)
             natex, settings = arc_data['natex'], arc_data['settings']
             vars = dict(self._vars)
-            match = natex.match(natural_language, vars, self._macros, debugging)
+            match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
                 transition_options.append((settings.score, arc, vars))
         if transition_options:
@@ -99,7 +123,7 @@ class DialogueFlow(Graph):
 
     def add_user_transition(self, source: Enum, target: Enum,
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
-        if self.has_arc(source, target, Speaker.USER):
+        if self._graph.has_arc(source, target, Speaker.USER):
             raise ValueError('user transition {} -> {} already exists'.format(source, target))
         if isinstance(natex_nlu, str):
             natex_nlu = NatexNLU(natex_nlu, macros=self._macros)
@@ -109,12 +133,12 @@ class DialogueFlow(Graph):
                 natex_nlu = NatexNLU('{' + ', '.join(natex_nlu) + '}')
             elif isinstance(item, NatexNLU):
                 raise NotImplementedError()
-        if not self.has_node(source):
+        if not self._graph.has_node(source):
             self.add_state(source)
-        if not self.has_node(target):
+        if not self._graph.has_node(target):
             self.add_state(target)
-        self.add_arc(source, target, Speaker.USER)
-        arc_data = self.arc_data(source, target, Speaker.USER)
+        self._graph.add_arc(source, target, Speaker.USER)
+        arc_data = self._graph.arc_data(source, target, Speaker.USER)
         arc_data['natex'] = natex_nlu
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
@@ -122,7 +146,7 @@ class DialogueFlow(Graph):
 
     def add_system_transition(self, source: Enum, target: Enum,
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
-        if self.has_arc(source, target, Speaker.SYSTEM):
+        if self._graph.has_arc(source, target, Speaker.SYSTEM):
             raise ValueError('system transition {} -> {} already exists'.format(source, target))
         if isinstance(natex_nlg, str):
             natex_nlg = NatexNLG(natex_nlg, macros=self._macros)
@@ -132,36 +156,59 @@ class DialogueFlow(Graph):
                 natex_nlg = NatexNLG('{' + ', '.join(natex_nlg) + '}')
             elif isinstance(item, NatexNLG):
                 raise NotImplementedError()
-        if not self.has_node(source):
+        if not self._graph.has_node(source):
             self.add_state(source)
-        if not self.has_node(target):
+        if not self._graph.has_node(target):
             self.add_state(target)
-        self.add_arc(source, target, Speaker.SYSTEM)
-        arc_data = self.arc_data(source, target, Speaker.SYSTEM)
+        self._graph.add_arc(source, target, Speaker.SYSTEM)
+        arc_data = self._graph.arc_data(source, target, Speaker.SYSTEM)
         arc_data['natex'] = natex_nlg
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
         arc_data['settings'] = transition_settings
 
     def add_state(self, state: Enum, error_successor: Union[Enum, None] =None, **settings):
-        if self.has_node(state):
+        if self._graph.has_node(state):
             raise ValueError('state {} already exists'.format(state))
-        if error_successor is None:
-            error_successor = self._initial_state
         state_settings = Settings()
         state_settings.update(**settings)
-        self.add_node(state)
-        self.data(state)['settings'] = state_settings
-        self.data(state)['error'] = error_successor
+        self._graph.add_node(state)
+        self._graph.data(state)['settings'] = state_settings
+        if error_successor is not None:
+            self._graph.data(state)['error'] = error_successor
+
+    def check(self):
+        all_good = True
+        for state in self._graph.nodes():
+            has_system_fallback = False
+            has_user_fallback = False
+            for source, target, speaker in self._graph.arcs_out(state):
+                if speaker == Speaker.SYSTEM:
+                    if self.transition_natex(source, target, speaker).is_complete():
+                        has_system_fallback = True
+            data = self._graph.data(state)
+            if 'error' in data:
+                has_user_fallback = True
+            in_labels = {x[2] for x in self._graph.arcs_in(state)}
+            if Speaker.SYSTEM in in_labels:
+                if not has_user_fallback:
+                    print('Turn-taking dead end: state {} has no fallback user transition'.format(state))
+                    all_good = False
+            if Speaker.USER in in_labels:
+                if not has_system_fallback:
+                    print('Turn-taking dead end: state {} has no fallback system transitions'.format(state))
+                    all_good = False
+        return all_good
+
 
     def transition_natex(self, source: Enum, target: Enum, speaker: Enum):
-        return self.arc_data(source, target, speaker)['natex']
+        return self._graph.arc_data(source, target, speaker)['natex']
 
     def transition_settings(self, source: Enum, target: Enum, speaker: Enum):
-        return self.arc_data(source, target, speaker)['settings']
+        return self._graph.arc_data(source, target, speaker)['settings']
 
     def state_settings(self, state: Enum):
-        return self.data(state)['settings']
+        return self._graph.data(state)['settings']
 
     def state(self):
         return self._state
@@ -171,6 +218,12 @@ class DialogueFlow(Graph):
 
     def speaker(self):
         return self._speaker
+
+    def set_speaker(self, speaker: Enum):
+        self._speaker = speaker
+
+    def graph(self):
+        return self._graph
 
 
 
