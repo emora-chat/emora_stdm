@@ -1,13 +1,14 @@
+<<<<<<< HEAD:stdm/modules/holiday.py
+from emora_stdm import DialogueFlow
+=======
 from emora_stdm.old_StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+>>>>>>> dev:emora_stdm/modules/holiday.py
 import os
 
-component = DialogueFlow('prestart')
+component = DialogueFlow('prestart', 'holiday')
 data_file = ""
 cwd = os.getcwd()
-if '/app' in cwd and '/deploy/' in cwd:
-    data_file = os.path.join(cwd, 'emora-stdm', 'emora_stdm', 'modules','holiday_database.json')
-else:
-    data_file = os.path.join(cwd, 'emora_stdm', 'modules', 'holiday_database.json')
+data_file = os.path.join(cwd, 'emora_stdm', 'stdm', 'modules', 'holiday_database.json')
 with open(data_file, 'r') as json_file:
     component.knowledge_base().load_json(json_file.read())
 
@@ -196,6 +197,8 @@ component.add_transition(
 component.add_transition(
     'end', 'end', None, {'x'}, settings='e'
 )
+
+component.finalize()
 
 if __name__ == '__main__':
     component.run()

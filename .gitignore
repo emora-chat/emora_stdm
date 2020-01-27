@@ -4,6 +4,7 @@ venv/
 build/
 *__pycache__*
 *.idea/*
+.idea/*
 *.pyc
 .pytest_cache/*
 

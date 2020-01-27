@@ -1,6 +1,19 @@
 # State Transition Dialogue Manager
 
-## Quickstart example
+Defines a dialogue management framework based on state machines and 
+regular expressions. 
+
+## Installation
+
+Users install using `pip install emora_stdm`
+
+Developers install using:
+```
+git clone https://github.com/emora-chat/emora_stdm.git
+pip install -r emora_stdm/requirements.txt
+```
+
+## Example usage
 
 ```python
 from emora_stdm import DialogueFlow
@@ -37,9 +50,6 @@ if __name__ == '__main__':
     df.run(debugging=True)
 ```
 
-Defines a dialogue management framework based on state machines and 
-regular expressions. 
-
 Class `DialogueFlow` is the main class to initialize. It defines
 a state machine that drives natural language conversation. State
 transitions in the state machine (alternately) represent either 
@@ -57,17 +67,6 @@ The first two arguments are the source and target states of
 the transition, the third argument is a string that defines a set 
 of natural language expressions given by a user that satisfy the 
 transition (see NatexNLU/NatexNLG below).
-
-A user turn can be taken, updating state, using
-```
-dialogue_manager.user_turn(input)
-```
-where input is a string representing the user utterance.
-
-A system turn can be taken using
-```
-response = dialogue_manager.system_turn()
-```
 
 ## NatexNLU
 
@@ -131,7 +130,7 @@ element.
 
 ### Negation
 ```
-[!i am -bad]
+'[!i am -bad]'
 ```
 prepend `-` to negate the next term in the expression. The example
 will match any expression starting with "i am" where "bad" does NOT
@@ -164,7 +163,7 @@ on what the user said.
 
 ### Variable reference
 ```
-[!why are you $f today]
+'[!why are you $f today]'
 ```
 using `$` references a previously assigned variable. If no such
 variable exists, the expression as a whole returns with no match.
@@ -213,94 +212,29 @@ if __name__ == '__main__':
     assert natex.match('oh hello there hello there how are you')
 ```
 
-## Knowledge base and ontology (doc out of date)
+## NatexNLG
 
-The Knowledge Base and Ontology are optional components of the 
-dialogue manager that allow you to write more generalizable
-transitions. 
+NatexNLG objects work very similarly to NatexNLU objects, but they are used to create a 
+response string instead of match a user utterance.
 
-The Knowledge Base and Ontology are modeled as a unified (single)
-directed graph. You specify the knowledge and ontology elements you 
-need by updating the `database.json` file.
+```python
+from emora_stdm import NatexNLG
 
-The Knowledge Base is defined as a list of predicates, 
-where a predicate is stored as a list `[subject, relation, object]`.
-
-```
-'predicates': [
-    ['dog', 'sound', 'bark'],
-    ['bark', 'quality', 'annoying'],
-    ['scarlett johansson', 'plays', 'black widow']
-]
+natex = NatexNLG('[!{this, here} is a {example, test}]')
+print(natex.generate())
 ```
 
-The Ontology is defined as a mapping between categories and a list of elements of that category. 
-The category string must always begin with the ampersand symbol: `&`.
+Options (disjunctions) in a NatexNLG will result in one of the set of options to be selected
+to generate the response. 
 
-```
-'ontology': {
-    '&feeling': ['sad', 'happy', 'angry'],
-    '&animal': ['dog', 'cat', 'bird']
-}
-```
+Some constructs (e.g. conjunction, negation) don't make sense in NatexNLGs. Here is the full
+list of supported constructs for NatexNLGs:
 
-Taking these two structures together, the final `database.json` for this example would look 
-like the following:
+1. literal
+2. rigid sequence [!...]
+3. disjunction {...}
+4. variable reference $var
+5. variable assignment $var=...
+6. macro call #MACRO(...)
 
-```
-{
-'predicates': [
-        ['dog', 'sound', 'bark'],
-        ['bark', 'quality', 'annoying'],
-        ['scarlett johansson', 'plays', 'black widow']
-    ],
-'ontology': {
-        '&feeling': ['sad', 'happy', 'angry'],
-        '&animal': ['dog', 'cat', 'bird']
-    }
-}
-```
-
-### Ontology reference
-```
-'i am &feeling'
-```
-Using a prepended `&` references a node in the ontology. Any 
-subtype of the referenced node can be matched in the expression.
-
-### Knowledge base reference
-```
-'a dog can #dog:sound#'
-```
-substrings encapsulated within `##` reference a set of nodes in the knowledge
-graph. The set is created by starting at the node defined before
-the initial `:`, then traversing arcs labeled by each subsequent
-term following `:`. In this case, all nodes related to "dog" by
-a "sound" arc are valid matches. For example, the utterances "a
-dog can bark" and "a dog can growl" might be matched if "bark" and
-"growl" were present in the knowledge graph.
-
-```
-'a dog is #dog:sound:quality#'
-```
-knowledge base expressions can chain multiple predicates together.
-suppose the predicates `sound(dog, bark)` and `quality(bark, annoying)`
-were present in the knowledge base. The expression would match 
-"a dog is annoying"
-
-```
-'black widow is played by #black widow:/plays#'
-```
-using `/` reverses the direction of a knowledge graph relation. If
-`plays(scarlett johansson, black widow)` is present in the KB, then
-the above expression matches "black widow is played by scarlett 
-johansson"
-
-```
-'a %a=&animal, can #$a:sound#'
-```
-knowledge graph expressions can be built using veriable references.
-Together with ontology reference, highly generalizable expressions
-can be written. Given an appropriately constructed KB and ontology,
-this example might match "a cow can moo", "a dog can bark", and
-everything in between.
+All the above constructs share the same syntax as the NatexNLU syntax.
