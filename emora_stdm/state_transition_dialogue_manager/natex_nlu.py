@@ -66,12 +66,13 @@ class NatexNLU:
     class Compiler(Visitor):
         grammar = r"""
         start: term
-        term: flexible_sequence | rigid_sequence | conjunction | disjunction | negation 
+        term: flexible_sequence | rigid_sequence | conjunction | disjunction | optional | negation 
               | regex | reference | assignment | macro | literal
         flexible_sequence: "[" " "? term (","? " "? term)* "]"
         rigid_sequence: "[!" " "? term (","? " "? term)+ "]"
         conjunction: "<" term (","? " "? term)+ ">"
         disjunction: "{" term (","? " "? term)+ "}"
+        optional: term "?"
         negation: "-" term
         regex: "/" regex_value "/"
         reference: "$" symbol
@@ -105,7 +106,7 @@ class NatexNLU:
                 if isinstance(arg, str):
                     strings.append(arg)
                 elif isinstance(arg, set):
-                    strings.append('(?:' + '|'.join(arg) + ')')
+                    strings.append(r'(?:\b' + r'\b|\b'.join(arg) + r'\b)')
                 elif isinstance(arg, bool):
                     if arg:
                         strings.append('.*')
@@ -118,32 +119,38 @@ class NatexNLU:
         def flexible_sequence(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] =  '.*?' + '.*?'.join(self.to_strings(args)) + '.*?'
+            tree.children[0] =  r'.*?\b' + r'\b.*?\b'.join(self.to_strings(args)) + r'\b.*?\b'
             if self._debugging: print('    {:15} {}'.format('Flex. sequence', self._current_compilation(self._tree)))
 
         def rigid_sequence(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'\W+'.join(self.to_strings(args))
+            tree.children[0] = r'\b' + r'\b\W*\b'.join(self.to_strings(args)) + r'\b'
             if self._debugging: print('    {:15} {}'.format('Rigid sequence', self._current_compilation(self._tree)))
 
         def conjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = ''.join(['.*?(?=.*?{})'.format(x) for x in self.to_strings(args)]) + '.*'
+            tree.children[0] = ''.join([r'.*?(?=.*?\b{}\b)'.format(x) for x in self.to_strings(args)]) + '.*'
             if self._debugging: print('    {:15} {}'.format('Conjunction', self._current_compilation(self._tree)))
 
         def disjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = '(?:{})'.format('|'.join(self.to_strings(args)))
+            tree.children[0] = r'(?:\b{}\b)'.format(r'\b|\b'.join(self.to_strings(args)))
             if self._debugging: print('    {:15} {}'.format('Disjunction', self._current_compilation(self._tree)))
+
+        def optional(self, tree):
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = r'(?:\b{}\b)?'.format(args[0])
+            if self._debugging: print('    {:15} {}'.format('Optional', self._current_compilation(self._tree)))
 
         def negation(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
             (arg,) = self.to_strings(args)
-            tree.children[0] = '(?:(?:(?!.*{}.*$).)+)'.format(arg)
+            tree.children[0] = r'(?:(?:(?!.*\b{}\b.*$).)+)'.format(arg)
             if self._debugging: print('    {:15} {}'.format('Negation', self._current_compilation(self._tree)))
 
         def regex(self, tree):
