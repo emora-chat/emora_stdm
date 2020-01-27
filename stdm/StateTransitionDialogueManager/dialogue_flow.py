@@ -121,7 +121,7 @@ class DialogueFlow:
     def set_transition_nlg_score(self, source, target, score):
         self._graph.arc(source, target).nlg_score = score
 
-    def user_transition(self, utterance=None):
+    def _onehop_user_transition(self, utterance=None):
         graph_arcs = self._graph.arcs_out(self._state)
         if self._state not in self._state_selection_functions:
             transition, best_score, next_state, vars_update = self._default_state_selection(utterance, graph_arcs)
@@ -134,6 +134,12 @@ class DialogueFlow:
         if self._state in self._state_update_functions:
             self._state_update_functions[self._state](self)
         return best_score
+
+    def user_transition(self, utterance=None):
+        scores = [self._onehop_user_transition(utterance)]
+        while self.state() in self._nlu_multihop:
+            scores.append(self._onehop_user_transition(utterance))
+        return sum(scores) / len(scores)
 
     def _onehop_system_transition(self):
         class Dict(dict):
@@ -165,7 +171,7 @@ class DialogueFlow:
 
     def system_transition(self):
         utterance = self._onehop_system_transition()
-        while (self.state() in self._nlg_multihop):
+        while self.state() in self._nlg_multihop:
             utterance += " " + self._onehop_system_transition()
         return utterance
 
