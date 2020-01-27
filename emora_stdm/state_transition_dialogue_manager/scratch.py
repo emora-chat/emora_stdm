@@ -1,13 +1,14 @@
-
-from abc import ABC, abstractmethod, abstractproperty
-from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
-from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
+from emora_stdm import Macro
 
 
-class Macro(ABC):
+class MyMacro(Macro):
 
-    @abstractmethod
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+    # optionally, define constructor if macro needs access to additional data
+    def __init__(self, x):
+        self.x = x
+
+    # define method to run when macro is evaluated in Natex
+    def run(self, ngrams, vars, args):
         """
         :param ngrams: an Ngrams object defining the set of all ngrams in the
                        input utterance (for NLU) or vocabulary (for NLG). Treat
@@ -23,8 +24,11 @@ class Macro(ABC):
                   or an unmatchable character sequence (False)
                   returning an arbitrary object is only used to pass data to other macros
         """
-        pass
+        return ' '.join(['hello ' + args[0]] * self.x)
 
-    def __call__(self, *args, **kwargs):
-        return self.run(*args, **kwargs)
 
+from emora_stdm import NatexNLU
+
+if __name__ == '__main__':
+    natex = NatexNLU('[!oh #MyMacro(there) how are you]', macros={'MyMacro': MyMacro(2)})
+    assert natex.match('oh hello there hello there how are you')
