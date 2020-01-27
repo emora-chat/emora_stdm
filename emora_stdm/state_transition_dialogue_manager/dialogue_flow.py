@@ -52,7 +52,8 @@ class DialogueFlow:
         :return: the natural language system response
         """
         response, next_state = self.system_transition(debugging=debugging)
-        print('Transitioning {} -> {}'.format(self._state, next_state))
+        if debugging:
+            print('Transitioning {} -> {}'.format(self._state, next_state))
         self.set_state(next_state)
         self.set_speaker(Speaker.USER)
         return response
@@ -67,11 +68,13 @@ class DialogueFlow:
         """
         next_state = self.user_transition(natural_language, debugging=debugging)
         if next_state:
-            print('Transitioning {} -> {}'.format(self._state, next_state))
+            if debugging:
+                print('Transitioning {} -> {}'.format(self._state, next_state))
             self.set_state(next_state)
         else:
             next_state = self._graph.data(self._state)['error']
-            print('Error transition {} -> {}'.format(self._state, next_state))
+            if debugging:
+                print('Error transition {} -> {}'.format(self._state, next_state))
             self.set_state(next_state)
         self.set_speaker(Speaker.SYSTEM)
 
@@ -196,11 +199,11 @@ class DialogueFlow:
             in_labels = {x[2] for x in self._graph.arcs_in(state)}
             if Speaker.SYSTEM in in_labels:
                 if not has_user_fallback:
-                    print('Turn-taking dead end: state {} has no fallback user transition'.format(state))
+                    print('WARNING: Turn-taking dead end: state {} has no fallback user transition'.format(state))
                     all_good = False
             if Speaker.USER in in_labels:
                 if not has_system_fallback:
-                    print('Turn-taking dead end: state {} has no fallback system transitions'.format(state))
+                    print('WARNING: Turn-taking dead end: state {} may have no fallback system transitions'.format(state))
                     all_good = False
         return all_good
 
