@@ -53,7 +53,7 @@ class DialogueFlow:
         """
         response, next_state = self.system_transition(debugging=debugging)
         if debugging:
-            print('Transitioning {} -> {}'.format(self._state, next_state))
+            print('Transitioning {} -> {}'.format(self.state(), next_state))
         self.set_state(next_state)
         self.set_speaker(Speaker.USER)
         return response
@@ -69,12 +69,12 @@ class DialogueFlow:
         next_state = self.user_transition(natural_language, debugging=debugging)
         if next_state:
             if debugging:
-                print('Transitioning {} -> {}'.format(self._state, next_state))
+                print('Transitioning {} -> {}'.format(self.state(), next_state))
             self.set_state(next_state)
         else:
-            next_state = self._graph.data(self._state)['error']
+            next_state = self.error_successor(self.state())
             if debugging:
-                print('Error transition {} -> {}'.format(self._state, next_state))
+                print('Error transition {} -> {}'.format(self.state(), next_state))
             self.set_state(next_state)
         self.set_speaker(Speaker.SYSTEM)
 
@@ -87,18 +87,18 @@ class DialogueFlow:
         if state is None:
             state = self._state
         transition_options = {}
-        for arc in self._graph.arcs_out(state):
-            arc_data = self._graph.arc_data(*arc)
-            natex, settings = arc_data['natex'], arc_data['settings']
+        for transition in self.transitions(state):
+            natex = self.transition_natex(*transition)
+            settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
             generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
             if generation:
-                transition_options[(generation, arc, vars)] = settings.score
+                transition_options[(generation, transition, vars)] = settings.score
         if transition_options:
             options = StochasticOptions(transition_options)
-            response, arc, vars = options.select()
+            response, transition, vars = options.select()
             self._vars.update(vars)
-            return response, arc[1]
+            return response, transition[1]
         else:
             raise AssertionError('dialogue flow system transition found no valid options')
 
@@ -114,17 +114,17 @@ class DialogueFlow:
             state = self._state
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
-        for arc in self._graph.arcs_out(state):
-            arc_data = self._graph.arc_data(*arc)
-            natex, settings = arc_data['natex'], arc_data['settings']
+        for transition in self.transitions(state):
+            natex = self.transition_natex(*transition)
+            settings = self.transition_settings(*transition)
             vars = dict(self._vars)
             match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
-                transition_options.append((settings.score, arc, vars))
+                transition_options.append((settings.score, transition, vars))
         if transition_options:
-            score, arc, vars = max(transition_options)
+            score, transition, vars = max(transition_options)
             self._vars.update(vars)
-            return arc[1]
+            return transition[1]
         else:
             return None
 
@@ -140,16 +140,15 @@ class DialogueFlow:
                 natex_nlu = NatexNLU('{' + ', '.join(natex_nlu) + '}')
             elif isinstance(item, NatexNLU):
                 raise NotImplementedError()
-        if not self._graph.has_node(source):
+        if not self.has_state(source):
             self.add_state(source)
-        if not self._graph.has_node(target):
+        if not self.has_state(target):
             self.add_state(target)
         self._graph.add_arc(source, target, Speaker.USER)
-        arc_data = self._graph.arc_data(source, target, Speaker.USER)
-        arc_data['natex'] = natex_nlu
+        self.set_transition_natex(source, target, Speaker.USER, natex_nlu)
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
-        arc_data['settings'] = transition_settings
+        self.set_transition_settings(source, target, Speaker.USER, transition_settings)
 
     def add_system_transition(self, source: Enum, target: Enum,
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
@@ -163,26 +162,25 @@ class DialogueFlow:
                 natex_nlg = NatexNLG('{' + ', '.join(natex_nlg) + '}')
             elif isinstance(item, NatexNLG):
                 raise NotImplementedError()
-        if not self._graph.has_node(source):
+        if not self.has_state(source):
             self.add_state(source)
-        if not self._graph.has_node(target):
+        if not self.has_state(target):
             self.add_state(target)
         self._graph.add_arc(source, target, Speaker.SYSTEM)
-        arc_data = self._graph.arc_data(source, target, Speaker.SYSTEM)
-        arc_data['natex'] = natex_nlg
+        self.set_transition_natex(source, target, Speaker.SYSTEM, natex_nlg)
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
-        arc_data['settings'] = transition_settings
+        self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
 
     def add_state(self, state: Enum, error_successor: Union[Enum, None] =None, **settings):
-        if self._graph.has_node(state):
+        if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
         state_settings = Settings()
         state_settings.update(**settings)
         self._graph.add_node(state)
-        self._graph.data(state)['settings'] = state_settings
+        self.set_state_settings(state, state_settings)
         if error_successor is not None:
-            self._graph.data(state)['error'] = error_successor
+            self.set_error_successor(state, error_successor)
 
     def check(self):
         all_good = True
@@ -193,10 +191,9 @@ class DialogueFlow:
                 if speaker == Speaker.SYSTEM:
                     if self.transition_natex(source, target, speaker).is_complete():
                         has_system_fallback = True
-            data = self._graph.data(state)
-            if 'error' in data:
+            if self.error_successor(state) is not None:
                 has_user_fallback = True
-            in_labels = {x[2] for x in self._graph.arcs_in(state)}
+            in_labels = {x[2] for x in self.incoming_transitions(state)}
             if Speaker.SYSTEM in in_labels:
                 if not has_user_fallback:
                     print('WARNING: Turn-taking dead end: state {} has no fallback user transition'.format(state))
@@ -207,21 +204,39 @@ class DialogueFlow:
                     all_good = False
         return all_good
 
-
     def transition_natex(self, source: Enum, target: Enum, speaker: Enum):
         return self._graph.arc_data(source, target, speaker)['natex']
+
+    def set_transition_natex(self, source, target, speaker, natex):
+        self._graph.arc_data(source, target, speaker)['natex'] = natex
 
     def transition_settings(self, source: Enum, target: Enum, speaker: Enum):
         return self._graph.arc_data(source, target, speaker)['settings']
 
+    def set_transition_settings(self, source, target, speaker, settings):
+        self._graph.arc_data(source, target, speaker)['settings'] = settings
+
     def state_settings(self, state: Enum):
         return self._graph.data(state)['settings']
+
+    def set_state_settings(self, state, settings):
+        self._graph.data(state)['settings'] = settings
 
     def state(self):
         return self._state
 
     def set_state(self, state: Enum):
         self._state = state
+
+    def has_state(self, state):
+        return self._graph.has_node(state)
+
+    def error_successor(self, state):
+        data = self._graph.data(state)
+        if 'error' in data:
+            return data['error']
+        else:
+            return None
 
     def set_error_successor(self, state, error_successor):
         self._graph.data(state)['error'] = error_successor
@@ -234,6 +249,22 @@ class DialogueFlow:
 
     def graph(self):
         return self._graph
+
+    def transitions(self, source_state=None):
+        """
+        get (source, target, speaker) transition tuples for the entire state machine
+        (default) or that lead out from a given source_state
+        :param source_state: optionally, filter returned transitions by source state
+        :return: a generator over (source, target, speaker) 3-tuples
+        """
+        if source_state is None:
+            yield from self._graph.arcs()
+        else:
+            yield from self._graph.arcs_out(source_state)
+
+    def incoming_transitions(self, target_state):
+        yield from self._graph.arcs_in(target_state)
+
 
 
 
