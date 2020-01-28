@@ -1,0 +1,209 @@
+-reading: {hobby}
+-cooking: {hobby}
+-painting: {hobby}
+-hiking: {unknown_hobby}
+-drawing: {unknown_hobby}
+-play_instr: {unknown_hobby}
+-amateur radio: {unknown_hobby}
+-acting: {unknown_hobby}
+-baton twirling: {unknown_hobby}
+-board games: {unknown_hobby}
+-calligraphy: {unknown_hobby}
+-candle making: {unknown_hobby}
+-computer programming: {unknown_hobby}
+-coloring: {unknown_hobby}
+-cosplaying: {unknown_hobby}
+-couponing: {unknown_hobby}
+-creative writing: {unknown_hobby}
+-crocheting: {unknown_hobby}
+-cryptography: {unknown_hobby}
+-dance: {unknown_hobby}
+-digital arts: {unknown_hobby}
+-drama: {unknown_hobby}
+-diy: {unknown_hobby}
+-electronics: {unknown_hobby}
+-embroidery: {unknown_hobby}
+-flower arranging: {unknown_hobby}
+-foreign language learning: {unknown_hobby}
+-gaming: {unknown_hobby}
+-gambling: {unknown_hobby}
+-genealogy: {unknown_hobby}
+-glass blowing: {unknown_hobby}
+-homebrewing: {unknown_hobby}
+-ice skating: {unknown_hobby}
+-jewelry making: {unknown_hobby}
+-jigsaw puzzles: {unknown_hobby}
+-juggling: {unknown_hobby}
+-knapping: {unknown_hobby}
+-knitting: {unknown_hobby}
+-kabaddi: {unknown_hobby}
+-knife making: {unknown_hobby}
+-lace making: {unknown_hobby}
+-lapidary: {unknown_hobby}
+-leather crafting: {unknown_hobby}
+-lego building: {unknown_hobby}
+-machining: {unknown_hobby}
+-macrame: {unknown_hobby}
+-magic: {unknown_hobby}
+-model building: {unknown_hobby}
+-listening to music: {unknown_hobby}
+-origami: {unknown_hobby}
+-playing music: {unknown_hobby}
+-pottery: {unknown_hobby}
+-ceramics: {unknown_hobby}
+-quilting: {unknown_hobby}
+-scrapbooking: {unknown_hobby}
+-sculpting: {unknown_hobby}
+-sewing: {unknown_hobby}
+-singing: {unknown_hobby}
+-sketching: {unknown_hobby}
+-soapmaking: {unknown_hobby}
+-sports: {unknown_hobby}
+-stand up comedy: {unknown_hobby}
+-sudoku: {unknown_hobby}
+-table tennis: {unknown_hobby}
+-taxidermy: {unknown_hobby}
+-air sports: {unknown_hobby}
+-archery: {unknown_hobby}
+-astronomy: {unknown_hobby}
+-backpacking: {unknown_hobby}
+-base jumping: {unknown_hobby}
+-baseball: {unknown_hobby}
+-basketball: {unknown_hobby}
+-beekeeping: {unknown_hobby}
+-bird watching: {unknown_hobby}
+-blacksmithing: {unknown_hobby}
+-board sports: {unknown_hobby}
+-bodybuilding: {unknown_hobby}
+-brazilian jiu jitsu: {unknown_hobby}
+-cycling: {unknown_hobby}
+-dowsing: {unknown_hobby}
+-driving: {unknown_hobby}
+-fishing: {unknown_hobby}
+-flag football: {unknown_hobby}
+-flying: {unknown_hobby}
+-foraging: {unknown_hobby}
+-gardening: {unknown_hobby}
+-geocaching: {unknown_hobby}
+-ghost hunting: {unknown_hobby}
+-handball: {unknown_hobby}
+-hooping: {unknown_hobby}
+-hunting: {unknown_hobby}
+-inline skating: {unknown_hobby}
+-jogging: {unknown_hobby}
+-kayaking: {unknown_hobby}
+-kite flying: {unknown_hobby}
+-larping: {unknown_hobby}
+-letterboxing: {unknown_hobby}
+-metal detecting: {unknown_hobby}
+-motor sports: {unknown_hobby}
+-mountain biking: {unknown_hobby}
+-mountaineering: {unknown_hobby}
+-mushroom hunting: {unknown_hobby}
+-netball: {unknown_hobby}
+-nordic skating: {unknown_hobby}
+-orienteering: {unknown_hobby}
+-paintball: {unknown_hobby}
+-parkour: {unknown_hobby}
+-photography: {unknown_hobby}
+-polo: {unknown_hobby}
+-rafting: {unknown_hobby}
+-rappelling: {unknown_hobby}
+-rock climbing: {unknown_hobby}
+-roller skating: {unknown_hobby}
+-rugby: {unknown_hobby}
+-running: {unknown_hobby}
+-rowing: {unknown_hobby}
+-sailing: {unknown_hobby}
+-sand art: {unknown_hobby}
+-scuba diving: {unknown_hobby}
+-shooting: {unknown_hobby}
+-shopping: {unknown_hobby}
+-skateboarding: {unknown_hobby}
+-skiing: {unknown_hobby}
+-skimboarding: {unknown_hobby}
+-skydiving: {unknown_hobby}
+-slacklining: {unknown_hobby}
+-snowboarding: {unknown_hobby}
+-snorkeling: {unknown_hobby}
+-stone skipping: {unknown_hobby}
+-taekwondo: {unknown_hobby}
+-tai chi: {unknown_hobby}
+-urban exploration: {unknown_hobby}
+-vehicle restoration: {unknown_hobby}
+-antiquing: {unknown_hobby}
+-art collecting: {unknown_hobby}
+-book collecting: {unknown_hobby}
+-card collecting: {unknown_hobby}
+-coin collecting: {unknown_hobby}
+-comic book collecting: {unknown_hobby}
+-deltiology: {unknown_hobby}
+-element collecting: {unknown_hobby}
+-movie collecting: {unknown_hobby}
+-record collecting: {unknown_hobby}
+-stamp collecting: {unknown_hobby}
+-stone collecting: {unknown_hobby}
+-video game collecting: {unknown_hobby}
+-vintage cars: {unknown_hobby}
+-antiquity collecting: {unknown_hobby}
+-flower pressing: {unknown_hobby}
+-fossil hunting: {unknown_hobby}
+-insect collecting: {unknown_hobby}
+-mineral collecting: {unknown_hobby}
+-rock balancing: {unknown_hobby}
+-sea glass collecting: {unknown_hobby}
+-seashell collecting: {unknown_hobby}
+-animal fancy: {unknown_hobby}
+-badminton: {unknown_hobby}
+-billiards: {unknown_hobby}
+-bowling: {unknown_hobby}
+-boxing: {unknown_hobby}
+-bridge: {unknown_hobby}
+-cheerleading: {unknown_hobby}
+-chess: {unknown_hobby}
+-color guard: {unknown_hobby}
+-curling: {unknown_hobby}
+-darts: {unknown_hobby}
+-debate: {unknown_hobby}
+-fencing: {unknown_hobby}
+-go: {unknown_hobby}
+-gymnastics: {unknown_hobby}
+-marbles: {unknown_hobby}
+-martial arts: {unknown_hobby}
+-mahjong: {unknown_hobby}
+-poker: {unknown_hobby}
+-slot car racing: {unknown_hobby}
+-table football: {unknown_hobby}
+-volleyball: {unknown_hobby}
+-american football: {unknown_hobby}
+-breakdancing: {unknown_hobby}
+-cricket: {unknown_hobby}
+-disc golf: {unknown_hobby}
+-miniature golf: {unknown_hobby}
+-glow in the dark mini golf: {unknown_hobby}
+-dog sport: {unknown_hobby}
+-equestrianism: {unknown_hobby}
+-exhibition drill: {unknown_hobby}
+-ultimate frisbee: {unknown_hobby}
+-footbag: {unknown_hobby}
+-golfing: {unknown_hobby}
+-hockey: {unknown_hobby}
+-kart racing: {unknown_hobby}
+-knife throwing: {unknown_hobby}
+-laser tag: {unknown_hobby}
+-horseshoes: {unknown_hobby}
+-racquetball: {unknown_hobby}
+-speed skating: {unknown_hobby}
+-soccer: {unknown_hobby}
+-surfing: {unknown_hobby}
+-swimming: {unknown_hobby}
+-tennis: {unknown_hobby}
+-triathalon: {unknown_hobby}
+-fishkeeping: {unknown_hobby}
+-astrology: {unknown_hobby}
+-gongoozling: {unknown_hobby}
+-herping: {unknown_hobby}
+-people watching: {unknown_hobby}
+-boating: {unknown_hobby}
+-traveling: {unknown_hobby}
+-zorbing: {unknown_hobby}
