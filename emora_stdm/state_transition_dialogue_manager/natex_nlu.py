@@ -7,11 +7,22 @@ from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 class NatexNLU:
 
     def __init__(self, expression, macros=None):
-        self._expression = expression
         self._regex = None
         if macros is None:
             macros = {}
         self._macros = macros
+        if isinstance(expression, str):
+            self._expression = expression
+        elif isinstance(expression, list) or isinstance(expression, set):
+            item = next(iter(expression))
+            if isinstance(item, str):
+                self._expression = '{' + ', '.join(expression) + '}'
+            elif isinstance(item, NatexNLU):
+                raise NotImplementedError()
+        elif isinstance(expression, NatexNLU):
+            self._expression = expression.expression()
+            self._macros = dict(expression.macros())
+            self._macros.update(macros)
 
     def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
         if vars is None:

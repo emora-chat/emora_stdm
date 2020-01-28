@@ -8,12 +8,23 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 class NatexNLG:
 
     def __init__(self, expression, macros=None, ngrams=None):
-        self._expression = expression
         self._ngrams = ngrams
         if macros is None:
             self._macros = {}
         else:
             self._macros = macros
+        if isinstance(expression, str):
+            self._expression = expression
+        elif isinstance(expression, list) or isinstance(expression, set):
+            item = next(iter(expression))
+            if isinstance(item, str):
+                self._expression = '{' + ', '.join(expression) + '}'
+            elif isinstance(item, NatexNLG):
+                raise NotImplementedError()
+        elif isinstance(expression, NatexNLG):
+            self._expression = expression.expression()
+            self._macros = dict(expression.macros())
+            self._macros.update(macros)
 
     def generate(self, ngrams=None, vars=None, macros=None, debugging=False):
         if vars is None:
