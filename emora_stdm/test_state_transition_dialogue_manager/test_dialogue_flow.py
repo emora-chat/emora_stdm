@@ -10,7 +10,7 @@ class States(Enum):
     B = 1
     C = 2
     D = 3
-
+    E = 4
 
 def test_constructor():
     df = DialogueFlow(States.A)
@@ -103,5 +103,50 @@ def test_global_transitions():
     df.update_state_settings(States.A, global_nlu='{hi, hey, hello}')
     assert df.transition_natex(States.D, States.A, Speaker.USER).expression() == '{hi, hey, hello}'
 
+def test_user_multi_hop():
+    df = DialogueFlow(States.A, initial_speaker=Speaker.USER)
+    df.add_state(States.B, error_successor=States.B, user_multi_hop=True)
+    df.add_state(States.C, error_successor=States.A, user_multi_hop=True)
+    df.add_state(States.D, error_successor=States.A)
+    df.add_state(States.E, error_successor=States.A)
+    df.add_user_transition(States.A, States.B, '[{hey, hello}]')
+    df.add_user_transition(States.A, States.C, '[{excuse, pardon}]')
+    df.add_user_transition(States.B, States.D, '[how, you]')
+    df.add_user_transition(States.C, States.E, '[{where, how, what}]')
+    df.set_state(States.A)
+    df.user_turn('hey', debugging=True)
+    assert df.state() is States.B
+    df.set_state(States.A)
+    df.set_speaker(Speaker.USER)
+    df.user_turn('hey how are you')
+    assert df.state() is States.D
+    df.set_state(States.A)
+    df.set_speaker(Speaker.USER)
+    df.user_turn('excuse me where do i go')
+    assert df.state() is States.E
+    df.set_state(States.A)
+    df.set_speaker(Speaker.USER)
+    df.user_turn('excuse me')
+    assert df.state() is States.A
+
+def test_system_multi_hop():
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.B, error_successor=States.B, system_multi_hop=True)
+    df.add_state(States.C, error_successor=States.A, system_multi_hop=True)
+    df.add_state(States.D, error_successor=States.A)
+    df.add_state(States.E, error_successor=States.A)
+    df.add_system_transition(States.A, States.B, '{hey, hello}')
+    df.add_system_transition(States.A, States.C, 'excuse me')
+    df.add_system_transition(States.B, States.D, 'how are you')
+    df.add_system_transition(States.C, States.E, 'what')
+    for _ in range(100):
+        df.set_state(States.A)
+        df.set_speaker(Speaker.SYSTEM)
+        response = df.system_turn()
+        assert response in {'hey how are you', 'hello how are you',
+                            'excuse me what'}
+
+def test_nlg_novelty():
+    pass
 
 

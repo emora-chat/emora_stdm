@@ -1,5 +1,7 @@
 
 from enum import Enum
+
+from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from structpy.graph.labeled_digraph import MapMultidigraph
@@ -54,11 +56,16 @@ class DialogueFlow:
         one or more system transitions
         :return: the natural language system response
         """
+        visited = {self.state()}
         responses = []
         while self.speaker() is Speaker.SYSTEM:
             response, next_state = self.system_transition(debugging=debugging)
             self.take_transition(next_state)
             responses.append(response)
+            if next_state in visited:
+                self.change_speaker()
+                break
+            visited.add(next_state)
         return  ' '.join(responses)
 
     def user_turn(self, natural_language, debugging=False):
@@ -69,9 +76,14 @@ class DialogueFlow:
         :param debugging:
         :return: None
         """
+        visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, debugging=debugging)
             self.take_transition(next_state)
+            if next_state in visited:
+                self.change_speaker()
+                break
+            visited.add(next_state)
 
     # HIGH LEVEL
 
@@ -84,13 +96,16 @@ class DialogueFlow:
         if state is None:
             state = self._state
         transition_options = {}
-        for transition in self.transitions(state):
-            natex = self.transition_natex(*transition)
-            settings = self.transition_settings(*transition)
-            vars = HashableDict(self._vars)
-            generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-            if generation:
-                transition_options[(generation, transition, vars)] = settings.score
+        transitions = list(self.transitions(state))
+        for transition in transitions:
+            memory = self.state_settings(state).memory
+            if transition not in memory or len(transitions) <= len(memory):
+                natex = self.transition_natex(*transition)
+                settings = self.transition_settings(*transition)
+                vars = HashableDict(self._vars)
+                generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                if generation:
+                    transition_options[(generation, transition, vars)] = settings.score
         if transition_options:
             options = StochasticOptions(transition_options)
             response, transition, vars = options.select()
@@ -134,6 +149,30 @@ class DialogueFlow:
                 print('Error transition {} -> {}'.format(self.state(), next_state))
             return next_state
 
+    def check(self, debugging=False):
+        all_good = True
+        for state in self._graph.nodes():
+            has_system_fallback = False
+            has_user_fallback = False
+            for source, target, speaker in self._graph.arcs_out(state):
+                if speaker == Speaker.SYSTEM:
+                    if self.transition_natex(source, target, speaker).is_complete():
+                        has_system_fallback = True
+            if self.error_successor(state) is not None:
+                has_user_fallback = True
+            in_labels = {x[2] for x in self.incoming_transitions(state)}
+            if Speaker.SYSTEM in in_labels:
+                if not has_user_fallback:
+                    if debugging:
+                        print('WARNING: Turn-taking dead end: state {} has no fallback user transition'.format(state))
+                    all_good = False
+            if Speaker.USER in in_labels:
+                if not has_system_fallback:
+                    if debugging:
+                        print('WARNING: Turn-taking dead end: state {} may have no fallback system transitions'.format(state))
+                    all_good = False
+        return all_good
+
     def add_user_transition(self, source: Enum, target: Enum,
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
         if self.has_transition(source, target, Speaker.USER):
@@ -167,35 +206,13 @@ class DialogueFlow:
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
 
-    def check(self):
-        all_good = True
-        for state in self._graph.nodes():
-            has_system_fallback = False
-            has_user_fallback = False
-            for source, target, speaker in self._graph.arcs_out(state):
-                if speaker == Speaker.SYSTEM:
-                    if self.transition_natex(source, target, speaker).is_complete():
-                        has_system_fallback = True
-            if self.error_successor(state) is not None:
-                has_user_fallback = True
-            in_labels = {x[2] for x in self.incoming_transitions(state)}
-            if Speaker.SYSTEM in in_labels:
-                if not has_user_fallback:
-                    print('WARNING: Turn-taking dead end: state {} has no fallback user transition'.format(state))
-                    all_good = False
-            if Speaker.USER in in_labels:
-                if not has_system_fallback:
-                    print('WARNING: Turn-taking dead end: state {} may have no fallback system transitions'.format(state))
-                    all_good = False
-        return all_good
-
     def add_state(self, state: Enum, error_successor: Union[Enum, None] =None, **settings):
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(multi_hop=False, global_nlu=None)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=1)
         state_settings.update(**settings)
         self._graph.add_node(state)
-        self._set_state_settings(state, state_settings)
+        self.update_state_settings(state, **state_settings)
         if error_successor is not None:
             self.set_error_successor(state, error_successor)
         for global_target in self._global_states:
@@ -205,11 +222,15 @@ class DialogueFlow:
     # MID LEVEL
 
     def take_transition(self, target):
+        if self.speaker() is Speaker.SYSTEM:
+            transition = (self.state(), target, self.speaker())
+            self.state_settings(self.state()).memory.add(transition)
         self.set_state(target)
-        if not self.state_settings(self.state()).multi_hop:
-            if self.speaker() is Speaker.SYSTEM:
+        if self.speaker() is Speaker.SYSTEM:
+            if not self.state_settings(self.state()).system_multi_hop:
                 self.set_speaker(Speaker.USER)
-            else:
+        else:
+            if not self.state_settings(self.state()).user_multi_hop:
                 self.set_speaker(Speaker.SYSTEM)
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
@@ -257,11 +278,11 @@ class DialogueFlow:
                         if self.transition_global_nlu(*transition):
                             self.remove_transition(*transition)
 
-    def _set_state_settings(self, state, settings):
-        self._graph.data(state)['settings'] = settings
-        self._update_global_states(state)
-
     def update_state_settings(self, state, **settings):
+        if 'settings' not in self._graph.data(state):
+            self._graph.data(state)['settings'] = Settings()
+        if 'memory' in settings:
+            settings['memory'] = Memory(settings['memory'])
         self.state_settings(state).update(**settings)
         self._update_global_states(state)
 
@@ -317,9 +338,8 @@ class DialogueFlow:
     def incoming_transitions(self, target_state):
         yield from self._graph.arcs_in(target_state)
 
-
-
-
-
-
-
+    def change_speaker(self):
+        if self.speaker() is Speaker.USER:
+            self.set_speaker(Speaker.SYSTEM)
+        elif self.Speaker is Speaker.SYSTEM:
+            self.set_speaker(Speaker.USER)
