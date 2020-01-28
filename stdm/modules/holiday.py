@@ -1,4 +1,8 @@
+<<<<<<< HEAD:stdm/modules/holiday.py
 from emora_stdm import DialogueFlow
+=======
+from emora_stdm.old_StateTransitionDialogueManager.dialogue_flow import DialogueFlow
+>>>>>>> dev:emora_stdm/modules/holiday.py
 import os
 
 component = DialogueFlow('prestart', 'holiday')
