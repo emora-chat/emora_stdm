@@ -44,6 +44,7 @@ class NatexNLG:
             if ngrams is not None:
                 print('  {:15} {}'.format('Ngrams', ', '.join(ngrams)))
             print('  {:15} {}'.format('Macros', ' '.join(macros.keys())))
+            print('  {:15} {}'.format('Vars', ', '.join([k + '=' + str(v) for k, v in vars.items()])))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
         compiler = NatexNLG.Compiler(ngrams, vars, macros, debugging)
