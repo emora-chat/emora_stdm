@@ -88,7 +88,7 @@ class DialogueFlow:
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, debugging=debugging)
             self.take_transition(next_state)
-            if next_state in visited:
+            if next_state in visited and self._speaker is Speaker.USER:
                 self.change_speaker()
                 break
             visited.add(next_state)

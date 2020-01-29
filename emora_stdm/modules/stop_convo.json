@@ -13,7 +13,8 @@
         ],
         "ontoffpaired": [
           "down",
-          "up"
+          "up",
+          "away"
         ],
         "ontturn": [
           "turn",
