@@ -31,9 +31,22 @@ def test_conjunction():
 
 def test_optional():
     natex = NatexNLU('[!i, really?, love sports]')
-    assert natex.match('i really love sports', debugging=True)
+    assert natex.match('i really love sports', debugging=False)
     assert natex.match('i love sports')
     assert not natex.match('i sports')
+
+def test_kleene_star():
+    natex = NatexNLU('[!i, really*, love, sports]')
+    assert natex.match('i really love sports')
+    assert natex.match('i love sports')
+    assert natex.match('i really really really love sports', debugging=True)
+    assert not natex.match('i sports')
+
+def test_kleene_plus():
+    natex = NatexNLU('[!i, really+, love, sports]')
+    assert natex.match('i really love sports')
+    assert natex.match('i really really really love sports')
+    assert not natex.match('i love sports')
 
 def test_negation():
     natex = NatexNLU('-{bad, horrible, not}')
@@ -190,9 +203,9 @@ def test_ontology():
     assert df._vars["m"] == "october"
     assert df._vars["s"] == "fall"
 
-    df._state = States.A
+    df.set_state(States.A)
     df.set_speaker(Speaker.USER)
-    df.user_turn("hello there")
+    df.user_turn("hello there", debugging=False)
     assert df.state() == States.E
 
 
