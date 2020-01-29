@@ -31,9 +31,10 @@ class DialogueFlow:
         self._state = initial_state
         self._speaker = initial_speaker
         self._vars = {}
-        if macros is None:
-            macros = {}
-        self._macros = macros
+        self._macros = {
+
+        }
+        self._macros.update(macros)
         self._global_states = set()
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
