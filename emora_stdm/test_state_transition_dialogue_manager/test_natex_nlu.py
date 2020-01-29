@@ -191,8 +191,9 @@ def test_ontology():
     assert df._vars["s"] == "fall"
 
     df._state = States.A
-    df.user_turn("fall")
-    assert df.state() == States.A
+    df.set_speaker(Speaker.USER)
+    df.user_turn("hello there")
+    assert df.state() == States.E
 
 
 

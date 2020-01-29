@@ -57,7 +57,9 @@ class NatexNLG:
     def is_complete(self, string=None):
         if string is None:
             string = self._expression
-        return bool(regex.fullmatch(r'[a-z A-Z]+', string))
+        if '_NOT_FOUND_' in string:
+            return False
+        return bool(regex.fullmatch(r'[^$]+', string))
 
     def ngrams(self):
         return self._ngrams
@@ -78,12 +80,12 @@ class NatexNLG:
         grammar = r"""
         start: term (","? " "? term)*
         term: rigid_sequence | disjunction | assignment | reference | macro | literal
-        rigid_sequence: "[!" " "? term (","? " "? term)+ "]"
-        disjunction: "{" term (","? " "? term)+ "}"
+        rigid_sequence: "[!" " "? term (","? " "? term)* "]"
+        disjunction: "{" term (","? " "? term)* "}"
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
+        literal: /[a-zA-Z]+( +[a-zA-Z]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
         parser = Lark(grammar)

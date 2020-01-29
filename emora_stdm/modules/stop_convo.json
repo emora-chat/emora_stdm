@@ -1,0 +1,28 @@
+{
+    "ontology": {
+        "ontoff": [
+          "off",
+          "stop",
+          "close",
+          "end",
+          "finish",
+          "quiet",
+          "sleep",
+          "quit",
+          "exit"
+        ],
+        "ontoffpaired": [
+          "down",
+          "up"
+        ],
+        "ontturn": [
+          "turn",
+          "go",
+          "set",
+          "be",
+          "shut"
+        ]
+    },
+
+    "predicates": []
+}

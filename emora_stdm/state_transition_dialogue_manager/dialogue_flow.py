@@ -70,7 +70,7 @@ class DialogueFlow:
             response, next_state = self.system_transition(debugging=debugging)
             self.take_transition(next_state)
             responses.append(response)
-            if next_state in visited:
+            if next_state in visited and self._speaker is Speaker.SYSTEM:
                 self.change_speaker()
                 break
             visited.add(next_state)
@@ -104,7 +104,7 @@ class DialogueFlow:
         if state is None:
             state = self._state
         transition_options = {}
-        transitions = list(self.transitions(state))
+        transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
             memory = self.state_settings(state).memory
             if transition not in memory or len(transitions) <= len(memory):
@@ -137,7 +137,7 @@ class DialogueFlow:
             state = self._state
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
-        for transition in self.transitions(state):
+        for transition in self.transitions(state, Speaker.USER):
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = dict(self._vars)
@@ -328,17 +328,20 @@ class DialogueFlow:
     def graph(self):
         return self._graph
 
-    def transitions(self, source_state=None):
+    def transitions(self, source_state, speaker=None):
         """
         get (source, target, speaker) transition tuples for the entire state machine
         (default) or that lead out from a given source_state
         :param source_state: optionally, filter returned transitions by source state
+        :param speaker: optionally, filter returned transitions by speaker
         :return: a generator over (source, target, speaker) 3-tuples
         """
-        if source_state is None:
-            yield from self._graph.arcs()
-        else:
+        if speaker is None:
             yield from self._graph.arcs_out(source_state)
+        elif self._graph.has_arc_label(source_state, speaker):
+            yield from self._graph.arcs_out(source_state, label=speaker)
+        else:
+            return
 
     def has_transition(self, source, target, speaker):
         return self._graph.has_arc(source, target, speaker)
