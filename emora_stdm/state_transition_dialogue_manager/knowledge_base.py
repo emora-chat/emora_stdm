@@ -110,8 +110,16 @@ class KnowledgeBase(Graph):
         return json.dumps({'ontology': ontology_arcs, 'predicates': relation_arcs,
                            'expressions': expression_arcs}, indent=4, sort_keys=True)
 
-    def load_json(self, json_string):
+    def load_json_file(self, json_file):
+        f = open(json_file, "r")
+        d = json.load(f)
+        self.load_json(d)
+
+    def load_json_string(self, json_string):
         d = json.loads(json_string)
+        self.load_json(d)
+
+    def load_json(self, d):
         if 'ontology' in d:
             ontology = d['ontology']
             for k, l in ontology.items():
