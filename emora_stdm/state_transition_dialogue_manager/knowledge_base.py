@@ -15,10 +15,11 @@ _expr = 'expr'
 
 class KnowledgeBase(Graph):
 
-    def __init__(self, arcs):
+    def __init__(self, arcs=None):
         Graph.__init__(self)
-        for s, r, o in arcs:
-            self.add_relation(s, r, o)
+        if arcs is not None:
+            for s, r, o in arcs:
+                self.add_relation(s, r, o)
 
     def query(self, node, *relations):
         if isinstance(node, set):

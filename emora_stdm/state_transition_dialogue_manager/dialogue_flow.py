@@ -13,6 +13,8 @@ from emora_stdm.state_transition_dialogue_manager.settings import Settings
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
+from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
+from emora_stdm.state_transition_dialogue_manager.macros_common import *
 
 Graph = Database(MapMultidigraph)
 
@@ -25,14 +27,18 @@ class DialogueFlow:
 
     Speaker = Speaker
 
-    def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM, macros: Dict[str, Macro] =None):
+    def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM,
+                 macros: Dict[str, Macro] =None, kb: KnowledgeBase =None):
         self._graph = Graph()
         self._initial_state = initial_state
         self._state = initial_state
         self._speaker = initial_speaker
         self._vars = {}
+        if kb is None:
+            kb = KnowledgeBase()
+        self._kb = kb
         self._macros = {
-
+            'ONT': ONT(self._kb)
         }
         self._macros.update(macros)
         self._global_states = set()
