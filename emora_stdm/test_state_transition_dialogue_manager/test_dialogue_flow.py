@@ -147,6 +147,64 @@ def test_system_multi_hop():
                             'excuse me what'}
 
 def test_nlg_novelty():
-    pass
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.B, error_successor=States.A)
+    df.add_state(States.C, error_successor=States.A)
+    df.add_system_transition(States.A, States.B, 'B')
+    df.add_system_transition(States.A, States.C, 'C')
+
+    for _ in range(100):
+        df.set_state(States.A)
+        df.set_speaker(Speaker.SYSTEM)
+        response = df.system_turn()
+        df.user_turn("")
+        response2 = df.system_turn()
+        assert response != response2
+
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.B, error_successor=States.A)
+    df.add_state(States.C, error_successor=States.A)
+    df.add_state(States.D, error_successor=States.A)
+    df.add_state(States.E, error_successor=States.A)
+    df.add_system_transition(States.A, States.B, 'B')
+    df.add_system_transition(States.A, States.C, 'C')
+    df.add_system_transition(States.A, States.D, 'D')
+    df.add_system_transition(States.A, States.E, 'E')
+
+    for _ in range(100):
+        df.set_state(States.A)
+        df.set_speaker(Speaker.SYSTEM)
+        response = df.system_turn()
+        df.user_turn("")
+        response2 = df.system_turn()
+        assert response != response2
+
+    mem_val = 2
+
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.A, memory=mem_val)
+    df.add_state(States.B, error_successor=States.A)
+    df.add_state(States.C, error_successor=States.A)
+    df.add_state(States.D, error_successor=States.A)
+    df.add_state(States.E, error_successor=States.A)
+    df.add_system_transition(States.A, States.B, 'B')
+    df.add_system_transition(States.A, States.C, 'C')
+    df.add_system_transition(States.A, States.D, 'D')
+    df.add_system_transition(States.A, States.E, 'E')
+
+    prev_turns = [None,None]
+    idx = 0
+    for _ in range(100):
+        df.set_state(States.A)
+        df.set_speaker(Speaker.SYSTEM)
+        response = df.system_turn()
+        assert response not in prev_turns
+        prev_turns[idx] = response
+        idx = (idx + 1) % mem_val
+        df.user_turn("")
+        response2 = df.system_turn()
+        assert response2 not in prev_turns
+        prev_turns[idx] = response2
+        idx = (idx + 1) % mem_val
 
 
