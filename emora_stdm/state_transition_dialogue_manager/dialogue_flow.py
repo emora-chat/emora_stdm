@@ -40,7 +40,8 @@ class DialogueFlow:
         self._macros = {
             'ONT': ONT(self._kb)
         }
-        self._macros.update(macros)
+        if macros:
+            self._macros.update(macros)
         self._global_states = set()
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES

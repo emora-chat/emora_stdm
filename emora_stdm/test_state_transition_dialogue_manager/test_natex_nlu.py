@@ -1,7 +1,9 @@
-
+import json
 import pytest
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
-from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
+from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
+from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow, Speaker
+from enum import Enum
 
 
 def test_flexible_sequence():
@@ -131,5 +133,66 @@ def test_nested_macro():
     natex = NatexNLU('#INTER(#SET(apple, banana), #SET(apple, orange))', macros=macros)
     assert natex.match('apple', debugging=False)
     assert not natex.match('orange')
+
+class States(Enum):
+    A = 0
+    B = 1
+    C = 2
+    D = 3
+    E = 4
+
+def test_ontology():
+    kb = KnowledgeBase()
+    ontology = {
+        "ontology": {
+            "season": [
+                "fall",
+                "spring",
+                "summer",
+                "winter"
+            ],
+            "month": [
+                "january",
+                "february",
+                "march",
+                "april",
+                "may",
+                "june",
+                "july",
+                "august",
+                "september",
+                "october",
+                "november",
+                "december"
+            ]
+        }
+    }
+    kb.load_json(json.dumps(ontology))
+    df = DialogueFlow(States.A, Speaker.USER, kb=kb)
+    df.add_state(States.A)
+    df.add_state(States.B)
+    df.add_state(States.C)
+    df.add_state(States.D)
+    df.add_state(States.E)
+    df.set_error_successor(States.A, States.E)
+    df.set_error_successor(States.B, States.E)
+    df.set_error_successor(States.C, States.E)
+    df.set_error_successor(States.D, States.E)
+    df.add_user_transition(States.A, States.B, "[#ONT(month)]")
+    df.add_system_transition(States.B, States.C, "B to C")
+    df.add_user_transition(States.C, States.D, "[$m=#ONT(month), $s=#ONT(season)]")
+
+    df.user_turn("january")
+    assert df.state() == States.B
+    assert df.system_turn() == "B to C"
+    df.user_turn("october is in the fall season")
+    assert df.state() == States.D
+    assert df._vars["m"] == "october"
+    assert df._vars["s"] == "fall"
+
+    df._state = States.A
+    df.user_turn("fall")
+    assert df.state() == States.A
+
 
 

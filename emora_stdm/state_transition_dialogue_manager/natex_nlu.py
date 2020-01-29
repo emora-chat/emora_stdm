@@ -42,7 +42,7 @@ class NatexNLU:
         if vars is None:
             vars = {}
         if macros is not None:
-            for k, v in self._macros:
+            for k, v in self._macros.items():
                 if k not in macros:
                     macros[k] = v
         else:
