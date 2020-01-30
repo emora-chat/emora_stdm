@@ -34,7 +34,7 @@ class NatexNLU:
         self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
         if match:
-            vars.update(match.groupdict())
+            vars.update({k: v for k, v in match.groupdict().items() if v is not None})
             original_vars.update(vars)
         return match
 
@@ -78,18 +78,20 @@ class NatexNLU:
         grammar = r"""
         start: term
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | optional | negation 
-              | regex | reference | assignment | macro | literal
+              | kleene_star | kleene_plus | regex | reference | assignment | macro | literal
         flexible_sequence: "[" " "? term (","? " "? term)* "]"
-        rigid_sequence: "[!" " "? term (","? " "? term)+ "]"
-        conjunction: "<" term (","? " "? term)+ ">"
-        disjunction: "{" term (","? " "? term)+ "}"
+        rigid_sequence: "[!" " "? term (","? " "? term)* "]"
+        conjunction: "<" term (","? " "? term)* ">"
+        disjunction: "{" term (","? " "? term)* "}"
         optional: term "?"
+        kleene_star: term "*"
+        kleene_plus: term "+"
         negation: "-" term
         regex: "/" regex_value "/"
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-zA-Z]+( +[a-zA-Z]+)*/
+        literal: /[a-z_A-Z@.]+( +[a-z_A-Z@.]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
@@ -117,7 +119,10 @@ class NatexNLU:
                 if isinstance(arg, str):
                     strings.append(arg)
                 elif isinstance(arg, set):
-                    strings.append(r'(?:\b' + r'\b|\b'.join(arg) + r'\b)')
+                    if arg:
+                        strings.append(r'(?:\b' + r'\b|\b'.join(arg) + r'\b)')
+                    else:
+                        strings.append(r'_EMPTY_SET_')
                 elif isinstance(arg, bool):
                     if arg:
                         strings.append('.*')
@@ -156,6 +161,18 @@ class NatexNLU:
             tree.data = 'compiled'
             tree.children[0] = r'(?:\b{}\b)?'.format(args[0])
             if self._debugging: print('    {:15} {}'.format('Optional', self._current_compilation(self._tree)))
+
+        def kleene_star(self, tree):
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = r'(?:\b{}\b)?(?:\b\W*{}\b)*'.format(args[0], args[0])
+            if self._debugging: print('    {:15} {}'.format('Kleene *', self._current_compilation(self._tree)))
+
+        def kleene_plus(self, tree):
+            args = [x.children[0] for x in tree.children]
+            tree.data = 'compiled'
+            tree.children[0] = r'(?:\b{}\b)(?:\b\W*{}\b)*'.format(args[0], args[0])
+            if self._debugging: print('    {:15} {}'.format('Kleene +', self._current_compilation(self._tree)))
 
         def negation(self, tree):
             args = [x.children[0] for x in tree.children]
@@ -203,10 +220,11 @@ class NatexNLU:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
                     if self._debugging: print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
-                    tree.children[0] = '-'
+                    tree.children[0] = '_MACRO_EXCEPTION_'
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:
                 if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
+                tree.children[0] = '_MACRO_NOT_FOUND_'
 
         def literal(self, tree):
             args = tree.children
@@ -241,6 +259,12 @@ class NatexNLU:
                     return '<' + ', '.join([str(arg) for arg in args]) + '>'
                 def disjunction(self, args):
                     return '{' + ', '.join([str(arg) for arg in args]) + '}'
+                def optional(self, args):
+                    return args[0] + '?'
+                def kleene_star(self, args):
+                    return args[0] + '*'
+                def kleene_plus(self, args):
+                    return args[0] + '+'
                 def negation(self, args):
                     (arg,) = args
                     return '-' + str(arg)

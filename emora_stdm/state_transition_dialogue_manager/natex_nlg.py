@@ -58,7 +58,7 @@ class NatexNLG:
     def is_complete(self, string=None):
         if string is None:
             string = self._expression
-        if '_NOT_FOUND_' in string:
+        if '_' in string:
             return False
         return bool(regex.fullmatch(r'[^$]+', string))
 
@@ -116,7 +116,10 @@ class NatexNLG:
                 if isinstance(arg, str):
                     strings.append(arg)
                 elif isinstance(arg, set):
-                    strings.append(StochasticOptions(arg).select())
+                    if arg:
+                        strings.append(StochasticOptions(arg).select())
+                    else:
+                        strings.append('_EMPTY_SET_')
                 elif isinstance(arg, bool):
                     if arg:
                         strings.append('')
@@ -171,10 +174,11 @@ class NatexNLG:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
                     if self._debugging: print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
-                    tree.children[0] = '-'
+                    tree.children[0] = '_MACRO_EXCEPTION_'
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:
                 if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
+                tree.children[0] = '_MACRO_NOT_FOUND_'
 
         def literal(self, tree):
             args = tree.children

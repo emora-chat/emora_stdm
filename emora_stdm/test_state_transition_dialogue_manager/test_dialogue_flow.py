@@ -114,7 +114,7 @@ def test_user_multi_hop():
     df.add_user_transition(States.B, States.D, '[how, you]')
     df.add_user_transition(States.C, States.E, '[{where, how, what}]')
     df.set_state(States.A)
-    df.user_turn('hey', debugging=True)
+    df.user_turn('hey', debugging=False)
     assert df.state() is States.B
     df.set_state(States.A)
     df.set_speaker(Speaker.USER)
