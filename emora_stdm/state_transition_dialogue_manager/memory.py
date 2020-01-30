@@ -1,6 +1,7 @@
 
 from collections import deque
 
+
 class Memory:
 
     def __init__(self, n_OR_collection):
@@ -8,10 +9,14 @@ class Memory:
             self._data = deque([None] * n_OR_collection)
         else:
             self._data = deque(n_OR_collection)
+        self._init_vals = list(self._data)
 
     def add(self, item):
         self._data.appendleft(item)
         self._data.pop()
+
+    def clear(self):
+        self._data = deque(self._init_vals)
 
     def __contains__(self, item):
         return item in self._data

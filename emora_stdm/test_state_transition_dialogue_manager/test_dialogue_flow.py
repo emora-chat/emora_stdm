@@ -207,4 +207,34 @@ def test_nlg_novelty():
         prev_turns[idx] = response2
         idx = (idx + 1) % mem_val
 
+def test_reset():
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.B, error_successor=States.E)
+    df.add_state(States.C, error_successor=States.E)
+    df.add_system_transition(States.A, States.B, 'B')
+    df.add_system_transition(States.A, States.C, 'C')
+    df.add_system_transition(States.E, States.E, 'E')
+
+    response = df.system_turn()
+    df.user_turn("")
+    assert df.state() == States.E
+
+    df.reset()
+    assert df.state() == States.A
+    assert df.speaker() == Speaker.SYSTEM
+    response = df.system_turn()
+    df.user_turn("")
+    assert df.state() == States.E
+    df.system_turn()
+    assert df.state() == States.E
+
+    df.reset()
+    assert df.state() == States.A
+    assert df.speaker() == Speaker.SYSTEM
+    response = df.system_turn()
+    df.user_turn("")
+    assert df.state() == States.E
+    df.system_turn()
+    assert df.state() == States.E
+
 

@@ -32,6 +32,7 @@ class DialogueFlow:
         self._graph = Graph()
         self._initial_state = initial_state
         self._state = initial_state
+        self._initial_speaker = initial_speaker
         self._speaker = initial_speaker
         self._vars = {}
         if kb is None:
@@ -354,3 +355,10 @@ class DialogueFlow:
             self.set_speaker(Speaker.SYSTEM)
         elif self.Speaker is Speaker.SYSTEM:
             self.set_speaker(Speaker.USER)
+
+    def reset(self):
+        self._state = self._initial_state
+        self._speaker = self._initial_speaker
+        self._vars = {}
+        for state in self.graph().nodes():
+            self.state_settings(state).memory.clear()
