@@ -13,7 +13,7 @@ TRANSITION_OUT = ["movies", "music", "sports"]
 
 knowledge = KnowledgeBase()
 knowledge.load_json_file("stop_convo.json")
-df = DialogueFlow(State.START, initial_speaker=DialogueFlow.Speaker.USER, kb=knowledge)
+df = DialogueFlow(State.START, State, initial_speaker=DialogueFlow.Speaker.USER, kb=knowledge)
 df.add_state(State.START, error_successor=State.START)
 df.add_state(State.INSTRUCT_OFF, error_successor=State.START)
 df.add_state(State.INSTRUCT_OFF_2, error_successor=State.START)

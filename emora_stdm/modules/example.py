@@ -10,7 +10,7 @@ class State(Enum):
     FAM_ERR = 4
     WHATEV = 5
 
-df = DialogueFlow(State.START)
+df = DialogueFlow(State.START, State)
 
 df.add_system_transition(State.START, State.FAM_ANS, '[!do you have a $F={brother, sister, son, daughter, cousin}]')
 df.add_user_transition(State.FAM_ANS, State.FAM_Y, '[{yes, yea, yup, yep, i do, yeah}]')

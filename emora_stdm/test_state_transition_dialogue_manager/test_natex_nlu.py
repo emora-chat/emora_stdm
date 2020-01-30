@@ -181,7 +181,7 @@ def test_ontology():
         }
     }
     kb.load_json(ontology)
-    df = DialogueFlow(States.A, Speaker.USER, kb=kb)
+    df = DialogueFlow(States.A, States, Speaker.USER, kb=kb)
     df.add_state(States.A)
     df.add_state(States.B)
     df.add_state(States.C)

@@ -13,53 +13,53 @@ class States(Enum):
     E = 4
 
 def test_constructor():
-    df = DialogueFlow(States.A)
-    assert df.state() == States.A
-    assert df.speaker() == Speaker.SYSTEM
+    df = DialogueFlow(States.A,States)
+    assert df.state() == df.state_enum_to_string(States.A)
+    assert df.speaker() == "SYSTEM"
 
 def test_add_transitions():
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_system_transition(States.A, States.B, 'hello')
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
     df.add_user_transition(States.B, States.D, '[{dog, cat, parrot}]')
     df.add_system_transition(States.D, States.A, 'so')
     assert df.graph().arcs() == {
-        (States.A, States.B, DialogueFlow.Speaker.SYSTEM),
-        (States.B, States.C, DialogueFlow.Speaker.USER),
-        (States.B, States.D, DialogueFlow.Speaker.USER),
-        (States.D, States.A, DialogueFlow.Speaker.SYSTEM)
+        (df.state_enum_to_string(States.A), df.state_enum_to_string(States.B), "SYSTEM"),
+        (df.state_enum_to_string(States.B), df.state_enum_to_string(States.C), 'USER'),
+        (df.state_enum_to_string(States.B), df.state_enum_to_string(States.D), 'USER'),
+        (df.state_enum_to_string(States.D), df.state_enum_to_string(States.A), 'SYSTEM')
     }
-    assert isinstance(df.transition_natex(States.A, States.B, Speaker.SYSTEM), NatexNLG)
-    assert isinstance(df.transition_natex(States.B, States.C, Speaker.USER), NatexNLU)
+    assert isinstance(df.transition_natex(States.A, States.B, 'SYSTEM'), NatexNLG)
+    assert isinstance(df.transition_natex(States.B, States.C, 'USER'), NatexNLU)
 
 def test_single_system_transition():
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_system_transition(States.A, States.B, 'hello')
-    assert df.system_transition() == ('hello', States.B)
+    assert df.system_transition() == ('hello', df.state_enum_to_string(States.B))
 
 def test_single_user_transition():
-    df = DialogueFlow(States.B)
+    df = DialogueFlow(States.B,States)
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
-    assert df.user_transition('oh hey there') == States.C
+    assert df.user_transition('oh hey there') == df.state_enum_to_string(States.C)
 
 def test_system_transition():
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_system_transition(States.A, States.B, 'hello')
     df.add_system_transition(States.A, States.C, 'hey')
     responses = set()
     for i in range(100):
         responses.add(df.system_transition())
-    assert responses == {('hello', States.B), ('hey', States.C)}
+    assert responses == {('hello', df.state_enum_to_string(States.B)), ('hey', df.state_enum_to_string(States.C))}
 
 def test_user_transition():
-    df = DialogueFlow(States.B)
+    df = DialogueFlow(States.B,States)
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
     df.add_user_transition(States.B, States.D, '[{bye, goodbye, see you, see ya, later}]')
-    assert df.user_transition('oh hey there') == States.C
-    assert df.user_transition('well see ya later') == States.D
+    assert df.user_transition('oh hey there') == df.state_enum_to_string(States.C)
+    assert df.user_transition('well see ya later') == df.state_enum_to_string(States.D)
 
 def test_check():
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_state(States.B, error_successor=States.C)
     df.add_state(States.D, error_successor=States.A)
     df.add_system_transition(States.A, States.B, 'hello')
@@ -67,14 +67,14 @@ def test_check():
     df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
     df.add_system_transition(States.C, States.D, 'ok')
     assert df.check()
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_state(States.B, error_successor=States.C)
     df.add_system_transition(States.A, States.B, 'hello')
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
     df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
     df.add_system_transition(States.C, States.D, 'ok')
     assert not df.check()
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_state(States.B, error_successor=States.C)
     df.add_state(States.D, error_successor=States.A)
     df.add_system_transition(States.A, States.B, 'hello')
@@ -84,7 +84,7 @@ def test_check():
     assert not df.check()
 
 def test_global_transitions():
-    df = DialogueFlow(States.A)
+    df = DialogueFlow(States.A,States)
     df.add_state(States.A, global_nlu='{hi, hey, hello}')
     df.add_state(States.B, error_successor=States.C)
     df.add_state(States.D, error_successor=States.D)
@@ -92,8 +92,8 @@ def test_global_transitions():
     df.add_user_transition(States.B, States.C, '[how, you]')
     df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
     df.add_system_transition(States.C, States.D, 'ok')
-    assert df.transition_natex(States.D, States.A, Speaker.USER).expression() == '{hi, hey, hello}'
-    df = DialogueFlow(States.A)
+    assert df.transition_natex(States.D, States.A, 'USER').expression() == '{hi, hey, hello}'
+    df = DialogueFlow(States.A,States)
     df.add_state(States.B, error_successor=States.C)
     df.add_state(States.D, error_successor=States.D)
     df.add_system_transition(States.A, States.B, 'hello')
@@ -101,10 +101,10 @@ def test_global_transitions():
     df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
     df.add_system_transition(States.C, States.D, 'ok')
     df.update_state_settings(States.A, global_nlu='{hi, hey, hello}')
-    assert df.transition_natex(States.D, States.A, Speaker.USER).expression() == '{hi, hey, hello}'
+    assert df.transition_natex(States.D, States.A, 'USER').expression() == '{hi, hey, hello}'
 
 def test_user_multi_hop():
-    df = DialogueFlow(States.A, initial_speaker=Speaker.USER)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.USER)
     df.add_state(States.B, error_successor=States.B, user_multi_hop=True)
     df.add_state(States.C, error_successor=States.A, user_multi_hop=True)
     df.add_state(States.D, error_successor=States.A)
@@ -117,20 +117,20 @@ def test_user_multi_hop():
     df.user_turn('hey', debugging=False)
     assert df.state() is States.B
     df.set_state(States.A)
-    df.set_speaker(Speaker.USER)
+    df.set_speaker('USER')
     df.user_turn('hey how are you')
     assert df.state() is States.D
     df.set_state(States.A)
-    df.set_speaker(Speaker.USER)
+    df.set_speaker('USER')
     df.user_turn('excuse me where do i go')
     assert df.state() is States.E
     df.set_state(States.A)
-    df.set_speaker(Speaker.USER)
+    df.set_speaker('USER')
     df.user_turn('excuse me')
     assert df.state() is States.A
 
 def test_system_multi_hop():
-    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.SYSTEM)
     df.add_state(States.B, error_successor=States.B, system_multi_hop=True)
     df.add_state(States.C, error_successor=States.A, system_multi_hop=True)
     df.add_state(States.D, error_successor=States.A)
@@ -141,13 +141,13 @@ def test_system_multi_hop():
     df.add_system_transition(States.C, States.E, 'what')
     for _ in range(100):
         df.set_state(States.A)
-        df.set_speaker(Speaker.SYSTEM)
+        df.set_speaker('SYSTEM')
         response = df.system_turn()
         assert response in {'hey how are you', 'hello how are you',
                             'excuse me what'}
 
 def test_nlg_novelty():
-    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.SYSTEM)
     df.add_state(States.B, error_successor=States.A)
     df.add_state(States.C, error_successor=States.A)
     df.add_system_transition(States.A, States.B, 'B')
@@ -155,13 +155,13 @@ def test_nlg_novelty():
 
     for _ in range(100):
         df.set_state(States.A)
-        df.set_speaker(Speaker.SYSTEM)
+        df.set_speaker('SYSTEM')
         response = df.system_turn()
         df.user_turn("")
         response2 = df.system_turn()
         assert response != response2
 
-    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.SYSTEM)
     df.add_state(States.B, error_successor=States.A)
     df.add_state(States.C, error_successor=States.A)
     df.add_state(States.D, error_successor=States.A)
@@ -173,7 +173,7 @@ def test_nlg_novelty():
 
     for _ in range(100):
         df.set_state(States.A)
-        df.set_speaker(Speaker.SYSTEM)
+        df.set_speaker('SYSTEM')
         response = df.system_turn()
         df.user_turn("")
         response2 = df.system_turn()
@@ -181,7 +181,7 @@ def test_nlg_novelty():
 
     mem_val = 2
 
-    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.SYSTEM)
     df.add_state(States.A, memory=mem_val)
     df.add_state(States.B, error_successor=States.A)
     df.add_state(States.C, error_successor=States.A)
@@ -196,7 +196,7 @@ def test_nlg_novelty():
     idx = 0
     for _ in range(100):
         df.set_state(States.A)
-        df.set_speaker(Speaker.SYSTEM)
+        df.set_speaker('SYSTEM')
         response = df.system_turn()
         assert response not in prev_turns
         prev_turns[idx] = response
@@ -208,7 +208,7 @@ def test_nlg_novelty():
         idx = (idx + 1) % mem_val
 
 def test_reset():
-    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df = DialogueFlow(States.A, States, initial_speaker=Speaker.SYSTEM)
     df.add_state(States.B, error_successor=States.E)
     df.add_state(States.C, error_successor=States.E)
     df.add_system_transition(States.A, States.B, 'B')
@@ -221,7 +221,7 @@ def test_reset():
 
     df.reset()
     assert df.state() == States.A
-    assert df.speaker() == Speaker.SYSTEM
+    assert df.speaker() == 'SYSTEM'
     response = df.system_turn()
     df.user_turn("")
     assert df.state() == States.E
@@ -230,7 +230,7 @@ def test_reset():
 
     df.reset()
     assert df.state() == States.A
-    assert df.speaker() == Speaker.SYSTEM
+    assert df.speaker() == 'SYSTEM'
     response = df.system_turn()
     df.user_turn("")
     assert df.state() == States.E
