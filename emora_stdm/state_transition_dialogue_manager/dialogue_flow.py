@@ -47,7 +47,9 @@ class DialogueFlow:
         else:
             self._kb = kb
         self._macros = {
-            'ONT': ONT(self._kb)
+            'ONT': ONT(self._kb),
+            'ONT_NEG': ONT_NEG(self._kb),
+            'KBQ': KBQ(self._kb)
         }
         if macros:
             self._macros.update(macros)

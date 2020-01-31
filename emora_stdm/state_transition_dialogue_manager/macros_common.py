@@ -22,6 +22,17 @@ class ONT(Macro):
         else:
             return ont_result
 
+class ONT_NEG(Macro):
+    def __init__(self, kb):
+        self.kb = kb
+        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer.lemmatize('initialize')
+
+    def run(self, ngrams, vars, args):
+        node_set = args[0]
+        ont_result = self.kb.expressions(self.kb.subtypes(node_set))
+        return ont_result
+
 class KBQ(Macro):
     def __init__(self, kb):
         self.kb = kb
