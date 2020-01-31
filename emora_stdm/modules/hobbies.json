@@ -26,6 +26,7 @@
             "basketball",
             "baton twirling",
             "beekeeping",
+            "biking",
             "billiards",
             "bird watching",
             "blacksmithing",
@@ -238,7 +239,8 @@
          "powerful",
          "successful",
          "overcome",
-         "difficult"
+         "difficult",
+           "hard"
         ],
        "uncertain_expression": [
          "don't know",
