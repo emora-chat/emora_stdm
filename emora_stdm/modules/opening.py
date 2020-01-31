@@ -242,39 +242,40 @@ receive_how_are_you = "{" \
                       "}"
 
 feelings_pos_and_not_received_how_are_you = "{" \
-                                            "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_positive)]]," \
-                                            "[! -%s, [#ONT(ont_negation)], [#ONT(ont_feelings_negative)]]," \
-                                            "#IsPositiveSentiment" \
-                                            "}"%(receive_how_are_you,receive_how_are_you)
+                                                "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_positive)]]," \
+                                                "[! -%s, [#ONT(ont_negation)], [#ONT(ont_feelings_negative)]]," \
+                                                "#IsPositiveSentiment" \
+                                                "}" % (receive_how_are_you, receive_how_are_you)
+
 
 feelings_neg_and_not_received_how_are_you = "{" \
-                                            "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_negative)]]," \
+                                            "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_negative)]]," \
                                             "[! -%s, [#ONT(ont_negation)], [{#ONT(ont_feelings_positive),#ONT(ont_feelings_neutral)}]]," \
                                             "#IsNegativeSentiment" \
-                                            "}"%(receive_how_are_you,receive_how_are_you)
+                                            "}" % (receive_how_are_you, receive_how_are_you)
 
-feelings_neutral_and_not_received_how_are_you = "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_neutral)]]"%(receive_how_are_you)
-
+feelings_neutral_and_not_received_how_are_you = "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_neutral)]]" % (
+        receive_how_are_you)
 feelings_pos_and_received_how_are_you = "{" \
-                                        "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_positive)], [%s]]," \
+                                        "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_positive)], [%s]]," \
                                         "[#ONT(ont_negation), #ONT(ont_feelings_negative), %s]," \
                                         "<#IsPositiveSentiment, %s>" \
-                                        "}"%(receive_how_are_you,receive_how_are_you,receive_how_are_you)
+                                        "}" % (receive_how_are_you, receive_how_are_you, receive_how_are_you)
 
 feelings_neg_and_received_how_are_you = "{" \
-                                        "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_negative)], [%s]]," \
-                                        "[#ONT(ont_negation), {#ONT(ont_feelings_positive),#ONT(ont_feelings_neutral)}, %s]," \
-                                        "<#IsNegativeSentiment, %s>" \
-                                        "}"%(receive_how_are_you,receive_how_are_you,receive_how_are_you)
+                                            "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_negative)], [%s]]," \
+                                            "[#ONT(ont_negation), {#ONT(ont_feelings_positive),#ONT(ont_feelings_neutral)}, %s]," \
+                                            "<#IsNegativeSentiment, %s>" \
+                                            "}" % (receive_how_are_you, receive_how_are_you, receive_how_are_you)
 
-feelings_neutral_and_received_how_are_you = "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_neutral)], [%s]]"%(receive_how_are_you)
-
-decline_share = "{"\
-                "[#ONT(ont_negation), {talk, talking, discuss, discussing, share, sharing, tell, telling, say, saying}],"\
-                "[#ONT(ont_fillers), #ONT(ont_negative)],"\
-                "[#ONT(ont_negative)]"\
-                "<{dont,do not}, know>,"\
-                "<not, sure>"\
+feelings_neutral_and_received_how_are_you = "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_neutral)], [%s]]" % (
+    receive_how_are_you)
+decline_share = "{" \
+                "[#ONT(ont_negation), {talk, talking, discuss, discussing, share, sharing, tell, telling, say, saying}]," \
+                "[#ONT(ont_fillers), #ONT(ont_negative)]," \
+                "[#ONT(ont_negative)]" \
+                "<{dont,do not}, know>," \
+                "<not, sure>" \
                 "}"
 
 
@@ -373,7 +374,7 @@ component.add_system_transition('feeling_neutral_and_received_how_are_you', 'ack
 
 component.add_user_transition('acknowledge_pos', 'share_pos',
     '{'
-    '[!-#ONT_NEG(ont_negation), [#ONT(ont_positive_indicators)]]'
+    '[!#ONT_NEG(ont_negation), [#ONT(ont_positive_indicators)]]'
     '}'
 )
 
@@ -386,7 +387,7 @@ component.add_user_transition('acknowledge_neg', 'share_neg',
 
 component.add_user_transition('acknowledge_neutral', 'share_pos',
     '{'
-    '[!-#ONT_NEG(ont_negation), [#ONT(ont_positive_indicators)]]'
+    '[!#ONT_NEG(ont_negation), [#ONT(ont_positive_indicators)]]'
     '}'
 )
 
@@ -450,4 +451,4 @@ if __name__ == '__main__':
     using = arg_dict5
     component._vars.update({key: val for key, val in using.items() if val is not None})
 
-    component.run(debugging=True)
+    component.run(debugging=False)

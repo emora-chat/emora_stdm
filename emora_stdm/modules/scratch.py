@@ -1,4 +1,4 @@
-from emora_stdm import NatexNLU, ONT, ONT_NEG, KnowledgeBase
+from emora_stdm import NatexNLU, ONTE, ONT_NEG, KnowledgeBase
 import nltk
 
 
@@ -15,13 +15,13 @@ receive_how_are_you = "{" \
                       "}"
 
 feelings_pos_and_not_received_how_are_you = "{" \
-                                            "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_positive)]]," \
+                                            "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_positive)]]," \
                                             "[! -%s, [#ONT(ont_negation)], [#ONT(ont_feelings_negative)]]," \
                                             "#IsPositiveSentiment" \
                                             "}"%(receive_how_are_you,receive_how_are_you)
 
 
-nlu = NatexNLU(feelings_pos_and_not_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+nlu = NatexNLU(feelings_pos_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("POS NO HOW ARE YOU")
 print()
 print("MATCH:")
@@ -96,12 +96,12 @@ print(m)
 print()
 
 feelings_neg_and_not_received_how_are_you = "{" \
-                                            "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_negative)]]," \
+                                            "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_negative)]]," \
                                             "[! -%s, [#ONT(ont_negation)], [{#ONT(ont_feelings_positive),#ONT(ont_feelings_neutral)}]]," \
                                             "#IsNegativeSentiment" \
                                             "}"%(receive_how_are_you,receive_how_are_you)
 
-nlu = NatexNLU(feelings_neg_and_not_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+nlu = NatexNLU(feelings_neg_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("NEG NO HOW ARE YOU")
 print()
 print("MATCH:")
@@ -178,8 +178,8 @@ print()
 print(m)
 print()
 
-feelings_neutral_and_not_received_how_are_you = "[!-#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_neutral)]]"%(receive_how_are_you)
-nlu = NatexNLU(feelings_neutral_and_not_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+feelings_neutral_and_not_received_how_are_you = "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_neutral)]]"%(receive_how_are_you)
+nlu = NatexNLU(feelings_neutral_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("NEUTRAL NO HOW ARE YOU")
 print()
 
@@ -273,12 +273,12 @@ print(m)
 print()
 
 feelings_pos_and_received_how_are_you = "{" \
-                                        "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_positive)], [%s]]," \
+                                        "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_positive)], [%s]]," \
                                         "[#ONT(ont_negation), #ONT(ont_feelings_negative), %s]," \
                                         "<#IsPositiveSentiment, %s>" \
                                         "}"%(receive_how_are_you,receive_how_are_you,receive_how_are_you)
 
-nlu = NatexNLU(feelings_pos_and_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+nlu = NatexNLU(feelings_pos_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("POS HOW ARE YOU")
 print()
 
@@ -387,12 +387,12 @@ print(m)
 print()
 
 feelings_neg_and_received_how_are_you = "{" \
-                                        "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_negative)], [%s]]," \
+                                        "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_negative)], [%s]]," \
                                         "[#ONT(ont_negation), {#ONT(ont_feelings_positive),#ONT(ont_feelings_neutral)}, %s]," \
                                         "<#IsNegativeSentiment, %s>" \
                                         "}"%(receive_how_are_you,receive_how_are_you,receive_how_are_you)
 
-nlu = NatexNLU(feelings_neg_and_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+nlu = NatexNLU(feelings_neg_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("NEG HOW ARE YOU")
 print()
 
@@ -496,8 +496,8 @@ print()
 print(m)
 print()
 
-feelings_neutral_and_received_how_are_you = "[!-#ONT_NEG(ont_negation), [#ONT(ont_feelings_neutral)], [%s]]"%(receive_how_are_you)
-nlu = NatexNLU(feelings_neutral_and_received_how_are_you, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+feelings_neutral_and_received_how_are_you = "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_neutral)], [%s]]"%(receive_how_are_you)
+nlu = NatexNLU(feelings_neutral_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("NEUTRAL HOW ARE YOU")
 print()
 
@@ -620,7 +620,7 @@ decline_share = "{"\
                 "<not, sure>"\
                 "}"
 
-nlu = NatexNLU(decline_share, macros={"ONT": ONT(kb), "ONT_NEG": ONT_NEG(kb)})
+nlu = NatexNLU(decline_share, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
 print("DECLINE SHARE")
 print()
 
