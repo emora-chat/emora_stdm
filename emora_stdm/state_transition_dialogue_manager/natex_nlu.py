@@ -154,7 +154,8 @@ class NatexNLU:
         def disjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'(?:\b{}\b)'.format(r'\b|\b'.join(self.to_strings(args)))
+            tree.children[0] = r'(?:\b{}\b)'.format(r'\b|\b'.join(
+                [r'(?:{})'.format(x) for x in self.to_strings(args)]))
             if self._debugging: print('    {:15} {}'.format('Disjunction', self._current_compilation(self._tree)))
 
         def optional(self, tree):

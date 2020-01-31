@@ -39,7 +39,7 @@ def test_kleene_star():
     natex = NatexNLU('[!i, really*, love, sports]')
     assert natex.match('i really love sports')
     assert natex.match('i love sports')
-    assert natex.match('i really really really love sports', debugging=True)
+    assert natex.match('i really really really love sports', debugging=False)
     assert not natex.match('i sports')
 
 def test_kleene_plus():
@@ -49,11 +49,19 @@ def test_kleene_plus():
     assert not natex.match('i love sports')
 
 def test_negation():
-    natex = NatexNLU('-{bad, horrible, not}')
+    natex = NatexNLU('-[{bad, horrible, not}]')
     assert natex.match('i am good')
+    assert natex.match('good')
     assert not natex.match('i am not good')
     assert not natex.match('i am horrible')
     assert not natex.match('bad')
+    natex = NatexNLU('[!-bad [good]]')
+    assert natex.match('good')
+    assert not natex.match('bad but good', debugging=False)
+    assert not natex.match('good but bad')
+    assert natex.match('im good sort of')
+    assert not natex.match('im good sort of but bad')
+    assert not natex.match('im bad but also good')
 
 def test_regex():
     natex = NatexNLU('/[a-c]+/')
