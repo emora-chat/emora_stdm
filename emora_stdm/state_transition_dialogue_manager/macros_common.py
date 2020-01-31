@@ -37,7 +37,9 @@ class ONT_NEG(Macro):
     def run(self, ngrams, vars, args):
         node_set = args[0]
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
-        return ont_result
+        if len(ont_result.intersection(ngrams)) > 0:
+            return False
+        return True
 
 class KBE(Macro):
     """
