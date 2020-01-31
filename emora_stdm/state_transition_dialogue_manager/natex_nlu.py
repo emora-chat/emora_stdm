@@ -159,19 +159,19 @@ class NatexNLU:
         def optional(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'(?:\b{}\b)?'.format(args[0])
+            tree.children[0] = r'(?:\b{}\b)?'.format(self.to_strings(args)[0])
             if self._debugging: print('    {:15} {}'.format('Optional', self._current_compilation(self._tree)))
 
         def kleene_star(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'(?:\b{}\b)?(?:\b\W*{}\b)*'.format(args[0], args[0])
+            tree.children[0] = r'(?:\b{}\b)?(?:\b\W*{}\b)*'.format(self.to_strings(args)[0], self.to_strings(args)[0])
             if self._debugging: print('    {:15} {}'.format('Kleene *', self._current_compilation(self._tree)))
 
         def kleene_plus(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'(?:\b{}\b)(?:\b\W*{}\b)*'.format(args[0], args[0])
+            tree.children[0] = r'(?:\b{}\b)(?:\b\W*{}\b)*'.format(self.to_strings(args)[0], self.to_strings(args)[0])
             if self._debugging: print('    {:15} {}'.format('Kleene +', self._current_compilation(self._tree)))
 
         def negation(self, tree):
