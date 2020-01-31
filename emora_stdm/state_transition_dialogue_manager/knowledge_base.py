@@ -81,7 +81,7 @@ class KnowledgeBase(Graph):
         subtypes = set()
         for node in node_set:
             if self.has_node(node):
-                subtypes.update(set(traversal.BreadthFirstOnArcsReverse(self, node, _type)) - {node})
+                subtypes.update(set(traversal.BreadthFirstOnArcsReverse(self, node, _type)))
         return subtypes
 
     def expressions(self, node_set):

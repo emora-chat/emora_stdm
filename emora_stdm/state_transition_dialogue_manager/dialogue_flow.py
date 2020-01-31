@@ -39,15 +39,19 @@ class DialogueFlow:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
             self._kb = KnowledgeBase()
-            self._kb.load_json(kb)
+            self._kb.load_json_file(kb)
         elif isinstance(kb, list):
             self._kb = KnowledgeBase()
             for filename in kb:
-                self._kb.load_json(filename)
+                self._kb.load_json_file(filename)
         else:
             self._kb = kb
+        onte = ONTE(self._kb)
+        kbe = KBE(self._kb)
         self._macros = {
-            'ONT': ONT(self._kb)
+            'ONT': onte, 'ONTE': onte,
+            'KBQ': kbe, 'KBE': kbe,
+            'EXP': EXP(self._kb)
         }
         if macros:
             self._macros.update(macros)
@@ -126,6 +130,18 @@ class DialogueFlow:
         if transition_options:
             options = StochasticOptions(transition_options)
             response, transition, vars = options.select()
+            if debugging:
+                updates = {}
+                for k, v in vars.items():
+                    if k not in self._vars or v != self._vars[k]:
+                        updates[k] = v
+                if updates:
+                    print('Updating vars:')
+                    for k, v in updates.items():
+                        if k in self._vars:
+                            print('  {} = {} -> {}'.format(k, self._vars[k], v))
+                        else:
+                            print('  {} = None -> {}'.format(k, v))
             self._vars.update(vars)
             next_state = transition[1]
             if debugging:
@@ -147,14 +163,29 @@ class DialogueFlow:
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
         for transition in self.transitions(state, Speaker.USER):
+            if debugging:
+                print('Evaluating transition {}'.format(transition[:2]))
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = dict(self._vars)
             match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
+                print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 transition_options.append((settings.score, transition, vars))
         if transition_options:
             score, transition, vars = max(transition_options)
+            if debugging:
+                updates = {}
+                for k, v in vars.items():
+                    if k not in self._vars or v != self._vars[k]:
+                        updates[k] = v
+                if updates:
+                    print('Updating vars:')
+                    for k, v in updates.items():
+                        if k in self._vars:
+                            print('  {} = {} -> {}'.format(k, self._vars[k], v))
+                        else:
+                            print('  {} = None -> {}'.format(k, v))
             self._vars.update(vars)
             next_state = transition[1]
             if debugging:

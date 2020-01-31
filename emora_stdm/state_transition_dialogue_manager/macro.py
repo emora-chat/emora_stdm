@@ -25,6 +25,9 @@ class Macro(ABC):
         """
         pass
 
+    def debugging_on(self):
+        self.debugging = True
+
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
 
