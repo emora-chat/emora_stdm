@@ -1,0 +1,18 @@
+{
+    "ontology": {
+      "person": ["partner", "roommate"],
+      "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
+      "spouse": ["husband", "wife"]
+    },
+
+  "expressions": {
+    "boyfriend": ["boy friend"],
+    "girlfriend": ["girl friend"],
+    "romantic_partner": ["lover", "significant other"],
+    "roommate": ["room mate"]
+  },
+
+  "predicates": [
+
+  ]
+}
