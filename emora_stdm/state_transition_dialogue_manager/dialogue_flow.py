@@ -27,8 +27,8 @@ class DialogueFlow:
 
     Speaker = Speaker
 
-    def __init__(self, initial_state: Enum, initial_speaker = Speaker.SYSTEM,
-                 macros: Dict[str, Macro] =None, kb: KnowledgeBase =None):
+    def __init__(self, initial_state: Union[Enum, str], initial_speaker = Speaker.SYSTEM,
+                 macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
         self._graph = Graph()
         self._initial_state = initial_state
         self._state = initial_state
@@ -36,8 +36,16 @@ class DialogueFlow:
         self._speaker = initial_speaker
         self._vars = {}
         if kb is None:
-            kb = KnowledgeBase()
-        self._kb = kb
+            self._kb = KnowledgeBase()
+        elif isinstance(kb, str):
+            self._kb = KnowledgeBase()
+            self._kb.load_json(kb)
+        elif isinstance(kb, list):
+            self._kb = KnowledgeBase()
+            for filename in kb:
+                self._kb.load_json(filename)
+        else:
+            self._kb = kb
         self._macros = {
             'ONT': ONT(self._kb)
         }
@@ -96,7 +104,7 @@ class DialogueFlow:
 
     # HIGH LEVEL
 
-    def system_transition(self, state: Enum =None, debugging=False):
+    def system_transition(self, state: Union[Enum, str] =None, debugging=False):
         """
         :param state:
         :param debugging:
@@ -126,7 +134,7 @@ class DialogueFlow:
         else:
             raise AssertionError('dialogue flow system transition found no valid options')
 
-    def user_transition(self, natural_language: str, state: Enum =None, debugging=False):
+    def user_transition(self, natural_language: str, state: Union[Enum, str] =None, debugging=False):
         """
         :param state:
         :param natural_language:
@@ -182,7 +190,7 @@ class DialogueFlow:
                     all_good = False
         return all_good
 
-    def add_user_transition(self, source: Enum, target: Enum,
+    def add_user_transition(self, source: Union[Enum, str], target: Union[Enum, str],
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
         if self.has_transition(source, target, Speaker.USER):
             if self.transition_global_nlu(source, target):
@@ -200,7 +208,7 @@ class DialogueFlow:
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.USER, transition_settings)
 
-    def add_system_transition(self, source: Enum, target: Enum,
+    def add_system_transition(self, source: Union[Enum, str], target: Union[Enum, str],
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
         if self.has_transition(source, target, Speaker.SYSTEM):
             raise ValueError('system transition {} -> {} already exists'.format(source, target))
@@ -215,7 +223,7 @@ class DialogueFlow:
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
 
-    def add_state(self, state: Enum, error_successor: Union[Enum, None] =None, **settings):
+    def add_state(self, state: Union[Enum, str], error_successor: Union[Union[Enum, str], None] =None, **settings):
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
         state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=1)
@@ -244,13 +252,13 @@ class DialogueFlow:
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
-    def transition_natex(self, source: Enum, target: Enum, speaker: Enum):
+    def transition_natex(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
         return self._graph.arc_data(source, target, speaker)['natex']
 
     def set_transition_natex(self, source, target, speaker, natex):
         self._graph.arc_data(source, target, speaker)['natex'] = natex
 
-    def transition_settings(self, source: Enum, target: Enum, speaker: Enum):
+    def transition_settings(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
         return self._graph.arc_data(source, target, speaker)['settings']
 
     def set_transition_settings(self, source, target, speaker, settings):
@@ -259,7 +267,7 @@ class DialogueFlow:
     def update_transition_settings(self, source, target, speaker, **settings):
         self.transition_settings(source, target, speaker).update(settings)
 
-    def transition_global_nlu(self, source: Enum, target: Enum):
+    def transition_global_nlu(self, source: Union[Enum, str], target: Union[Enum, str]):
         if self.has_transition(source, target, Speaker.USER) \
         and 'global' in self._graph.arc_data(source, target, Speaker.USER):
             return self._graph.arc_data(source, target, Speaker.USER)['global']
@@ -304,7 +312,7 @@ class DialogueFlow:
     def state(self):
         return self._state
 
-    def set_state(self, state: Enum):
+    def set_state(self, state: Union[Enum, str]):
         self._state = state
 
     def has_state(self, state):

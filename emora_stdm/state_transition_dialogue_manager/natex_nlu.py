@@ -25,6 +25,7 @@ class NatexNLU:
             self._macros.update(macros)
 
     def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
+        natural_language += ' _END_'
         if vars is None:
             vars = {}
         original_vars = vars
@@ -147,7 +148,7 @@ class NatexNLU:
         def conjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = ''.join([r'.*?(?=.*?\b{}\b)'.format(x) for x in self.to_strings(args)]) + '.*'
+            tree.children[0] = '.*?'.join([r'(?=.*?\b{}\b)'.format(x) for x in self.to_strings(args)]) + '.*?'
             if self._debugging: print('    {:15} {}'.format('Conjunction', self._current_compilation(self._tree)))
 
         def disjunction(self, tree):
@@ -178,7 +179,7 @@ class NatexNLU:
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
             (arg,) = self.to_strings(args)
-            tree.children[0] = r'(?:(?:(?!.*\b{}\b.*$).)+)'.format(arg)
+            tree.children[0] = r'(?!.*\b{}\b.*)'.format(arg) + '.*?'
             if self._debugging: print('    {:15} {}'.format('Negation', self._current_compilation(self._tree)))
 
         def regex(self, tree):
@@ -247,7 +248,7 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = self.to_strings(args)[0]
+            tree.children[0] = self.to_strings(args)[0] + ' _END_'
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
