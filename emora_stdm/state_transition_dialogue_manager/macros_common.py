@@ -10,7 +10,7 @@ except:
 
 class ONTE(Macro):
     """
-    get the set of expressions matching the entire descendent subree
+    get the set of expressions matching the entire descendent subtree
     underneath a given set of ontology nodes (usually 1)
     """
     def __init__(self, kb):
@@ -20,6 +20,27 @@ class ONTE(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         node_set = args[0]
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
+        if ngrams:
+            lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
+            matches = lemmas.keys() & ont_result
+            return {lemmas[match] for match in matches}
+        else:
+            return ont_result
+
+class ONTN(Macro):
+    """
+    get the set of node names matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self, kb):
+        self.kb = kb
+        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer.lemmatize('initialize')
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        node_set = args[0]
+        if not isinstance(node_set, set):
+            node_set = {node_set}
+        ont_result = self.kb.subtypes(node_set) - node_set
         if ngrams:
             lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
             matches = lemmas.keys() & ont_result

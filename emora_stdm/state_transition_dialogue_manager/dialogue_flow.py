@@ -51,6 +51,7 @@ class DialogueFlow:
         self._macros = {
             'ONT': onte, 'ONTE': onte,
             'KBQ': kbe, 'KBE': kbe,
+            'ONTN': ONTN(self._kb),
             'EXP': EXP(self._kb),
             'ONT_NEG': ONT_NEG(self._kb)
         }

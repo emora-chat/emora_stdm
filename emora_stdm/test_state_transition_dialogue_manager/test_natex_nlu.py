@@ -238,7 +238,6 @@ def test_negated_ontology():
                                                 "}" % (receive_how_are_you, receive_how_are_you)
 
     nlu = NatexNLU(feelings_pos_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("POS NO HOW ARE YOU")
 
     m = nlu.match("im not too bad", debugging=False)
     assert m
@@ -272,7 +271,6 @@ def test_negated_ontology():
                                                 "#IsNegativeSentiment" \
                                                 "}" % (receive_how_are_you, receive_how_are_you)
     nlu = NatexNLU(feelings_neg_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("NEG NO HOW ARE YOU")
     m = nlu.match("bad i guess", debugging=False)
     assert m
     m = nlu.match("bad", debugging=False)
@@ -304,7 +302,6 @@ def test_negated_ontology():
     feelings_neutral_and_not_received_how_are_you = "[!#ONT_NEG(ont_negation), -%s, [#ONT(ont_feelings_neutral)]]" % (
         receive_how_are_you)
     nlu = NatexNLU(feelings_neutral_and_not_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("NEUTRAL NO HOW ARE YOU")
     m = nlu.match("ok i guess", debugging=False)
     assert m
     m = nlu.match("ok", debugging=False)
@@ -345,7 +342,6 @@ def test_negated_ontology():
                                             "<#IsPositiveSentiment, %s>" \
                                             "}" % (receive_how_are_you, receive_how_are_you, receive_how_are_you)
     nlu = NatexNLU(feelings_pos_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("POS HOW ARE YOU")
     m = nlu.match("pretty well how are you", debugging=False)
     assert m
     m = nlu.match("great how are you", debugging=False)
@@ -392,7 +388,6 @@ def test_negated_ontology():
                                             "<#IsNegativeSentiment, %s>" \
                                             "}" % (receive_how_are_you, receive_how_are_you, receive_how_are_you)
     nlu = NatexNLU(feelings_neg_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("NEG HOW ARE YOU")
     m = nlu.match("not well how are you", debugging=False)
     assert m
     m = nlu.match("bad how are you", debugging=False)
@@ -434,7 +429,6 @@ def test_negated_ontology():
     feelings_neutral_and_received_how_are_you = "[!#ONT_NEG(ont_negation), [#ONT(ont_feelings_neutral)], [%s]]" % (
         receive_how_are_you)
     nlu = NatexNLU(feelings_neutral_and_received_how_are_you, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("NEUTRAL HOW ARE YOU")
     m = nlu.match("ok but how are you", debugging=False)
     assert m
     m = nlu.match("not ok how are you", debugging=False)
@@ -485,7 +479,6 @@ def test_negated_ontology():
                     "<not, sure>" \
                     "}"
     nlu = NatexNLU(decline_share, macros={"ONT": ONTE(kb), "ONT_NEG": ONT_NEG(kb)})
-    print("DECLINE SHARE")
     m = nlu.match("i dont know", debugging=False)
     assert m
     m = nlu.match("im not sure", debugging=False)
