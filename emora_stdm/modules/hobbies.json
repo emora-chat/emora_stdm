@@ -1,13 +1,13 @@
 {
     "ontology": {
         "known_hobby": [
-          "cooking",
-          "programming",
-          "reading",
-          "running",
-          "writing"
+          "reading"
         ],
         "unknown_hobby": [
+            "running",
+            "writing",
+            "cooking",
+            "programming",
             "acting",
             "air sports",
             "amateur radio",
@@ -257,6 +257,18 @@
             "too",
             "as well",
             "in addition"
+        ],
+        "yes_qualifier": [
+            "most of the time",
+            "some of the time",
+            "often",
+            "usually",
+            "sometimes",
+            "most times",
+            "every so often",
+            "every once in a while",
+            "i guess",
+            "occasionally"
         ]
     },
     "expressions": {
@@ -265,6 +277,8 @@
         "programming": ["coding", "writing programs", "writing code", "write programs", "write code"],
         "reading": ["read", "reads"],
         "running": ["run", "runs", "jog", "jogs", "sprint", "sprints"],
-        "writing": ["write", "writes"]
+        "writing": ["write", "writes"],
+        "yes": ["yeah", "yup", "sure", "yea", "i do", "i would say so"],
+        "no": ["nah", "not really", "not at all", "i dont", "i do not"]
     }
 }

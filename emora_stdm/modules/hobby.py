@@ -1,5 +1,12 @@
-from emora_stdm import DialogueFlow, KnowledgeBase
+from emora_stdm import DialogueFlow, KnowledgeBase, Macro
 from enum import Enum, auto
+
+class CheckPromptHobby(Macro):
+    def run(self, ngrams, vars, args):
+        if "prompt_hobby" in vars and len(args) > 0:
+            if vars["prompt_hobby"] == args[0]:
+                return True
+        return False
 
 class State(Enum):
     ASK_HOBBY = auto()
@@ -11,7 +18,14 @@ class State(Enum):
     UNSURE = auto()
     NO_RECOG_FAVE = auto()
     NO_RECOG_HOBBY = auto()
+    PROMPT_HOBBY = auto()
     READING_GENRE = auto()
+    LIKE_READING = auto()
+    ACK_NO_LIKE = auto()
+    ACK_NEVER_TRIED = auto()
+    PROMPT_RES_ERR = auto()
+    LIKE_HOBBY = auto()
+    LIKE_HOBBY_ERR = auto()
 
 hobby_opinion = {
     "cooking",
@@ -23,7 +37,7 @@ hobby_opinion = {
 
 knowledge = KnowledgeBase()
 knowledge.load_json_file("hobbies.json")
-df = DialogueFlow(State.ASK_HOBBY, DialogueFlow.Speaker.USER, kb=knowledge)
+df = DialogueFlow(State.ASK_HOBBY, DialogueFlow.Speaker.SYSTEM, macros={"CheckPromptHobby": CheckPromptHobby()}, kb=knowledge)
 
 ### (SYSTEM) TWO OPTIONS FOR STARTING HOBBY COMPONENT - what hobby do you like vs ive heard of hobby, do you like it
 
@@ -32,9 +46,57 @@ ask_hobby_nlg = ['"There are so many choices of what to do these days for fun. I
                  '"Do you have an activity you like to do in your free time? I like learning new things to try out based on what other people like."',
                  '"Everyone has such different answers to this, but I was wondering what you like to do to relax and have fun? "',
                  ]
-df.add_system_transition(State.ASK_HOBBY, State.REC_HOBBY, ask_hobby_nlg)
+#df.add_system_transition(State.ASK_HOBBY, State.REC_HOBBY, ask_hobby_nlg)
 
+# also need to check for untalked about hobby
+prompt_hobby_nlg = ['[!One activity that a lot of people have mentioned to me is $prompt_hobby=#ONT(known_hobby)"." Is this something you like to do"?"]',
+                    '[!Ive been hearing a bit about $prompt_hobby=#ONT(known_hobby)"." Do you like $prompt_hobby"?"]'
+                    ]
+df.add_system_transition(State.ASK_HOBBY, State.PROMPT_HOBBY, prompt_hobby_nlg)
 
+### (USER) ANSWERING YES TO PROMPT HOBBY
+# store talked about hobby
+yes_nlu = '{yes,#ONT(yes_qualifier)}'
+df.add_user_transition(State.PROMPT_HOBBY, State.LIKE_HOBBY, yes_nlu)
+df.update_state_settings(State.LIKE_HOBBY, user_multi_hop=True)
+df.add_user_transition(State.LIKE_HOBBY, State.LIKE_READING, "#CheckPromptHobby(reading)")
+
+like_hobby_err_nlg = ['"Sorry, I dont seem to have understood your answer very well. Lets try something else."',
+                     '"Im glad you like" $prompt_hobby ". Now I am curious.'
+                     ]
+df.set_error_successor(State.LIKE_HOBBY, State.LIKE_HOBBY_ERR)
+df.add_system_transition(State.LIKE_HOBBY_ERR, State.ASK_HOBBY, like_hobby_err_nlg)
+
+### (USER) ANSWERING NO TO PROMPT HOBBY
+df.add_user_transition(State.PROMPT_HOBBY, State.ACK_NO_LIKE, '[no]')
+
+### (USER) ANSWERING NEVER TRIED TO PROMPT HOBBY
+never_tried_nlu = '{[! -you [never] [{tried, heard, done}]], [#ONT(uncertain_expression)]}'
+df.add_user_transition(State.PROMPT_HOBBY, State.ACK_NEVER_TRIED, never_tried_nlu)
+
+### (USER) ERROR TO PROMPT HOBBY
+prompt_hobby_err_nlg = ['"Sorry, I dont seem to have understood your answer very well. Lets try something else."',
+                     '"You have provided an interesting answer to whether you like " $prompt_hobby ". Let me see.'
+                     ]
+df.set_error_successor(State.PROMPT_HOBBY, State.PROMPT_RES_ERR)
+df.add_system_transition(State.PROMPT_RES_ERR, State.ASK_HOBBY, prompt_hobby_err_nlg)
+
+### (SYSTEM) RESPONDING TO NO TO LIKE HOBBY PROMPT
+# store talked about hobby
+df.update_state_settings(State.ASK_HOBBY, system_multi_hop=True)
+ack_no_like_nlg = ['[! "I see. Im glad to learn that you dont really care for" $prompt_hobby "."]',
+                    '[! "Really? Thats very interesting to hear that you dont like" $prompt_hobby "." ]'
+                    ]
+df.add_system_transition(State.ACK_NO_LIKE, State.ASK_HOBBY, ack_no_like_nlg)
+
+### (SYSTEM) RESPONDING TO NEVER TRIED TO LIKE HOBBY PROMPT
+# store talked about hobby
+ack_never_tried_nlg = ['[! "Oh. It sounds like you have never tried" $prompt_hobby ". Thats ok."]',
+                        '[! "Wow, really? I find it fascinating to see the diversity in everyones life, since others have mentioned" $prompt_hobby "to me before." ]'
+                        ]
+df.add_system_transition(State.ACK_NEVER_TRIED, State.ASK_HOBBY, ack_never_tried_nlg)
+
+### (USER) RECEIVING SPECIFIC HOBBY USER LIKES WHERE HOBBY HAS INFO FOR EMORA
 
 ### (USER) RECEIVING SPECIFIC HOBBY USER LIKES WHERE HOBBY HAS NO INFO FOR EMORA
 
