@@ -19,6 +19,7 @@ class IsNoInfoHobby(Macro):
         return False
 
 class State(Enum):
+    PRESTART = auto()
     FIRST_ASK_HOBBY = auto()
     GEN_ASK_HOBBY = auto()
     REC_HOBBY = auto()
@@ -50,10 +51,16 @@ hobby_opinion = {
 
 knowledge = KnowledgeBase()
 knowledge.load_json_file("hobbies.json")
-df = DialogueFlow(State.FIRST_ASK_HOBBY, DialogueFlow.Speaker.SYSTEM,
+df = DialogueFlow(State.PRESTART, DialogueFlow.Speaker.USER,
                   kb=knowledge)
 macros = {"IsHobby": IsHobby(), "IsNoInfoHobby": IsNoInfoHobby(df)}
 df._macros.update(macros)
+
+### if user initiates
+request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
+df.add_user_transition(State.PRESTART, State.FIRST_ASK_HOBBY,request_hobby_nlu)
+df.set_error_successor(State.PRESTART, State.PRESTART)
+df.add_system_transition(State.PRESTART, State.PRESTART, '"NULL TRANSITION"')
 
 ### (SYSTEM) TWO OPTIONS FOR STARTING HOBBY COMPONENT - what hobby do you like vs ive heard of hobby, do you like it
 
@@ -74,8 +81,8 @@ gen_ask_hobby_nlg = ['"What is another hobby you like?"',
 df.add_system_transition(State.GEN_ASK_HOBBY, State.REC_HOBBY, gen_ask_hobby_nlg)
 
 # todo - also need to check for untalked about hobby
-first_prompt_hobby_nlg = ['[!One activity that a lot of people have mentioned to me is $hobby=#ONTN(known_hobby)"." Is this something you like to do"?"]',
-                    '[!Ive been hearing a bit about $hobby=#ONTN(known_hobby)"." Do you like $hobby"?"]'
+first_prompt_hobby_nlg = ['[!One activity that a lot of people have mentioned to me is $hobby={#ONTN(known_hobby),#ONTN(unknown_hobby)}"." Is this something you like to do"?"]',
+                    '[!Ive been hearing a bit about $hobby={#ONTN(known_hobby),#ONTN(unknown_hobby)}"." Do you like $hobby"?"]'
                     ]
 df.add_system_transition(State.FIRST_ASK_HOBBY, State.PROMPT_HOBBY, first_prompt_hobby_nlg)
 df.add_system_transition(State.GEN_ASK_HOBBY, State.PROMPT_HOBBY, first_prompt_hobby_nlg)
@@ -89,12 +96,13 @@ df.update_state_settings(State.LIKE_HOBBY, user_multi_hop=True)
 df.add_user_transition(State.LIKE_HOBBY, State.LIKE_READING, "#IsHobby(reading)")
 df.add_user_transition(State.LIKE_HOBBY, State.RECOG_NO_INFO_HOBBY, "#IsNoInfoHobby")
 like_hobby_err_nlg = ['"Sorry, I dont seem to have understood your answer very well. Lets try something else."',
-                     '"Im glad you like" $hobby ". Now I am curious.'
+                     '[!"Im glad you like" $hobby ". Now I am curious."]'
                      ]
 df.set_error_successor(State.LIKE_HOBBY, State.LIKE_HOBBY_ERR)
 df.add_system_transition(State.LIKE_HOBBY_ERR, State.GEN_ASK_HOBBY, like_hobby_err_nlg)
 
 ### (USER) ANSWERING NO TO PROMPT HOBBY
+no_nlu = '{[#EXP(no)], [!{i dont, i do not, no i dont, no i do not}]}'
 df.add_user_transition(State.PROMPT_HOBBY, State.ACK_NO_LIKE, '[#EXP(no)]')
 
 ### (USER) ANSWERING NEVER TRIED TO PROMPT HOBBY
@@ -119,7 +127,7 @@ df.add_system_transition(State.ACK_NO_LIKE, State.GEN_ASK_HOBBY, ack_no_like_nlg
 ### (SYSTEM) RESPONDING TO NEVER TRIED TO LIKE HOBBY PROMPT
 # todo - store talked hobby
 ack_never_tried_nlg = ['[!"Oh. It sounds like you have never tried" $hobby ". Thats ok."]',
-                        '[!"Wow, really? I find it fascinating to see the diversity in everyones life, since others have mentioned" $hobby "to me before."]'
+                        '[!"Wow, youve never done it? I find it fascinating to see the diversity in everyones life, since others have mentioned" $hobby "to me before."]'
                         ]
 df.add_system_transition(State.ACK_NEVER_TRIED, State.GEN_ASK_HOBBY, ack_never_tried_nlg)
 
@@ -213,4 +221,4 @@ if __name__ == '__main__':
     # automatic verification of the DialogueFlow's structure (dumps warnings to stdout)
     df.check()
     # run the DialogueFlow in interactive mode to test
-    df.run(debugging=False)
+    df.run(debugging=True)

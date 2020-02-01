@@ -1,5 +1,9 @@
 {
     "ontology": {
+        "hobby": [
+            "known_hobby",
+            "unknown_hobby"
+        ],
         "known_hobby": [
           "reading"
         ],
@@ -245,6 +249,7 @@
        "uncertain_expression": [
          "don't know",
          "dont know",
+           "do not know",
          "unsure",
          "not sure",
          "hard to say",
@@ -272,13 +277,16 @@
         ]
     },
     "expressions": {
-        "hiking": ["hike", "hikes"],
-        "cooking": ["cook", "baking", "bake"],
-        "programming": ["coding", "writing programs", "writing code", "write programs", "write code"],
-        "reading": ["read", "reads"],
-        "running": ["run", "runs", "jog", "jogs", "sprint", "sprints"],
-        "writing": ["write", "writes"],
-        "yes": ["yeah", "yup", "sure", "yea", "i do", "i would say so"],
-        "no": ["nah", "not really", "not at all", "i dont", "i do not"]
+        "hiking": ["hiking","hike", "hikes"],
+        "cooking": ["cooking","cook", "baking", "bake"],
+        "programming": ["programming","coding", "writing programs", "writing code", "write programs", "write code"],
+        "reading": ["reading","read", "reads"],
+        "running": ["running","run", "runs", "jog", "jogs", "sprint", "sprints"],
+        "writing": ["writing","write", "writes"],
+        "yes": ["yes","yeah", "yup", "sure", "yea", "i do", "i would say so"],
+        "no": ["no","nah", "not really", "not at all"],
+        "chat": ["chat","lets talk", "lets chat", "can we talk", "can we chat", "do you want to talk",
+                 "do you want to chat", "wanna chat", "wanna talk", "can i talk",
+                 "can we have a conversation", "can we have a talk"]
     }
 }
