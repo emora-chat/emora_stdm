@@ -18,6 +18,47 @@ class IsNoInfoHobby(Macro):
                 return True
         return False
 
+class TryGetHobby(Macro):
+    def run(self, ngrams, vars, args):
+        if "hobby" in vars:
+            return vars["hobby"]
+        else:
+            return "it"
+
+class ResetHobby(Macro):
+    def run(self, ngrams, vars, args):
+        if "hobby" in vars:
+            del vars["hobby"]
+
+class UpdateCoveredHobbies(Macro):
+    def run(self, ngrams, vars, args):
+        if "covered_hobbies" not in vars:
+            vars["covered_hobbies"] = set()
+        if "hobby" in vars:
+            vars["covered_hobbies"].add(vars["hobby"])
+        return None
+
+class UpdateLikedHobbies(Macro):
+    def run(self, ngrams, vars, args):
+        if "liked_hobbies" not in vars:
+            vars["liked_hobbies"] = set()
+        if "hobby" in vars:
+            liked = vars["hobby"]
+            vars["liked_hobbies"].add(liked)
+            if "covered_hobbies" in vars and liked not in vars["covered_hobbies"]:
+                vars["covered_hobbies"].add(liked)
+        return None
+
+class UnCoveredHobbies(Macro):
+    def __init__(self, d):
+        self.ontn = d._macros["ONTN"]
+    def run(self, ngrams, vars, args):
+        if "covered_hobbies" not in vars:
+            vars["covered_hobbies"] = set()
+        if "hobby" in vars:
+            vars["covered_hobbies"].add(vars["hobby"])
+        return None
+
 class State(Enum):
     PRESTART = auto()
     FIRST_ASK_HOBBY = auto()
@@ -53,7 +94,9 @@ knowledge = KnowledgeBase()
 knowledge.load_json_file("hobbies.json")
 df = DialogueFlow(State.PRESTART, DialogueFlow.Speaker.USER,
                   kb=knowledge)
-macros = {"IsHobby": IsHobby(), "IsNoInfoHobby": IsNoInfoHobby(df)}
+macros = {"IsHobby": IsHobby(), "IsNoInfoHobby": IsNoInfoHobby(df),
+          "UpdateCoveredHobbies": UpdateCoveredHobbies(), "UpdateLikedHobbies": UpdateLikedHobbies(),
+          "TryGetHobby": TryGetHobby(), "ResetHobby": ResetHobby()}
 df._macros.update(macros)
 
 ### if user initiates
@@ -88,15 +131,13 @@ df.add_system_transition(State.FIRST_ASK_HOBBY, State.PROMPT_HOBBY, first_prompt
 df.add_system_transition(State.GEN_ASK_HOBBY, State.PROMPT_HOBBY, first_prompt_hobby_nlg)
 
 ### (USER) ANSWERING YES TO PROMPT HOBBY
-# todo - store talked hobby
-# todo - store likes hobby
 yes_nlu = '[{#EXP(yes),#ONT(yes_qualifier)}]'
 df.add_user_transition(State.PROMPT_HOBBY, State.LIKE_HOBBY, yes_nlu)
 df.update_state_settings(State.LIKE_HOBBY, user_multi_hop=True)
-df.add_user_transition(State.LIKE_HOBBY, State.LIKE_READING, "#IsHobby(reading)")
-df.add_user_transition(State.LIKE_HOBBY, State.RECOG_NO_INFO_HOBBY, "#IsNoInfoHobby")
+df.add_user_transition(State.LIKE_HOBBY, State.LIKE_READING, "[!#IsHobby(reading)]")
+df.add_user_transition(State.LIKE_HOBBY, State.RECOG_NO_INFO_HOBBY, "[!#IsNoInfoHobby]")
 like_hobby_err_nlg = ['"Sorry, I dont seem to have understood your answer very well. Lets try something else."',
-                     '[!"Im glad you like" $hobby ". Now I am curious."]'
+                     '[!"Im glad you like" #TryGetHobby() ". Now I am curious."]'
                      ]
 df.set_error_successor(State.LIKE_HOBBY, State.LIKE_HOBBY_ERR)
 df.add_system_transition(State.LIKE_HOBBY_ERR, State.GEN_ASK_HOBBY, like_hobby_err_nlg)
@@ -110,24 +151,22 @@ never_tried_nlu = '{[! -you [never] [{tried, heard, done}]], [#ONT(uncertain_exp
 df.add_user_transition(State.PROMPT_HOBBY, State.ACK_NEVER_TRIED, never_tried_nlu)
 
 ### (USER) ERROR TO PROMPT HOBBY
-prompt_hobby_err_nlg = ['"Sorry, I dont seem to have understood your answer very well. Lets try something else."',
-                        '[!"You have provided an interesting answer to whether you like" $hobby ", but I am still learning about it. "]'
+prompt_hobby_err_nlg = ['[!"Sorry, I dont seem to have understood your answer very well. Lets try something else."]',
+                        '[!"You have provided an interesting answer to whether you like" #TryGetHobby() ", but I am still learning about it. "]'
                      ]
 df.set_error_successor(State.PROMPT_HOBBY, State.PROMPT_RES_ERR)
 df.add_system_transition(State.PROMPT_RES_ERR, State.GEN_ASK_HOBBY, prompt_hobby_err_nlg)
 
 ### (SYSTEM) RESPONDING TO USERS NO TO LIKE HOBBY PROMPT
-# todo - store talked hobby
 df.update_state_settings(State.GEN_ASK_HOBBY, system_multi_hop=True)
-ack_no_like_nlg = ['[!"I see. Im glad to learn that you dont really care for" $hobby "."]',
-                    '[!"Really? Thats very interesting to hear that you dont like" $hobby "."]'
+ack_no_like_nlg = ['[!"I see. Im glad to learn that you dont really care for" #TryGetHobby() "." #UpdateCoveredHobbies]',
+                    '[!"Really? Thats very interesting to hear that you dont like" #TryGetHobby() "." #UpdateCoveredHobbies]'
                     ]
 df.add_system_transition(State.ACK_NO_LIKE, State.GEN_ASK_HOBBY, ack_no_like_nlg)
 
 ### (SYSTEM) RESPONDING TO NEVER TRIED TO LIKE HOBBY PROMPT
-# todo - store talked hobby
-ack_never_tried_nlg = ['[!"Oh. It sounds like you have never tried" $hobby ". Thats ok."]',
-                        '[!"Wow, youve never done it? I find it fascinating to see the diversity in everyones life, since others have mentioned" $hobby "to me before."]'
+ack_never_tried_nlg = ['[!"Oh. It sounds like you have never tried" #TryGetHobby() ". Thats ok." #UpdateCoveredHobbies]',
+                        '[!"Wow, youve never done it? I find it fascinating to see the diversity in everyones life, since others have mentioned" $hobby "to me before." #UpdateCoveredHobbies]'
                         ]
 df.add_system_transition(State.ACK_NEVER_TRIED, State.GEN_ASK_HOBBY, ack_never_tried_nlg)
 
@@ -145,19 +184,19 @@ df.set_error_successor(State.REC_HOBBY, State.NO_RECOG_HOBBY)
 
 ### (SYSTEM) ACKNOWLEDING IT HAS NEVER HEARD OF SUCH HOBBY
 # todo - save utterance into user attributes
-no_recog_hobby_nlg = ['"Ive never heard that one. What is your favorite thing about it?"',
-                        '"Im not very familiar with that. What would you say you enjoy the most about it?"',
-                        '"Wow, it is not every day that I hear about a brand new activity for me. What is your favorite thing about it?"',
-                        '"I dont remember if I have ever heard of that activity before. What do you enjoy the most about it?"'
+no_recog_hobby_nlg = ['[!"Ive never heard that one. What is your favorite thing about it?" #ResetHobby]',
+                        '[!"Im not very familiar with that. What would you say you enjoy the most about it?" #ResetHobby]',
+                        '[!"Wow, it is not every day that I hear about a brand new activity for me. What is your favorite thing about it?" #ResetHobby]',
+                        '[!"I dont remember if I have ever heard of that activity before. What do you enjoy the most about it?" #ResetHobby]'
                       ]
 df.add_system_transition(State.NO_RECOG_HOBBY, State.ASK_FAVE_THING, no_recog_hobby_nlg)
 
 ### (SYSTEM) ASKING FOR FAVORITE THING ABOUT NO INFO HOBBY
 
-ask_fave_thing_nlg = ['[!You like $hobby"?" I dont know much about it"." What is your favorite thing about $hobby"?"]',
-                        '[!Huh"," $hobby"?" Not many people that ive talked to have mentioned that one "." What would you say you enjoy the most about $hobby"?"]',
-                        '[!You like $hobby"?" Ive never done it"." What is your favorite thing about $hobby"?"]',
-                        '[!Its interesting that you said $hobby"." That doesnt seem to be as common as other hobbies"," at least in my conversations with others"." What do you enjoy the most about $hobby"?"]'
+ask_fave_thing_nlg = ['[!You like $hobby"?" I dont know much about it"." What is your favorite thing about $hobby"?" #UpdateLikedHobbies]',
+                        '[!Huh"," $hobby"?" Not many people that ive talked to have mentioned that one "." What would you say you enjoy the most about $hobby"?" #UpdateLikedHobbies]',
+                        '[!You like $hobby"?" Ive never done it"." What is your favorite thing about $hobby"?" #UpdateLikedHobbies]',
+                        '[!Its interesting that you said $hobby"." That doesnt seem to be as common as other hobbies"," at least in my conversations with others"." What do you enjoy the most about $hobby"?" #UpdateLikedHobbies]'
                       ]
 df.add_system_transition(State.RECOG_NO_INFO_HOBBY, State.ASK_FAVE_THING, ask_fave_thing_nlg)
 
@@ -176,13 +215,13 @@ df.set_error_successor(State.ASK_FAVE_THING, State.NO_RECOG_FAVE)
 ### (SYSTEM) RESPONDING TO FAVORITE THING ABOUT NO INFO HOBBY
 
 ack_experience_nlg = ['[! its great to find something that you enjoy"."]',
-                      '[! having fun experiences is important for everyone"," im glad you enjoy $hobby"."]'
+                      '[! having fun experiences is important for everyone"," im glad you enjoy #TryGetHobby() "."]'
                       '[! sometimes just enjoying yourself is exactly what you need "."]'
                      ]
 df.add_system_transition(State.EXPERIENCE, State.GEN_ASK_HOBBY, ack_experience_nlg)
 
 ack_challenge_nlg = ['[! pursuing personal growth is an admirable trait"." it sounds like you embody this and i am impressed"."]',
-                      '[! it always feels great to overcome a challenge"," im glad you find $hobby so rewarding"."]'
+                      '[! it always feels great to overcome a challenge"," im glad you find #TryGetHobby() so rewarding"."]'
                       '[! i see"." i do think working hard at something is sometimes just as fun as doing more relaxing activities"."]'
                         ]
 df.add_system_transition(State.CHALLENGE, State.GEN_ASK_HOBBY, ack_challenge_nlg)
@@ -194,7 +233,7 @@ ack_unsure_nlg = ['[! i understand"." sometimes it is hard to put your reasons i
 df.add_system_transition(State.UNSURE, State.GEN_ASK_HOBBY, ack_unsure_nlg)
 
 no_recog_fave_nlg = ['[!I dont think I understood all of that"," but Im glad to hear more about your opinions"."]',
-                     '[!You are so knowledgeable about $hobby"." I am hoping to learn all sorts of things like this"," so I am very happy to be talking to you"."]',
+                     '[!You are so knowledgeable about #TryGetHobby()"." I am hoping to learn all sorts of things like this"," so I am very happy to be talking to you"."]',
                      '[!Thanks for sharing that with me"." I am very interested in learning about your opinions"." It is so much fun to see what people like"!"]']
 
 df.add_system_transition(State.NO_RECOG_FAVE, State.GEN_ASK_HOBBY, no_recog_fave_nlg)
@@ -202,9 +241,9 @@ df.add_system_transition(State.NO_RECOG_FAVE, State.GEN_ASK_HOBBY, no_recog_fave
 
 ### (SYSTEM) ASKING ABOUT FAVE GENRE OF BOOK
 
-reading_ask_genre_nlg = ['"Oh, you like reading? What kind of books do you enjoy the most?"',
-                        '"Im so glad you like reading. Books are a great way to explore imaginary worlds and characters. What type of books do you like reading?"',
-                         '"Reading can be so much fun. What stories do you find the most enjoyable?"'
+reading_ask_genre_nlg = ['[!"Oh, you like reading? What kind of books do you enjoy the most?" #UpdateLikedHobbies]',
+                        '[!"Im so glad you like reading. Books are a great way to explore imaginary worlds and characters. What type of books do you like reading?" #UpdateLikedHobbies]',
+                         '[!"Reading can be so much fun. What stories do you find the most enjoyable?" #UpdateLikedHobbies]'
                         ]
 
 df.add_system_transition(State.LIKE_READING, State.ASK_GENRE, reading_ask_genre_nlg)
