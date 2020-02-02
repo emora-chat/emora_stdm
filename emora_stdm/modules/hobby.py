@@ -88,6 +88,7 @@ class State(Enum):
     LIKE_HOBBY_ERR = auto()
     ASK_GENRE = auto()
     UNRECOG_GENRE = auto()
+    END = auto()
 
 hobby_opinion = {
     "cooking",
@@ -127,7 +128,7 @@ gen_ask_hobby_nlg = ['"What is another hobby you like?"',
                          '"What do you like to do to have fun?"',
                      '"Are there any other activities that you enjoy as well?"',
                      '"What else do you enjoy doing?"',
-                     '"Do you have any other things you would consider to be hobbies?"']
+                     '"Do you have any other things that you would consider to be your hobbies?"']
 df.add_system_transition(State.GEN_ASK_HOBBY, State.REC_HOBBY, gen_ask_hobby_nlg)
 
 first_prompt_hobby_nlg = ['[!One activity that a lot of people have mentioned to me is $hobby=#UnCoveredHobby()"." Is this something you like to do"?"]',
@@ -186,6 +187,8 @@ df.add_user_transition(State.REC_HOBBY, State.RECOG_NO_INFO_HOBBY, init_noinfo_h
 init_info_hobby_nlu = ["[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $hobby=#ONT(known_hobby), #ONT(also_syns)?]]",
                         "[$hobby=#ONT(known_hobby)]"]
 df.add_user_transition(State.REC_HOBBY, State.LIKE_HOBBY, init_info_hobby_nlu)
+no_more_hobbies_nlu = ""
+df.add_user_transition(State.REC_HOBBY, State.END, )
 df.set_error_successor(State.REC_HOBBY, State.NO_RECOG_HOBBY)
 
 ### (SYSTEM) ACKNOWLEDING IT HAS NEVER HEARD OF SUCH HOBBY
@@ -266,4 +269,4 @@ if __name__ == '__main__':
     # automatic verification of the DialogueFlow's structure (dumps warnings to stdout)
     df.check()
     # run the DialogueFlow in interactive mode to test
-    df.run(debugging=True)
+    df.run(debugging=False)

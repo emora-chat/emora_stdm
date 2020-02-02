@@ -18,11 +18,14 @@ class ONTE(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        node_set = args[0]
-        if isinstance(node_set, list):
-            node_set = set(node_set)
-        elif isinstance(node_set, str):
-            node_set = {node_set}
+        if isinstance(args, list):
+            node_set = set(args)
+        elif isinstance(args, str):
+            node_set = {args}
+        elif isinstance(args, set):
+            node_set = args
+        else:
+            raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
         if ngrams:
             lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
@@ -41,11 +44,14 @@ class ONTN(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        node_set = args[0]
-        if isinstance(node_set, list):
-            node_set = set(node_set)
-        elif isinstance(node_set, str):
-            node_set = {node_set}
+        if isinstance(args, list):
+            node_set = set(args)
+        elif isinstance(args, str):
+            node_set = {args}
+        elif isinstance(args, set):
+            node_set = args
+        else:
+            raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
         ont_result = self.kb.subtypes(node_set) - node_set
         if ngrams:
             lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
