@@ -1,5 +1,9 @@
-from emora_stdm import DialogueFlow, KnowledgeBase, Macro, ONTE
+from emora_stdm import DialogueFlow, KnowledgeBase, Macro
 from enum import Enum, auto
+import random
+
+TRANSITION_OUT = ["movies", "music", "sports"]
+NULL = "NULL TRANSITION"
 
 class IsHobby(Macro):
     def run(self, ngrams, vars, args):
@@ -66,6 +70,14 @@ class UnCoveredHobby(Macro):
             hobbies = self.ontn(None, vars, ["unknown_hobby"])
         return hobbies
 
+class CoveredHobbySent(Macro):
+    def run(self, ngrams, vars, args):
+        num = int(args[0])
+        if "liked_hobbies" in vars:
+            hobs = random.sample(vars["liked_hobbies"], num)
+            return ', and '.join(hobs)
+        return 'different hobbies'
+
 class State(Enum):
     PRESTART = auto()
     FIRST_ASK_HOBBY = auto()
@@ -88,6 +100,7 @@ class State(Enum):
     LIKE_HOBBY_ERR = auto()
     ASK_GENRE = auto()
     UNRECOG_GENRE = auto()
+    ACK_END = auto()
     END = auto()
 
 hobby_opinion = {
@@ -104,14 +117,15 @@ df = DialogueFlow(State.PRESTART, DialogueFlow.Speaker.USER,
                   kb=knowledge)
 macros = {"IsHobby": IsHobby(), "IsNoInfoHobby": IsNoInfoHobby(df),
           "UpdateCoveredHobbies": UpdateCoveredHobbies(), "UpdateLikedHobbies": UpdateLikedHobbies(),
-          "TryGetHobby": TryGetHobby(), "ResetHobby": ResetHobby(), "UnCoveredHobby": UnCoveredHobby(df)}
+          "TryGetHobby": TryGetHobby(), "ResetHobby": ResetHobby(), "UnCoveredHobby": UnCoveredHobby(df),
+          "CoveredHobbySent": CoveredHobbySent()}
 df._macros.update(macros)
 
 ### if user initiates
 request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
 df.add_user_transition(State.PRESTART, State.FIRST_ASK_HOBBY,request_hobby_nlu)
 df.set_error_successor(State.PRESTART, State.PRESTART)
-df.add_system_transition(State.PRESTART, State.PRESTART, '"NULL TRANSITION"')
+df.add_system_transition(State.PRESTART, State.PRESTART, NULL)
 
 ### (SYSTEM) TWO OPTIONS FOR STARTING HOBBY COMPONENT - what hobby do you like vs ive heard of hobby, do you like it
 
@@ -187,9 +201,19 @@ df.add_user_transition(State.REC_HOBBY, State.RECOG_NO_INFO_HOBBY, init_noinfo_h
 init_info_hobby_nlu = ["[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $hobby=#ONT(known_hobby), #ONT(also_syns)?]]",
                         "[$hobby=#ONT(known_hobby)]"]
 df.add_user_transition(State.REC_HOBBY, State.LIKE_HOBBY, init_info_hobby_nlu)
-no_more_hobbies_nlu = ""
-df.add_user_transition(State.REC_HOBBY, State.END, )
+no_more_hobbies_nlu = '{["no more"], [i, dont, have, more], [i, do, not, have, more], ' \
+                      '[thats it], [that is it], [all done], [im, done], [i, am, done], %s}'%no_nlu
+df.add_user_transition(State.REC_HOBBY, State.ACK_END, no_more_hobbies_nlu)
 df.set_error_successor(State.REC_HOBBY, State.NO_RECOG_HOBBY)
+
+### (SYSTEM) END CONVO AFTER USER INDICATES NO MORE HOBBIES
+end_nlg = ['"It has been fun talking about these different activities with you. But lets move on to something else. %s are on my mind. Which would you like to talk about?"'%(', and '.join(TRANSITION_OUT)),
+            '[!"I have enjoyed learning about your opinions on " #CoveredHobbySent(2) ". Right now, I am also interested in %s. What topic do you want to talk about next?"]'%(', and '.join(TRANSITION_OUT)),
+           '"This has been great. Ive learned some new things and some new activities I may end up trying. But until then, what would you like to chat about next? I think %s would be good."'%(', or '.join(TRANSITION_OUT))
+            ]
+df.add_system_transition(State.ACK_END, State.END, end_nlg)
+df.set_error_successor(State.END, State.END)
+df.add_system_transition(State.END, State.END, NULL)
 
 ### (SYSTEM) ACKNOWLEDING IT HAS NEVER HEARD OF SUCH HOBBY
 # todo - save utterance into user attributes
@@ -269,4 +293,4 @@ if __name__ == '__main__':
     # automatic verification of the DialogueFlow's structure (dumps warnings to stdout)
     df.check()
     # run the DialogueFlow in interactive mode to test
-    df.run(debugging=False)
+    df.run(debugging=True)
