@@ -2,14 +2,23 @@
     "ontology": {
       "person": ["partner", "roommate"],
       "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
-      "spouse": ["husband", "wife"]
+      "spouse": ["husband", "wife"],
+      "parent": ["mother", "father"],
+      "family": ["parent", "uncle", "aunt", "cousin", "neice", "nephew", "grandparent", "child"],
+      "child": ["son", "daughter"]
     },
 
   "expressions": {
     "boyfriend": ["boy friend"],
     "girlfriend": ["girl friend"],
     "romantic_partner": ["lover", "significant other"],
-    "roommate": ["room mate"]
+    "roommate": ["room mate"],
+    "mother": ["mom", "ma", "mama", "mommy"],
+    "father": ["dad", "pa", "papa", "daddy"],
+    "child": ["kid", "kiddo", "offspring"],
+    "son": ["boy"],
+    "daughter": ["girl"]
+
   },
 
   "predicates": [
