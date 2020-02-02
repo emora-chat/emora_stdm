@@ -38,7 +38,9 @@ class ONTN(Macro):
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         node_set = args[0]
-        if not isinstance(node_set, set):
+        if isinstance(node_set, list):
+            node_set = set(node_set)
+        elif isinstance(node_set, str):
             node_set = {node_set}
         ont_result = self.kb.subtypes(node_set) - node_set
         if ngrams:
