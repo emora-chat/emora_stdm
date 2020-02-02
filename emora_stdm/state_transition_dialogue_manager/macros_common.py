@@ -19,6 +19,10 @@ class ONTE(Macro):
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         node_set = args[0]
+        if isinstance(node_set, list):
+            node_set = set(node_set)
+        elif isinstance(node_set, str):
+            node_set = {node_set}
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
         if ngrams:
             lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
