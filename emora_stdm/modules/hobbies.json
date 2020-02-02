@@ -99,7 +99,6 @@
             "ghost hunting",
             "glass blowing",
             "glow in the dark mini golf",
-            "go",
             "golfing",
             "gongoozling",
             "gymnastics",
@@ -274,6 +273,18 @@
             "every once in a while",
             "i guess",
             "occasionally"
+        ],
+        "ont_negation": [
+            "not",
+            "cant",
+            "cannot",
+            "did not",
+            "should not",
+            "shouldnt",
+            "didnt",
+            "dont",
+            "do not",
+            "never"
         ]
     },
     "expressions": {

@@ -86,7 +86,7 @@ class NatexNLG:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-z_A-Z@.]+( +[a-z_A-Z@.]+)*/ | "\"" /[^\"]+/ "\""
+        literal: /[a-z_A-Z@.0-9]+( +[a-z_A-Z@.0-9]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
         parser = Lark(grammar)
