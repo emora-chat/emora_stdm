@@ -7,4 +7,5 @@ build/
 .idea/*
 *.pyc
 .pytest_cache/*
-
+emora_stdm/data
+emora_stdm/state_transition_dialogue_manager/data
