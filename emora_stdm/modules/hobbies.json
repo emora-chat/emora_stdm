@@ -31,7 +31,7 @@
             "baton twirling",
             "beekeeping",
             "biking",
-            "billiards",
+            "pool",
             "bird watching",
             "blacksmithing",
             "board games",
@@ -100,10 +100,8 @@
             "glass blowing",
             "glow in the dark mini golf",
             "golfing",
-            "gongoozling",
             "gymnastics",
             "handball",
-            "herping",
             "hiking",
             "hockey",
             "homebrewing",
@@ -181,7 +179,6 @@
             "sea glass collecting",
             "seashell collecting",
             "sewing",
-            "shooting",
             "shopping",
             "singing",
             "skateboarding",
@@ -218,8 +215,7 @@
             "video game collecting",
             "vintage cars",
             "volleyball",
-            "volunteer",
-            "zorbing"
+            "volunteering"
         ],
         "pos_experience": [
             "fun",
@@ -295,10 +291,13 @@
         "running": ["running","run", "runs", "jog", "jogs", "sprint", "sprints"],
         "writing": ["writing","write", "writes"],
         "yes": ["yes","yeah", "yup", "sure", "yea", "i do", "i would say so", "of course",
-                "certainly", "absolutely", "aye", "yep", "yup"],
+                "certainly", "absolutely", "aye", "yep", "yup", "most definitely", "definitely"],
         "no": ["no","nah", "not really", "not at all"],
         "chat": ["chat","lets talk", "lets chat", "can we talk", "can we chat", "do you want to talk",
                  "do you want to chat", "wanna chat", "wanna talk", "can i talk",
-                 "can we have a conversation", "can we have a talk"]
+                 "can we have a conversation", "can we have a talk"],
+        "pool": ["pool", "billiards"],
+        "like": ["enjoy", "love"],
+        "dislike": ["hate"]
     }
 }
