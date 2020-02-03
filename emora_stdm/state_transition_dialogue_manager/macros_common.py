@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
@@ -7,6 +8,9 @@ try:
     nltk.data.find('wordnet')
 except:
     nltk.download('wordnet')
+from nltk.corpus import wordnet
+from emora_stdm.state_transition_dialogue_manager.wordnet import \
+    related_synsets, wordnet_knowledge_base, lemmas_of
 
 class ONTE(Macro):
     """
@@ -107,6 +111,47 @@ class EXP(Macro):
         else:
             return kb_result
 
+class WN(Macro):
+    def __init__(self, kb=None):
+        if kb is None:
+            kb = wordnet_knowledge_base
+        self.kb = kb
+        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer.lemmatize('initialize')
+
+    def run(self, ngrams: Union[Ngrams, None], vars: Dict[str, Any], args: List[Any]):
+        if isinstance(args, list):
+            node_set = set(args)
+        elif isinstance(args, str):
+            node_set = {args}
+        elif isinstance(args, set):
+            node_set = args
+        else:
+            raise Exception("Args to WN were of wrong format: must be list, str, or set")
+        expanded_set = set()
+        for word in node_set:
+            expanded_set.update({x.name() for x in related_synsets(word)})
+        subtypes = self.kb.subtypes(expanded_set)
+        ont_result = set(self.kb.expressions(subtypes))
+        second_order = set()
+        for subtype in subtypes:
+            synset = wordnet.synset(subtype)
+            for lemma in synset.lemmas():
+                dlemmas = lemma.derivationally_related_forms()
+                second_order.update({dlemma.synset().name() for dlemma in dlemmas})
+                ont_result.update({dlemma.name().replace('_', ' ').lower() for dlemma in dlemmas})
+        second_order.difference_update(subtypes)
+        ont_result.update(self.kb.expressions(self.kb.subtypes(second_order)))
+        if ngrams:
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & ont_result
+            return set.union(*[lemma_map[match] for match in matches])
+        else:
+            return ont_result
 
 
 

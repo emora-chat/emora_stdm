@@ -42,6 +42,20 @@ def test_KBQ():
     natex = NatexNLG('[!the panther is #KBQ(panther, sound, quality)]', macros=macros)
     assert natex.generate(debugging=False) == 'the panther is scary'
 
+def test_WN():
+    debugging = True
+    if debugging:
+        macro = WN()
+        print(macro(None, {}, ['emotion']))
+    natex = NatexNLU('[!i feel #WN(emotion)]', macros={'WN': WN()})
+    assert natex.match('i feel happy')
+    assert natex.match('i feel sad')
+    assert natex.match('i feel joyful')
+    assert natex.match('i feel worrying')
+    assert natex.match('i feel worried')
+    assert not natex.match('i am person')
+    assert not natex.match('i am green')
+
 def test_bug_1():
     natex = NatexNLU("[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $like_hobby=#ONT(unknown_hobby), #ONT(also_syns)?]]",
                      macros=macros)
