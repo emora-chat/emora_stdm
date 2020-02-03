@@ -15,6 +15,7 @@ from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
+from time import time
 
 Graph = Database(MapMultidigraph)
 
@@ -79,6 +80,7 @@ class DialogueFlow:
         one or more system transitions
         :return: the natural language system response
         """
+        t1 = time()
         visited = {self.state()}
         responses = []
         while self.speaker() is Speaker.SYSTEM:
@@ -89,6 +91,9 @@ class DialogueFlow:
                 self.change_speaker()
                 break
             visited.add(next_state)
+        t2 = time()
+        if debugging:
+            print('System turn in {:.5f}'.format(t2-t1))
         return  ' '.join(responses)
 
     def user_turn(self, natural_language, debugging=False):
@@ -99,6 +104,7 @@ class DialogueFlow:
         :param debugging:
         :return: None
         """
+        t1 = time()
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, debugging=debugging)
@@ -107,6 +113,9 @@ class DialogueFlow:
                 self.change_speaker()
                 break
             visited.add(next_state)
+        t2 = time()
+        if debugging:
+            print('User turn in {:.5f}'.format(t2 - t1))
 
     # HIGH LEVEL
 
@@ -116,6 +125,7 @@ class DialogueFlow:
         :param debugging:
         :return: a <state, response> tuple representing the successor state and response
         """
+        ti = time()
         if state is None:
             state = self._state
         transition_options = {}
@@ -123,12 +133,16 @@ class DialogueFlow:
         for transition in transitions:
             memory = self.state_settings(state).memory
             if transition not in memory or len(transitions) <= len(memory):
+                t1 = time()
                 natex = self.transition_natex(*transition)
                 settings = self.transition_settings(*transition)
                 vars = HashableDict(self._vars)
                 generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
                 if generation:
                     transition_options[(generation, transition, vars)] = settings.score
+                t2 = time()
+                if debugging:
+                    print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
             options = StochasticOptions(transition_options)
             response, transition, vars = options.select()
@@ -147,6 +161,8 @@ class DialogueFlow:
             self._vars.update(vars)
             next_state = transition[1]
             if debugging:
+                tf = time()
+                print('System transition in {:.5f}'.format(tf-ti))
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
             return response, next_state
         else:
@@ -160,11 +176,13 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        ti = time()
         if state is None:
             state = self._state
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
         for transition in self.transitions(state, Speaker.USER):
+            t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
             natex = self.transition_natex(*transition)
@@ -174,6 +192,9 @@ class DialogueFlow:
             if match:
                 print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 transition_options.append((settings.score, transition, vars))
+            t2 = time()
+            if debugging:
+                print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
             score, transition, vars = max(transition_options)
             if debugging:
@@ -191,11 +212,13 @@ class DialogueFlow:
             self._vars.update(vars)
             next_state = transition[1]
             if debugging:
+                print('User transition in {:.5f}'.format(time() - ti))
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
             return next_state
         else:
             next_state = self.error_successor(self.state())
             if debugging:
+                print('User transition in {:.5f}'.format(time() - ti))
                 print('Error transition {} -> {}'.format(self.state(), next_state))
             return next_state
 

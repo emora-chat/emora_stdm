@@ -154,4 +154,51 @@ class WN(Macro):
             return ont_result
 
 
+class Union(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        sets = []
+        for arg in args:
+            if isinstance(arg, set):
+                sets.append(arg)
+            if isinstance(arg, str):
+                sets.append({arg})
+            elif isinstance(arg, list):
+                sets.append(set(arg))
+        return set().union(*sets)
 
+class Intersection(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        sets = []
+        for arg in args:
+            if isinstance(arg, set):
+                sets.append(arg)
+            if isinstance(arg, str):
+                sets.append({arg})
+            elif isinstance(arg, list):
+                sets.append(set(arg))
+        if sets:
+            return set.intersection(*sets)
+        else:
+            return set()
+
+class Difference(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if len(args) != 2:
+            raise ValueError('DIFF macro expects 2 args')
+        sets = []
+        for arg in args:
+            if isinstance(arg, set):
+                sets.append(arg)
+            if isinstance(arg, str):
+                sets.append({arg})
+            elif isinstance(arg, list):
+                sets.append(set(arg))
+        return sets[0] - sets[1]
+
+class SetVar(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        pass
+
+class AssertVar(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        pass

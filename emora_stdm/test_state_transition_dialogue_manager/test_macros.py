@@ -18,12 +18,14 @@ kb = KnowledgeBase([
     ('growl', 'quality', 'scary'),
     ('also', 'type', 'also_syns'),
     ('too', 'type', 'also_syns'),
-    ('basketball', 'type', 'unknown_hobby')
+    ('basketball', 'type', 'unknown_hobby'),
+    ('basketball', 'expr', 'bball')
 ])
 
 macros = {
     'ONT': ONTE(kb),
-    'KBQ': KBE(kb)
+    'KBQ': KBE(kb),
+    'EXP': EXP(kb)
 }
 
 def test_ONT():
@@ -42,6 +44,12 @@ def test_KBQ():
     natex = NatexNLG('[!the panther is #KBQ(panther, sound, quality)]', macros=macros)
     assert natex.generate(debugging=False) == 'the panther is scary'
 
+def test_EXP():
+    natex = NatexNLU('[!i play #EXP(basketball)]', macros=macros)
+    assert natex.match('i play bball')
+    assert natex.match('i play basketball')
+    assert not natex.match('i play soccer')
+
 def test_WN():
     debugging = True
     if debugging:
@@ -59,4 +67,19 @@ def test_WN():
 def test_bug_1():
     natex = NatexNLU("[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $like_hobby=#ONT(unknown_hobby), #ONT(also_syns)?]]",
                      macros=macros)
-    assert natex.match('i also like basketball', debugging=True)
+    assert natex.match('i also like basketball', debugging=False)
+
+kb2 = KnowledgeBase()
+import os
+print(os.getcwd())
+kb2.load_json_file("../modules/hobbies.json")
+macros2 = {
+    'ONT': ONTE(kb2),
+    'KBQ': KBE(kb2),
+    'EXP': EXP(kb2)
+}
+
+def test_EXP_bug():
+    natex = NatexNLU('[[! -{not,dont} {#EXP(yes),#ONT(yes_qualifier),#EXP(like)}]]', macros=macros2)
+    assert natex.match('i like', debugging=False)
+    assert natex.match('i love')
