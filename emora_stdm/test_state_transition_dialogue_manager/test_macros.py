@@ -45,4 +45,4 @@ def test_KBQ():
 def test_bug_1():
     natex = NatexNLU("[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $like_hobby=#ONT(unknown_hobby), #ONT(also_syns)?]]",
                      macros=macros)
-    assert natex.match('i also like basketball', debugging=False)
+    assert natex.match('i also like basketball', debugging=True)

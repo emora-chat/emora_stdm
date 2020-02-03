@@ -17,6 +17,10 @@ df.add_user_transition('living with response', 'living with spouse',
                        '[{[!my $livingwith=$partnertype=#ONT(partner)], [!a $partnertype=#ONT(partner)]}]')
 df.add_user_transition('living with response', 'living with roommate',
                        '[$livingwith=#EXP(roommate)]')
+df.add_user_transition('living with response', 'living with friend',
+                       '[friend]')
+df.add_user_transition('living with response', 'living with parents',
+                       '[]')
 
 # personality
 df.add_state('personality')
