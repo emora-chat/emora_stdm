@@ -6,13 +6,24 @@ except:
     nltk.download('wordnet')
 
 from nltk.corpus import wordnet as wn
+import os
+from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 
+
+wordnet_knowledge_base = KnowledgeBase()
+
+try:
+    wordnet_knowledge_base.load_json_file('data/wordnet.json')
+except FileNotFoundError:
+    print('Could not find wordnet.json')
+
+def lemmas_of(synset):
+    return {x.name().replace('_', ' ').lower() for x in synset.lemmas()}
 
 def synonyms(word):
     l = set()
     for syn in wn.synsets(word):
-        for lemma in syn.lemmas():
-            l.add(lemma.name().replace('_', ' '))
+        l.update(lemmas_of(syn))
     return l
 
 def _hyponyms(synset):
@@ -28,10 +39,8 @@ def _hyponyms(synset):
 def hyponyms(word):
     l = set()
     for syn in wn.synsets(word):
-        l.update({x.name().replace('_', ' ') for x in syn.lemmas()})
+        l.update(lemmas_of(syn))
         hypo_syns = _hyponyms(syn)
         for hypo_syn in hypo_syns:
-            l.update({x.name().replace('_', ' ') for x in hypo_syn.lemmas()})
+            l.update(lemmas_of(hypo_syn))
     return l
-
-
