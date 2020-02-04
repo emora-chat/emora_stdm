@@ -11,6 +11,7 @@ except:
 from nltk.corpus import wordnet
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
+import regex
 
 class ONTE(Macro):
     """
@@ -149,12 +150,12 @@ class WN(Macro):
                     lemma = self.lemmatizer.lemmatize(gram, pos=pos)
                     lemma_map[lemma].add(gram)
             matches = lemma_map.keys() & ont_result
-            return set.union(*[lemma_map[match] for match in matches])
+            return set().union(*[lemma_map[match] for match in matches])
         else:
             return ont_result
 
 
-class Union(Macro):
+class UnionMacro(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         sets = []
         for arg in args:
@@ -195,10 +196,31 @@ class Difference(Macro):
                 sets.append(set(arg))
         return sets[0] - sets[1]
 
-class SetVar(Macro):
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        pass
+def _assignment_to_var_val(arg):
+    var = arg[arg.find('<') + 1:arg.find('>')]
+    val = arg[arg.find('>') + 1:-1]
+    return var, val
 
-class AssertVar(Macro):
+class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        pass
+        for arg in args:
+            var, val = _assignment_to_var_val(arg)
+            vars[var] = val
+        return None
+
+class CheckVarsConjunction(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for arg in args:
+            var, val = _assignment_to_var_val(arg)
+            if var not in vars or vars[var] != val:
+                return False
+        return True
+
+
+class CheckVarsDisjunction(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for arg in args:
+            var, val = _assignment_to_var_val(arg)
+            if var in vars and vars[var] == val:
+                return True
+        return False

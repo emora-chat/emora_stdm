@@ -50,11 +50,18 @@ class DialogueFlow:
         onte = ONTE(self._kb)
         kbe = KBE(self._kb)
         self._macros = {
+            'WN': WN(),
             'ONT': onte, 'ONTE': onte,
             'KBQ': kbe, 'KBE': kbe,
             'ONTN': ONTN(self._kb),
             'EXP': EXP(self._kb),
-            'ONT_NEG': ONT_NEG(self._kb)
+            'ONT_NEG': ONT_NEG(self._kb),
+            'U': UnionMacro(),
+            'I': Intersection(),
+            'DIF': Difference(),
+            'SET': SetVars(),
+            'ALL': CheckVarsConjunction(),
+            'ANY': CheckVarsDisjunction()
         }
         if macros:
             self._macros.update(macros)
