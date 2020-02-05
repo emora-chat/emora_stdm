@@ -12,6 +12,7 @@ from datetime import datetime
 import pytz
 import random
 
+NULL = "NULL TRANSITION"
 
 def check_launch_request(arg_dict):
     if "request_type" in arg_dict and arg_dict["request_type"] == "LaunchRequest":
@@ -134,7 +135,7 @@ component = DialogueFlow('prestart', initial_speaker=DialogueFlow.Speaker.USER, 
 standard_opening = 'Hi"," this is an Alexa Prize Socialbot"."'
 inquire_feeling = 'How are you today"?"'
 time_acknowledgement = '$time_of_day_stat "." '
-transition_out = 'What would you like to talk about today"?" Ive recently become interested in sports"," but I have always enjoyed talking about music and movies"."'
+transition_out = '"What would you like to talk about today? Ive recently started learning about fun hobbies and sports, but I also know a lot about movies and music."'
 
 
 # start
@@ -437,18 +438,18 @@ component.set_error_successor('acknowledge_share_pos', 'end')
 component.set_error_successor('acknowledge_share_neg', 'end')
 component.set_error_successor('acknowledge_decline_share', 'end')
 component.set_error_successor('end', 'end')
-component.add_system_transition('end', 'end', '[!thats interesting"," tell me more]')
+component.add_system_transition('end', 'end', NULL)
 
 if __name__ == '__main__':
 
     arg_dict = {'request_type': 'LaunchRequest',"prev_conv_date": "2020-1-28 16:55:33.562881-0500", "username": "sarah", "sentiment_type": "pos"}
     arg_dict2 = {'request_type': 'LaunchRequest',"prev_conv_date": "2019-12-12 16:55:33.562881-0500", "username": "sarah","sentiment_type": "pos"}
     arg_dict3 = {'request_type': 'LaunchRequest',"prev_conv_date": "2019-12-12 16:55:33.562881-0500", "username": None, "sentiment_type": "pos"}
-    arg_dict4 = {'request_type': 'LaunchRequest',"prev_conv_date": None, "sentiment_type": "pos"}
+    arg_dict4 = {'request_type': 'LaunchRequest',"prev_conv_date": None}
     arg_dict5 = {'request_type': 'LaunchRequest', 'prev_conv_date': '2020-01-16 10:28:26.946645-0500','username': 'jane'}
     arg_dict6 = {'request_type': 'LaunchRequest', 'sentiment_type': 'neg', 'prev_conv_date': '2020-01-10 10:58:50.175772-0500'}
 
-    using = arg_dict5
+    using = arg_dict4
     component._vars.update({key: val for key, val in using.items() if val is not None})
 
     component.run(debugging=False)

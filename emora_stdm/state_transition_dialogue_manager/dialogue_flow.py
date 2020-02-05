@@ -204,7 +204,7 @@ class DialogueFlow:
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
-            score, transition, vars = max(transition_options)
+            score, transition, vars = max(transition_options, key=lambda x: x[0])
             if debugging:
                 updates = {}
                 for k, v in vars.items():
