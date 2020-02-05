@@ -8,4 +8,5 @@ build/
 *.pyc
 .pytest_cache/*
 emora_stdm/data
-emora_stdm/state_transition_dialogue_manager/data
+emora_stdm/state_transition_dialogue_manager/data/count_1w.txt
+emora_stdm/state_transition_dialogue_manager/data/count_2w.txt

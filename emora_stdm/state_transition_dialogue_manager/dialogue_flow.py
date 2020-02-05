@@ -56,6 +56,7 @@ class DialogueFlow:
             'ONTN': ONTN(self._kb),
             'EXP': EXP(self._kb),
             'ONT_NEG': ONT_NEG(self._kb),
+            'NOT': NOT(),
             'U': UnionMacro(),
             'I': Intersection(),
             'DIF': Difference(),

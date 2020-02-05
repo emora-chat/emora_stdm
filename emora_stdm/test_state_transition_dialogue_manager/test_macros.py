@@ -31,7 +31,8 @@ macros = {
     'DIF': Difference(),
     'SET': SetVars(),
     'ALL': CheckVarsConjunction(),
-    'ANY': CheckVarsDisjunction()
+    'ANY': CheckVarsDisjunction(),
+    'NOT': NOT()
 }
 
 def test_ONT():
@@ -69,6 +70,13 @@ def test_WN():
     assert natex.match('i feel worried')
     assert not natex.match('i am person')
     assert not natex.match('i am green')
+
+def test_NOT():
+    natex = NatexNLU('[!#NOT(#U(hello, there)) [dog]]', macros=macros)
+    assert natex.match('hi dog', debugging=True)
+    assert not natex.match('hello dog')
+    assert not natex.match('hi there dog')
+    assert not natex.match('oh dog hello')
 
 def test_UNION():
     natex = NatexNLU('#U(hello, there, world)', macros=macros)
