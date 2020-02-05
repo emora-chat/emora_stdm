@@ -6,15 +6,20 @@ df = DialogueFlow(initial_state="start", kb='family.json')
 
 # living with
 df.add_state('living with prompt')
-df.add_state('living with response')
-df.add_state('living with appraisal')
+df.add_state('living with response', error_successor='living with unsure')
+
+df.add_state('living with unsure')
+
 df.add_state('living with spouse')
 df.add_state('living with roommate')
 df.add_state('living with parents')
 df.add_state('living with friend')
+df.add_state('living with child')
 df.add_state('living alone')
+
 df.add_state('personality prompt')
-df.add_state('personality')
+df.add_state('personality unsure')
+df.add_state('personality', error_successor='personality unsure')
 df.add_state('alone prompt')
 
 df.add_state('smart')
@@ -49,6 +54,9 @@ df.add_state('end', error_successor='end')
 
 df.add_system_transition('living with prompt', 'living with response',
                          '"so, who do you live with?"')
+
+df.add_system_transition('living with unsure', 'living with response', '"I didnt catch that, who did you say you live with?"')
+
 df.add_user_transition('living with response', 'living with spouse',
                        '[{[!my $livingwith=$partnertype=#ONT(partner)], [have, $partnertype=#ONT(partner)]}]')
 df.add_user_transition('living with response', 'living with roommate',
@@ -57,6 +65,8 @@ df.add_user_transition('living with response', 'living with friend',
                        '[!#SET($livingwith=friend) [friend]]')
 df.add_user_transition('living with response', 'living with parents',
                        '[$livingwith=#ONT(parent)]')
+df.add_user_transition('living with response', 'living with child',
+                       '[$livingwith=#EXP(child)]')
 df.add_user_transition('living with response', 'living alone',
                        [
                            '[{alone, by myself, solo, nobody, noone, no one}]',
@@ -66,15 +76,20 @@ df.add_system_transition('living with spouse', 'personality', '[!what is your $p
 df.add_system_transition('living with roommate', 'personality', '[!what is your $livingwith "like?"]')
 df.add_system_transition('living with friend', 'personality', '[!what is your $livingwith "like?"]')
 df.add_system_transition('living with parents', 'personality', '[!what is your $livingwith "like?"]')
+df.add_system_transition('living with child', 'personality', '[!what is your $livingwith "like?"]')
 
 df.add_system_transition('living alone', 'alone prompt', '"Do you like living alone?"')
+df.add_user_transition('alone prompt', 'end', "Sure, just remember you can always talk to me if you feel lonely. Ill annoy you just as well as any roommate can.")
 
-df.add_user_transition('personality', 'smart', '[{#EXP(smart), #WN(smart)}]')
-df.add_user_transition('personality', 'funny', '[{#WN(funny)}]')
-df.add_user_transition('personality', 'outgoing', '[{#WN(outgoing)}]')
-df.add_user_transition('personality', 'shy', '[{#WN(shy)}]')
-df.add_user_transition('personality', 'polite', '[{#WN(polite)}]')
-df.add_user_transition('personality', 'conceited', '[#WN(conceited)]')
+df.add_system_transition('personality unsure', 'personality', '"Sorry, what is your $livingwith like?"')
+df.add_system_transition('personality unsure', 'end', '"Ok, gotcha."')
+
+df.add_user_transition('personality', 'smart', '[{#EXP(smart), #EXP(smart)}]')
+df.add_user_transition('personality', 'funny', '[{#EXP(funny)}]')
+df.add_user_transition('personality', 'outgoing', '[{#EXP(outgoing)}]')
+df.add_user_transition('personality', 'shy', '[{#EXP(shy)}]')
+df.add_user_transition('personality', 'polite', '[{#EXP(polite)}]')
+df.add_user_transition('personality', 'conceited', '[#EXP(conceited)]')
 df.add_user_transition('personality', 'good', '[{good, cool, great, awesome}]')
 df.add_user_transition('personality', 'athletic', '[{athletic, sports, works out}]')
 df.add_user_transition('personality', 'lazy', '[lazy]')
@@ -97,6 +112,7 @@ df.add_system_transition('hard working', 'end', '"thats admirable but sometimes 
 df.add_system_transition('fun', 'end', '"Thats great, spending time with people who are fun like that is great"')
 df.add_system_transition('worrying', 'end', '"I see. I think its hard to be stressed all the time."')
 
+df.add_system_transition('end', 'end', '"okay then"')
 
 if __name__ == '__main__':
     df.set_state('living with prompt')
