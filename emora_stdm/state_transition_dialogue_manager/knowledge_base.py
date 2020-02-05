@@ -60,6 +60,11 @@ class KnowledgeBase(Graph):
         if regex.fullmatch(r'[a-z A-Z]+', object):
             self.add(object, object, _expr)
 
+    def add_expression(self, node, expression):
+        self.add(node, expression, _expr)
+        if regex.fullmatch(r'[a-z A-Z]+', node):
+            self.add(node, node, _expr)
+
     def add_attr(self, type, attribute):
         if _attr not in self.data(type):
             self.data(type)[_attr] = set()
@@ -92,9 +97,6 @@ class KnowledgeBase(Graph):
             if self.has_arc_label(node, _expr):
                 expressions.update({x[1] for x in self.arcs_out(node, _expr)})
         return expressions
-
-    def add_expression(self, node, expression):
-        self.add(node, expression, _expr)
 
     def to_json(self):
         ontology_arcs = defaultdict(list)
