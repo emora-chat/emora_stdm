@@ -33,9 +33,13 @@ class ONTE(Macro):
             raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
         if ngrams:
-            lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
-            matches = lemmas.keys() & ont_result
-            return {lemmas[match] for match in matches}
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & ont_result
+            return set().union(*[lemma_map[match] for match in matches])
         else:
             return ont_result
 
@@ -59,9 +63,13 @@ class ONTN(Macro):
             raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
         ont_result = self.kb.subtypes(node_set) - node_set
         if ngrams:
-            lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
-            matches = lemmas.keys() & ont_result
-            return {lemmas[match] for match in matches}
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & ont_result
+            return set().union(*[lemma_map[match] for match in matches])
         else:
             return ont_result
 
@@ -79,6 +87,23 @@ class ONT_NEG(Macro):
             return False
         return True
 
+class NOT(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        processedargs = set()
+        for arg in args:
+            if isinstance(arg, list):
+                processedargs.update(set(arg))
+            elif isinstance(arg, str):
+                processedargs.add(str(arg))
+            elif isinstance(arg, set):
+                processedargs.update(arg)
+            else:
+                raise Exception("Args to WN were of wrong format: must be list, str, or set")
+        if processedargs & ngrams:
+            return False
+        else:
+            return True
+
 class KBE(Macro):
     """
     get the set of expressions matching the nodes returned from a KB
@@ -92,9 +117,13 @@ class KBE(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         kb_result = self.kb.expressions(self.kb.query(*args))
         if ngrams:
-            lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
-            matches = lemmas.keys() & kb_result
-            return {lemmas[match] for match in matches}
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & kb_result
+            return set().union(*[lemma_map[match] for match in matches])
         else:
             return kb_result
 
@@ -106,9 +135,13 @@ class EXP(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         kb_result = self.kb.expressions(*args)
         if ngrams:
-            lemmas = {self.lemmatizer.lemmatize(gram): gram for gram in ngrams}
-            matches = lemmas.keys() & kb_result
-            return {lemmas[match] for match in matches}
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & kb_result
+            return set().union(*[lemma_map[match] for match in matches])
         else:
             return kb_result
 

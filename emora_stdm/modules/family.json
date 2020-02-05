@@ -9,6 +9,11 @@
     },
 
   "expressions": {
+    "negation": ["no", "not", "don't", "dont", "won't", "wont", "shouldn't", "shouldnt",
+                 "can't", "cant", "isn't", "isnt"],
+    "someone": ["someone", "somebody", "some body", "some one"],
+    "anyone":  ["any one", "anyone", "any body", "anybody"],
+
     "boyfriend": ["boy friend"],
     "girlfriend": ["girl friend"],
     "romantic_partner": ["lover", "significant other"],
@@ -17,7 +22,10 @@
     "father": ["dad", "pa", "papa", "daddy"],
     "child": ["kid", "kiddo", "offspring"],
     "son": ["boy"],
-    "daughter": ["girl"]
+    "daughter": ["girl"],
+
+    "smart": ["smart", "intelligent", "bright", "capable", "sharp"]
+
 
   },
 
