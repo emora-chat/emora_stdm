@@ -175,7 +175,7 @@ class DialogueFlow:
                 print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 transition_options.append((settings.score, transition, vars))
         if transition_options:
-            score, transition, vars = max(transition_options)
+            score, transition, vars = max(transition_options, key=lambda x: x[0])
             if debugging:
                 updates = {}
                 for k, v in vars.items():
