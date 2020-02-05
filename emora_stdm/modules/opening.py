@@ -133,7 +133,6 @@ macros = {
 component = DialogueFlow('prestart', initial_speaker=DialogueFlow.Speaker.USER, macros=macros, kb=knowledge)
 
 standard_opening = 'Hi"," this is an Alexa Prize Socialbot"."'
-inquire_feeling = 'How are you today"?"'
 time_acknowledgement = '$time_of_day_stat "." '
 transition_out = '"What would you like to talk about today? Ive recently started learning about fun hobbies and sports, but I also know a lot about movies and music."'
 
@@ -143,12 +142,12 @@ transition_out = '"What would you like to talk about today? Ive recently started
 component.add_user_transition('prestart', 'start_new', r'#IsNewUser')
 component.add_user_transition('prestart', 'start_infreq', r'#IsInfreqUser')
 component.add_user_transition('prestart', 'start_freq', r'#IsFreqUser')
-component.add_user_transition('prestart', 'start_infreq_with_name', r'#IsInfreqUserWithName', score=1.1)
-component.add_user_transition('prestart', 'start_freq_with_name', r'#IsFreqUserWithName', score=1.1)
+component.add_user_transition('prestart', 'start_infreq_with_name', r'#IsInfreqUserWithName', score=5)
+component.add_user_transition('prestart', 'start_freq_with_name', r'#IsFreqUserWithName', score=5)
 component.set_error_successor('prestart', 'start_error')
 
 
-component.add_system_transition('start_error', 'how_are_you', "[!" + standard_opening + r' I am happy to be talking to you"." ' + inquire_feeling + "]")
+component.add_system_transition('start_error', 'how_are_you', "[!" + standard_opening + r' I am happy to be talking to you"."]')
 
 component.add_system_transition('start_new', 'receive_name',
     ["[!" + standard_opening + ' What can I call you"?"]',
@@ -162,76 +161,85 @@ component.add_user_transition('receive_name', 'got_female_name', r'[$username=#O
 component.add_user_transition('receive_name', 'got_male_name', r'[$username=#ONT(ont_male_names) #SaveMaleGender]')
 component.set_error_successor('receive_name', 'missed_name')
 
-component.add_system_transition('missed_name', 'how_are_you',
-    ['[!Ok"," well its very nice to meet you"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!I am glad to meet you"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Well"," its nice to meet you"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," well its very nice to meet you"." ' + inquire_feeling + "]",
-     '[!I am glad to meet you"." ' + inquire_feeling + "]",
-     '[!Well"," its very nice to meet you"." ' + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you"." ' + inquire_feeling + "]"
+component.add_system_transition('missed_name', 'opening_chat_choices',
+    ['[!Ok"," well its very nice to meet you"."]',
+     '[!I am glad to meet you"."]',
+     '[!Well"," its nice to meet you"."]',
+     '[!Ok"," I am very glad to meet you"."]',
+     '[!Ok"," well its very nice to meet you"."]',
+     '[!I am glad to meet you"."]',
+     '[!Well"," its very nice to meet you"."]',
+     '[!Ok"," I am very glad to meet you"."]'
      ]
 )
 
-component.add_system_transition('got_female_name', 'how_are_you',
-    ['[!Ok"," well its very nice to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!I am glad to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Well its nice to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," well its very nice to meet you","$username"." ' + inquire_feeling + "]",
-     '[!I am glad to meet you","$username"." ' + inquire_feeling + "]",
-     '[!Well its very nice to meet you","$username"." ' + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you","$username"." ' + inquire_feeling + "]"
+component.add_system_transition('got_female_name', 'opening_chat_choices',
+    ['[!Ok"," well its very nice to meet you","$username"."]',
+     '[!I am glad to meet you","$username"."]',
+     '[!Well its nice to meet you","$username"."]',
+     '[!Ok"," I am very glad to meet you","$username"."]',
+     '[!Ok"," well its very nice to meet you","$username"."]',
+     '[!I am glad to meet you","$username"."]',
+     '[!Well its very nice to meet you","$username"."]',
+     '[!Ok"," I am very glad to meet you","$username"."]'
      ]
 )
 
-component.add_system_transition('got_male_name', 'how_are_you',
-    ['[!Ok"," well its very nice to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!I am glad to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Well its nice to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you","$username"." ' + time_acknowledgement + inquire_feeling + "]",
-     '[!Ok"," well its very nice to meet you","$username"." ' + inquire_feeling + "]",
-     '[!I am glad to meet you","$username"." ' + inquire_feeling + "]",
-     '[!Well its very nice to meet you","$username"." ' + inquire_feeling + "]",
-     '[!Ok"," I am very glad to meet you","$username"." ' + inquire_feeling + "]"
+component.add_system_transition('got_male_name', 'opening_chat_choices',
+    ['[!Ok"," well its very nice to meet you","$username"."]',
+     '[!I am glad to meet you","$username"."]',
+     '[!Well its nice to meet you","$username"."]',
+     '[!Ok"," I am very glad to meet you","$username"."]',
+     '[!Ok"," well its very nice to meet you","$username"."]',
+     '[!I am glad to meet you","$username"."]',
+     '[!Well its very nice to meet you","$username"."]',
+     '[!Ok"," I am very glad to meet you","$username"."]'
      ]
 )
 
-component.add_system_transition('start_freq_with_name', 'how_are_you',
-    ["[!" + standard_opening + ' Welcome back"," $username"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Welcome back"," $username"." I am glad to be talking to you again"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Glad to see you back"," $username"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Happy to see you back"," $username"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Happy to talk to you again"," $username"." ' + time_acknowledgement + inquire_feeling + "]"]
+component.add_system_transition('start_freq_with_name', 'opening_chat_choices',
+    ["[!" + standard_opening + ' Welcome back"," $username"."]',
+     "[!" + standard_opening + ' Welcome back"," $username"." I am glad to be talking to you again"."]',
+     "[!" + standard_opening + ' Glad to see you back"," $username"."]',
+     "[!" + standard_opening + ' Happy to see you back"," $username"."]',
+     "[!" + standard_opening + ' Happy to talk to you again"," $username"."]']
 
 )
 
-component.add_system_transition('start_freq', 'how_are_you',
-    [ "[!" + standard_opening + ' Happy to talk to you again"." ' + time_acknowledgement + inquire_feeling + "]",
-        "[!" + standard_opening + ' Welcome back"," im excited to talk to you again"." ' + time_acknowledgement + inquire_feeling + "]",
-        "[!" + standard_opening + ' Glad to see you back"." ' + time_acknowledgement + inquire_feeling + "]",
-        "[!" + standard_opening + ' Happy to see you back"." ' + time_acknowledgement + inquire_feeling + "]"]
+component.add_system_transition('start_freq', 'opening_chat_choices',
+    [ "[!" + standard_opening + ' Happy to talk to you again"."]',
+        "[!" + standard_opening + ' Welcome back"," im excited to talk to you again"."]',
+        "[!" + standard_opening + ' Glad to see you back"."]',
+        "[!" + standard_opening + ' Happy to see you back"."]']
 )
 
-component.add_system_transition('start_infreq_with_name', 'how_are_you',
-    ["[!" + standard_opening + ' Its good to see you again"," $username "," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Im happy to have the chance to talk again"," $username "," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Welcome back"," $username "," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Its good to see you again"," $username "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Im happy to have the chance to talk again"," $username "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Welcome back"," $username "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
+component.add_system_transition('start_infreq_with_name', 'opening_chat_choices',
+    ["[!" + standard_opening + ' Its good to see you again"," $username "," its been a while since we last chatted"."]',
+     "[!" + standard_opening + ' Im happy to have the chance to talk again"," $username "," its been a while since we last chatted"."]',
+     "[!" + standard_opening + ' Welcome back"," $username "," its been a while since we last chatted"."]',
+     "[!" + standard_opening + ' Its good to see you again"," $username "," we havent talked in a while"."]',
+     "[!" + standard_opening + ' Im happy to have the chance to talk again"," $username "," we havent talked in a while"."]',
+     "[!" + standard_opening + ' Welcome back"," $username "," we havent talked in a while"."]'
      ]
 )
 
-component.add_system_transition('start_infreq', 'how_are_you',
-    ["[!" + standard_opening + ' Im happy to have the chance to talk again "," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Welcome back "," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Its good to see you again "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Im happy to have the chance to talk again "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Welcome back "," we havent talked in a while"." ' + time_acknowledgement + inquire_feeling + "]",
-     "[!" + standard_opening + ' Its good to see you again"," its been a while since we last chatted"." ' + time_acknowledgement + inquire_feeling + "]"]
+component.add_system_transition('start_infreq', 'opening_chat_choices',
+    ["[!" + standard_opening + ' Im happy to have the chance to talk again "," its been a while since we last chatted"."]',
+     "[!" + standard_opening + ' Welcome back "," its been a while since we last chatted"."]',
+     "[!" + standard_opening + ' Its good to see you again "," we havent talked in a while"."]',
+     "[!" + standard_opening + ' Im happy to have the chance to talk again "," we havent talked in a while"."]',
+     "[!" + standard_opening + ' Welcome back "," we havent talked in a while"."]',
+     "[!" + standard_opening + ' Its good to see you again"," its been a while since we last chatted"."]']
 )
+
+component.update_state_settings('opening_chat_choices', system_multi_hop=True)
+
+### (SYSTEM) ASK USER HOW THEY ARE
+component.add_system_transition('opening_chat_choices', 'how_are_you',
+                                ['[!"how are you today?"]',
+                                 '[!"how are you doing today?"]',
+                                 '[!"how is your day going?"]',
+                                 '[!"how has your day been?"]'])
 
 receive_how_are_you = "{" \
                       "[how are you]," \
@@ -437,6 +445,12 @@ component.add_system_transition('decline_share', 'acknowledge_decline_share',
 component.set_error_successor('acknowledge_share_pos', 'end')
 component.set_error_successor('acknowledge_share_neg', 'end')
 component.set_error_successor('acknowledge_decline_share', 'end')
+
+### (SYSTEM) ENVIRONMENT WITH PERSONALITY
+#component.add_system_transition('opening_chat_choices', 'how_are_you', '[!' + receive_how_are_you + ' "today?"]')
+
+
+
 component.set_error_successor('end', 'end')
 component.add_system_transition('end', 'end', NULL)
 
@@ -452,4 +466,4 @@ if __name__ == '__main__':
     using = arg_dict4
     component._vars.update({key: val for key, val in using.items() if val is not None})
 
-    component.run(debugging=False)
+    component.run(debugging=True)
