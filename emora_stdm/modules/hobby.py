@@ -182,6 +182,18 @@ class State(Enum):
     ACK_END = auto()
     END = auto()
 
+    INTRO_READING = auto()
+    ASK_LIKE_READING = auto()
+    YES_LIKE_READING = auto()
+    NO_LIKE_READING = auto()
+    READ_FOR_SCHOOL = auto()
+    READ_NOT_BY_CHOICE = auto()
+    READ_FOR_WORK = auto()
+    OCCASIONALLY_READ = auto()
+    USED_TO_READ = auto()
+    READ_NEWSPAPER = auto()
+    READ_MAGAZINE = auto()
+
 knowledge = KnowledgeBase()
 knowledge.load_json_file("hobbies.json")
 df = DialogueFlow(State.START, DialogueFlow.Speaker.USER,
@@ -195,11 +207,38 @@ df._macros.update(macros)
 
 ### if user initiates
 request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
-df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+df.add_user_transition(State.START, State.INTRO_READING, request_hobby_nlu)
 df.set_error_successor(State.START, State.START)
 df.add_system_transition(State.START, State.START, NULL)
 
-### (SYSTEM) TWO OPTIONS FOR STARTING HOBBY COMPONENT - what hobby do you like vs ive heard of hobby, do you like it
+
+### (SYSTEM) DIRECTED OPENING - READING CONVERSATION AS ONE OF EMORA'S HOBBIES
+ask_like_reading_nlg = ['[!"I have recently gotten back into reading. Do you read a lot too?"]',
+                        '[!"I have recently started reading again. Do you frequently read nowadays?"]']
+df.add_system_transition(State.INTRO_READING, State.ASK_LIKE_READING, ask_like_reading_nlg)
+
+
+df.add_user_transition(State.ASK_LIKE_READING, State.YES_LIKE_READING, '{'
+                                                                       '[! -{not,dont} [{#EXP(yes),#ONT(often_qualifier)}]],'
+                                                                       '[! -{not,dont} [#EXP(like) {reading, to read, it}]]'
+                                                                       '}')
+df.add_user_transition(State.ASK_LIKE_READING, State.NO_LIKE_READING, '{'
+                                                                      '[#EXP(no)],'
+                                                                      '[{i dont, i do not, no i dont, no i do not}],'
+                                                                      '[not, #ONT(often_qualifier)],'
+                                                                      '[#EXP(dislike) {reading, to read, it}]'
+                                                                      '}')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_SCHOOL, '[{school, textbooks, homework, assignments}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_NOT_BY_CHOICE, '{[not, choice],[{forced,requirement,obligation,made to,makes me}]}')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_WORK, '[{job, career, occupation, boss, work}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.OCCASIONALLY_READ, '[#ONT(sometimes_qualifier)]')
+df.add_user_transition(State.ASK_LIKE_READING, State.USED_TO_READ, '[{used to, in the past, younger, young, years ago}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_NEWSPAPER, '[#EXP(like)?, {#EXP(like),#EXP(reading)}, {newspaper,newspapers,articles}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_MAGAZINE, '[#EXP(like)?, {#EXP(like),#EXP(reading)}, {magazines,gossip,magazine}]')
+
+
+#df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+### (SYSTEM) TWO OPTIONS FOR UNDIRECTED HOBBY OPENING - what hobby do you like vs ive heard of hobby, do you like it
 
 first_ask_hobby_nlg = ['"So, it seems like you want to talk about some activities. There are so many choices of what to do these days for fun. I never know what to choose. What is one of your hobbies?"',
                  '"I see. It seems like you want to talk about different pasttimes. I\'m always looking for new activities to try out. Tell me, what activity do you enjoy doing these days?"',

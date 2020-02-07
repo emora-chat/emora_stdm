@@ -215,7 +215,7 @@ class GlobalUserStatisticHighLow(Macro):
                     count = vars["username_global_count"]
                 else:
                     count = int(get_global_name_count(vars))
-                if count < 50:
+                if count < 10:
                     return "Wow, your name seems to be pretty unique. I haven't met that many people with your name before."
                 else:
                     return "Cool! You know, it should be relatively easy for me to remember your name, because I have met a number of people with the same name!"
@@ -728,7 +728,7 @@ component.add_system_transition('end', 'end', NULL)
 
 if __name__ == '__main__':
     arg_dict = {'request_type': 'LaunchRequest', "prev_conv_date": "2020-1-28 16:55:33.562881-0500",
-                "username": "sarah", "sentiment_type": "pos", 'global_user_table_name': 'GlobalUserTableBeta'}
+                "username": "sarah", "sentiment_type": "pos", 'global_user_table_name': 'GlobalUserTable'}
     arg_dict2 = {'request_type': 'LaunchRequest', "prev_conv_date": "2019-12-12 16:55:33.562881-0500",
                  "username": "sarah", "sentiment_type": "pos", 'global_user_table_name': 'GlobalUserTableBeta'}
     arg_dict3 = {'request_type': 'LaunchRequest', "prev_conv_date": "2019-12-12 16:55:33.562881-0500",
@@ -741,7 +741,7 @@ if __name__ == '__main__':
                  'prev_conv_date': '2020-01-10 10:58:50.175772-0500',
                  'global_user_table_name': 'GlobalUserTableBeta'}
 
-    using = arg_dict4
+    using = arg_dict
     component._vars.update({key: val for key, val in using.items() if val is not None})
 
     component.run(debugging=True)
