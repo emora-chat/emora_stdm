@@ -266,6 +266,29 @@
             "i guess",
             "occasionally"
         ],
+        "often_qualifier": [
+            "most of the time",
+            "often",
+            "usually",
+            "most times",
+            "frequently",
+            "all the time",
+            "all of the time",
+            "every day",
+            "everyday",
+            "most days",
+            "every other day",
+            "every few days"
+        ],
+        "sometimes_qualifier": [
+            "some of the time",
+            "sometimes",
+            "every so often",
+            "every once in a while",
+            "i guess",
+            "occasionally",
+            "a little"
+        ],
         "ont_negation": [
             "not",
             "cant",
@@ -290,7 +313,7 @@
         "dancing": ["dance"],
         "yes": ["yes","yeah", "yup", "sure", "yea", "i do", "i would say so", "of course",
                 "certainly", "absolutely", "aye", "yep", "yup", "most definitely", "definitely"],
-        "no": ["no","nah", "not really", "not at all"],
+        "no": ["no","nah", "not really", "not at all", "not much"],
         "chat": ["chat","lets talk", "lets chat", "can we talk", "can we chat", "do you want to talk",
                  "do you want to chat", "wanna chat", "wanna talk", "can i talk",
                  "can we have a conversation", "can we have a talk"],

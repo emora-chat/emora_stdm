@@ -181,6 +181,51 @@ class State(Enum):
     CONTINUE = auto()
     ACK_END = auto()
     END = auto()
+    TRANSITION_OUT = auto()
+    MISUNDERSTOOD = auto()
+
+    INTRO_READING = auto()
+    ASK_LIKE_READING = auto()
+    YES_LIKE_READING = auto()
+    NO_LIKE_READING = auto()
+    READ_FOR_SCHOOL = auto()
+    READ_NOT_BY_CHOICE = auto()
+    READ_FOR_WORK = auto()
+    OCCASIONALLY_READ = auto()
+    USED_TO_READ = auto()
+    READ_NEWSPAPER = auto()
+    READ_MAGAZINE = auto()
+    CONFIRM_CONTINUE = auto()
+    PICK_GENRE = auto()
+    SCIFI = auto()
+    SHARE_TELEPORT_FUN = auto()
+    ASK_TELEPORT_OPI = auto()
+    REC_TELEPORT_SCARY = auto()
+    REC_TELEPORT_FUN = auto()
+    REC_TELEPORT_UNLIKELY = auto()
+    REC_TELEPORT_UNSURE = auto()
+    TRANSPORT_FAIL = auto()
+    REC_TRANSPORT_FAIL_OPI = auto()
+    YES_TRANSPORT_FAIL = auto()
+    NO_TRANSPORT_FAIL = auto()
+    MIS_TRANSPORT_FAIL = auto()
+    HARDEST_PART = auto()
+    REC_HARDEST_PART = auto()
+    HARDEST_CONSTRUCTION = auto()
+    HARDEST_TRANSPORTATION = auto()
+    HARDEST_OTHER = auto()
+    FIRST_PERSON = auto()
+    REC_FIRST_PERSON = auto()
+    YES_FIRST_PERSON = auto()
+    NO_FIRST_PERSON = auto()
+    MIS_FIRST_PERSON = auto()
+    TRANS_TO_ALIENS = auto()
+    SHARE_ALIENS_SCARY = auto()
+    ASK_ALIENS_SCARY = auto()
+    REC_ALIENS_SCARY = auto()
+    REC_ALIENS_NOT_SCARY = auto()
+    REC_ALIENS_UNSURE = auto()
+    ANS_WHY_ALIENS_SCARY = auto()
 
 knowledge = KnowledgeBase()
 knowledge.load_json_file("hobbies.json")
@@ -195,11 +240,171 @@ df._macros.update(macros)
 
 ### if user initiates
 request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
-df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+df.add_user_transition(State.START, State.INTRO_READING, request_hobby_nlu)
 df.set_error_successor(State.START, State.START)
 df.add_system_transition(State.START, State.START, NULL)
 
-### (SYSTEM) TWO OPTIONS FOR STARTING HOBBY COMPONENT - what hobby do you like vs ive heard of hobby, do you like it
+
+### (SYSTEM) DIRECTED OPENING - READING CONVERSATION AS ONE OF EMORA'S HOBBIES
+ask_like_reading_nlg = ['[!"I have recently gotten back into reading. Do you read a lot too?"]',
+                        '[!"I have recently started reading again. Do you frequently read nowadays?"]']
+df.add_system_transition(State.INTRO_READING, State.ASK_LIKE_READING, ask_like_reading_nlg)
+
+
+df.add_user_transition(State.ASK_LIKE_READING, State.YES_LIKE_READING, '{'
+                                                                       '[! -{not,dont} [{#EXP(yes),#ONT(often_qualifier)}]],'
+                                                                       '[! -{not,dont} [#EXP(like) {reading, to read, it}]]'
+                                                                       '}')
+df.add_user_transition(State.ASK_LIKE_READING, State.NO_LIKE_READING, '{'
+                                                                      '[#EXP(no)],'
+                                                                      '[{i dont, i do not, no i dont, no i do not}],'
+                                                                      '[not, #ONT(often_qualifier)],'
+                                                                      '[#EXP(dislike) {reading, to read, it}]'
+                                                                      '}')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_SCHOOL, '[{school, textbooks, homework, assignments}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_NOT_BY_CHOICE, '{[not, choice],[{forced,requirement,obligation,made to,makes me}]}')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_WORK, '[{job, career, occupation, boss, work}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.OCCASIONALLY_READ, '[#ONT(sometimes_qualifier)]')
+df.add_user_transition(State.ASK_LIKE_READING, State.USED_TO_READ, '[{used to, in the past, younger, young, years ago}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_NEWSPAPER, '[#EXP(like)?, {#EXP(like),#EXP(reading)}?, {newspaper,newspapers,articles}]')
+df.add_user_transition(State.ASK_LIKE_READING, State.READ_MAGAZINE, '[#EXP(like)?, {#EXP(like),#EXP(reading)}?, {magazines,gossip,magazine}]')
+df.set_error_successor(State.ASK_LIKE_READING, State.MISUNDERSTOOD)
+
+df.add_system_transition(State.NO_LIKE_READING, State.SCIFI, '"Oh, you don\'t like to read? That\'s alright. I really only read to see what people dream up for the future."')
+df.add_system_transition(State.READ_FOR_SCHOOL, State.SCIFI, '"That\'s unfortunate. Textbooks can be awfully boring. I really enjoy reading science fiction instead. Much more exciting."')
+df.add_system_transition(State.READ_NOT_BY_CHOICE, State.PICK_GENRE, '"Oh no! I am sorry if you feel forced to read. Reading can be exciting, though."')
+df.add_system_transition(State.USED_TO_READ, State.SCIFI, '"I see. You used to read more than you do now? I really only read now to see what people dream up for the future."')
+df.add_system_transition(State.READ_FOR_WORK, State.TRANSITION_OUT, '"Yeah, reading for your job is sometimes necessary. I would not know too much about any job-focused material, though. So, "')
+df.add_system_transition(State.READ_NEWSPAPER, State.TRANSITION_OUT, '"That is great to hear. Newspapers are a really good way to stay up to date with recent events! I do not read the newspaper too often."')
+df.add_system_transition(State.READ_MAGAZINE, State.TRANSITION_OUT, '"Magazines are so colorful and fun. They always have something interesting to read! Unfortunately, I do not know much about them. So, "')
+df.update_state_settings(State.TRANSITION_OUT, system_multi_hop=True)
+
+df.add_system_transition(State.MISUNDERSTOOD, State.TRANSITION_OUT, '"Hmm. I am not sure what you mean by that. Anyways, "')
+df.update_state_settings(State.MISUNDERSTOOD, system_multi_hop=True)
+df.add_system_transition(State.TRANSITION_OUT, State.END, '"What would you like to chat about next? I think %s would be good."'%(', or '.join(TRANSITION_OUT)))
+
+### (SYSTEM) RESPONDING TO USER LIKES READING
+ack_like_reading = ['"It\'s great that you like reading too!"',
+                    '"I am glad you like to read too!"',
+                    '"Cool, I am glad to find something we share in common."']
+df.add_system_transition(State.YES_LIKE_READING, State.PICK_GENRE, ack_like_reading)
+df.update_state_settings(State.PICK_GENRE, system_multi_hop=True)
+
+### (SYSTEM) TALK ABOUT SCIFI
+share_like_scifi = ['"I really enjoy reading science fiction novels."',
+                    '"One of my favorite things to read is science fiction."',
+                    '"I think that science fiction has become a pretty exciting genre for books."']
+df.add_system_transition(State.PICK_GENRE, State.SCIFI, share_like_scifi)
+df.update_state_settings(State.SCIFI, system_multi_hop=True)
+
+### (SYSTEM) TALK ABOUT TELEPORTATION
+share_teleport_fun = ['"I think it would be so cool for teleportation to be real. It would take a lot less time to travel around."',
+                      '"I am really excited when I read about inventions for teleportation. Never having to wait to get somewhere would be amazing."']
+df.add_system_transition(State.SCIFI, State.SHARE_TELEPORT_FUN, share_teleport_fun)
+df.update_state_settings(State.SHARE_TELEPORT_FUN, system_multi_hop=True)
+
+ask_teleport_opi = ['"What do you think about the possibility of teleportation?"',
+                    '"What is your opinion on teleportation?"']
+df.add_system_transition(State.SHARE_TELEPORT_FUN, State.ASK_TELEPORT_OPI, ask_teleport_opi)
+
+### (USER) SHARE OPINION ON TELEPORTATION
+teleport_fun = '{' \
+               '[!#ONT_NEG(ont_negation) [{agree, [! think {so,that} too]}]],' \
+               '[!#ONT_NEG(ont_negation) [{fun,exciting,excited,[looking,forward],good,great,cool,awesome,neat,amazing,wonderful,fantastic,sweet}]],' \
+               '[!#ONT_NEG(ont_negation) [i,{like,into},{it,teleportation,teleport}]]' \
+               '[!#ONT(ont_negation) [{scary,scared,terrifying,terrified,horrified,horrifying,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened}]]' \
+               '}'
+df.add_user_transition(State.ASK_TELEPORT_OPI, State.REC_TELEPORT_FUN, teleport_fun)
+teleport_scary = '{' \
+               '[!#ONT(ont_negation) [{agree, [! think {so,that} too]}]],' \
+               '[!#ONT_NEG(ont_negation) [{scary,scared,terrifying,terrified,horrified,horrifying,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened,worry,worrying,worried,pain,painful,suffering,death,misery,die,dying}]],' \
+               '[!#ONT(ont_negation) [{fun,exciting,good,great,cool,awesome,neat,amazing,wonderful,fantastic,sweet}]],' \
+               '[!#ONT(ont_negation) [i,{like,into},{it,teleportation,teleport}]]' \
+               '}'
+df.add_user_transition(State.ASK_TELEPORT_OPI, State.REC_TELEPORT_SCARY, teleport_scary)
+teleport_unlikely = '{' \
+               '[unlikely,impossible],' \
+               '[{dont, not,never},{happen,happening}]' \
+               '}'
+df.add_user_transition(State.ASK_TELEPORT_OPI, State.REC_TELEPORT_UNLIKELY, teleport_unlikely)
+uncertain_expression_nlu = ["[#ONT(uncertain_expression)]"]
+df.add_user_transition(State.ASK_TELEPORT_OPI, State.REC_TELEPORT_UNSURE, uncertain_expression_nlu)
+df.set_error_successor(State.ASK_TELEPORT_OPI, State.HARDEST_PART)
+
+### (SYSTEM) RESPOND TO USER FUN
+df.add_system_transition(State.REC_TELEPORT_FUN, State.FIRST_PERSON,
+                         ['"Yeah, it would be pretty awesome."', '"Cool, you like teleportation too? I am glad we agree!"'])
+df.update_state_settings(State.FIRST_PERSON, system_multi_hop=True)
+df.add_system_transition(State.FIRST_PERSON, State.REC_FIRST_PERSON, '"Would you be one of the first people to try teleportation?"')
+yes_first_person = "[! #ONT_NEG(ont_negation) [{#EXP(yes), [i, would], [i, think, so]}]]"
+df.add_user_transition(State.REC_FIRST_PERSON, State.YES_FIRST_PERSON, yes_first_person)
+no_first_person = "[{#EXP(no), [i, would, not], [i, {dont,do not}, think, so]}]"
+df.add_user_transition(State.REC_FIRST_PERSON, State.NO_FIRST_PERSON, no_first_person)
+df.set_error_successor(State.REC_FIRST_PERSON, State.MIS_FIRST_PERSON)
+
+df.add_system_transition(State.YES_FIRST_PERSON, State.TRANS_TO_ALIENS, '"You would volunteer so early? That is so courageous! I don\'t think I could gather the courage to do that."')
+df.add_system_transition(State.NO_FIRST_PERSON, State.TRANS_TO_ALIENS, '"Yeah, I definitely need other people to test it out first, too. Safety is important, for sure."')
+df.add_system_transition(State.MIS_FIRST_PERSON, State.TRANS_TO_ALIENS, '"I see. That is an interesting point. Personally, I don\'t think I could be one of the first people to try it out."')
+
+### (SYSTEM) RESPOND TO USER SCARED
+df.add_system_transition(State.REC_TELEPORT_SCARY, State.TRANSPORT_FAIL,
+                         ['"Oh, that is true. It could be kind of scary, for sure."', '"You bring up a good point. Depending, it could be a bit dangerous."'])
+df.update_state_settings(State.TRANSPORT_FAIL, system_multi_hop=True)
+df.add_system_transition(State.TRANSPORT_FAIL, State.REC_TRANSPORT_FAIL_OPI, '"I think the scariest part would be not making it to the destination in one piece. Are you scared of that too?"')
+df.add_user_transition(State.REC_TRANSPORT_FAIL_OPI, State.YES_TRANSPORT_FAIL, '{#EXP(yes), [! #ONT_NEG(ont_negation) [i, am]]}')
+df.add_user_transition(State.REC_TRANSPORT_FAIL_OPI, State.NO_TRANSPORT_FAIL, '{#EXP(no), [i am #ONT(ont_negation)]}')
+df.set_error_successor(State.REC_TRANSPORT_FAIL_OPI, State.MIS_TRANSPORT_FAIL)
+
+df.add_system_transition(State.YES_TRANSPORT_FAIL, State.TRANS_TO_ALIENS, '"Oh boy. It makes me shake just thinking about it!"')
+df.add_system_transition(State.NO_TRANSPORT_FAIL, State.TRANS_TO_ALIENS, '"Really? You are not scared of that? Maybe you know something I don\'t."')
+df.add_system_transition(State.MIS_TRANSPORT_FAIL, State.TRANS_TO_ALIENS, '"That is a good point, for sure. I never thought of it like that."')
+
+### (SYSTEM) RESPOND TO USER UNLIKELY
+df.add_system_transition(State.REC_TELEPORT_UNLIKELY, State.HARDEST_PART,
+                         ['"We will just have to wait and see, I guess."', '"Yeah, at this point, it is just fiction, after all."'])
+df.add_system_transition(State.HARDEST_PART, State.REC_HARDEST_PART, '"What is the hardest part, do you think? The reconstruction of the teleported item, or the mechanics of sending it to a new location?"')
+df.update_state_settings(State.HARDEST_PART, system_multi_hop=True)
+construct_nlu = "{" \
+                "[taking, apart], [putting, together], [{deconstruct,deconstructing,construct,constructing,reconstruct,reconstructing,build,building,make,making,form,forming,break,breaking}], " \
+                "[first, {one,thing}]" \
+                "}"
+df.add_user_transition(State.REC_HARDEST_PART, State.HARDEST_CONSTRUCTION, construct_nlu)
+transport_nlu = "{" \
+                "[{transport,transporting,transportation,transfer,transferring,send,sending,mechanics}], " \
+                "[{second,last,final}, {one,thing}]" \
+                "}"
+df.add_user_transition(State.REC_HARDEST_PART, State.HARDEST_TRANSPORTATION, transport_nlu)
+df.set_error_successor(State.REC_HARDEST_PART, State.HARDEST_OTHER)
+
+df.add_system_transition(State.HARDEST_CONSTRUCTION, State.TRANS_TO_ALIENS, '"Yeah, I think the item reconstruction is the hardest for sure. But I am not a scientist, so I could be wrong."')
+df.add_system_transition(State.HARDEST_TRANSPORTATION, State.TRANS_TO_ALIENS, '"Yeah, I\'m not a scientist, so I have no idea how items can be transported immediately from one location to another."')
+df.add_system_transition(State.HARDEST_OTHER, State.TRANS_TO_ALIENS, '"Yeah, there are probably many difficult pieces to the puzzle of teleportation. We can leave that up to the scientists."')
+
+### (SYSTEM) RESPOND TO USER UNSURE
+df.add_system_transition(State.REC_TELEPORT_UNSURE, State.TRANS_TO_ALIENS,
+                         ['"Real teleportation is still a bit out of reach, so it is hard to predict how you will feel about it."', '"I get it. It is hard to have an opinion on something we do not know much about at this point."'])
+df.update_state_settings(State.TRANS_TO_ALIENS, system_multi_hop=True)
+
+### (SYSTEM) INTRODUCE ALIENS TOPIC
+df.add_system_transition(State.TRANS_TO_ALIENS, State.SHARE_ALIENS_SCARY,
+                         ['"You know what else? I think aliens are really scary."',
+                          '"Speaking of which, I also find the idea of aliens quite terrifying."'])
+df.update_state_settings(State.SHARE_ALIENS_SCARY, system_multi_hop=True)
+
+df.add_system_transition(State.SHARE_ALIENS_SCARY, State.ASK_ALIENS_SCARY,
+                         ['"Do you find aliens scary too?"',
+                          '"Are you scared by the prospect of aliens being real?"'])
+
+### (USER) INTRODUCE ALIENS TOPIC
+#df.add_user_transition(State.ASK_ALIENS_SCARY, State.REC_ALIENS_SCARY, )
+################################################################################################################################
+################################################################################################################################
+################################################################################################################################
+################################################################################################################################
+################################################################################################################################
+
+#df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+### (SYSTEM) TWO OPTIONS FOR UNDIRECTED HOBBY OPENING - what hobby do you like vs ive heard of hobby, do you like it
 
 first_ask_hobby_nlg = ['"So, it seems like you want to talk about some activities. There are so many choices of what to do these days for fun. I never know what to choose. What is one of your hobbies?"',
                  '"I see. It seems like you want to talk about different pasttimes. I\'m always looking for new activities to try out. Tell me, what activity do you enjoy doing these days?"',
@@ -345,7 +550,6 @@ pos_exp_nlu = ["[#ONT(pos_experience)]"]
 df.add_user_transition(State.ASK_FAVE_THING, State.EXPERIENCE, pos_exp_nlu)
 challenge_exp_nlu = ["[#ONT(challenge_experience)]"]
 df.add_user_transition(State.ASK_FAVE_THING, State.CHALLENGE, challenge_exp_nlu)
-uncertain_expression_nlu = ["[#ONT(uncertain_expression)]"]
 df.add_user_transition(State.ASK_FAVE_THING, State.UNSURE, uncertain_expression_nlu)
 
 df.add_state(State.NO_RECOG_FAVE)
