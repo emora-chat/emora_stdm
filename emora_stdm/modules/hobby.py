@@ -207,6 +207,7 @@ class State(Enum):
     TRANSITION_OUT = auto()
     MISUNDERSTOOD = auto()
 
+    INTRO = auto()
     INTRO_READING = auto()
     ASK_LIKE_READING = auto()
     YES_LIKE_READING = auto()
@@ -266,10 +267,16 @@ df._macros.update(macros)
 
 ### if user initiates
 request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
-df.add_user_transition(State.START, State.INTRO_READING, request_hobby_nlu)
+df.add_user_transition(State.START, State.INTRO, request_hobby_nlu)
 df.set_error_successor(State.START, State.START)
 df.add_system_transition(State.START, State.START, NULL)
 
+open_hobby_nlg = ['"So, it seems like you want to talk about some activities."',
+                 '"So, I think you want to talk about some hobbies."',
+                 '"I see. Lets talk about hobbies then."'
+                 ]
+df.add_system_transition(State.INTRO, State.INTRO_READING, open_hobby_nlg)
+df.update_state_settings(State.INTRO_READING, system_multi_hop=True)
 
 ### (SYSTEM) DIRECTED OPENING - READING CONVERSATION AS ONE OF EMORA'S HOBBIES
 ask_like_reading_nlg = ['[!"I have recently gotten back into reading. Do you read a lot too?"]',
