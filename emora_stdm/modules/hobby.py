@@ -1,4 +1,4 @@
-from emora_stdm import DialogueFlow, KnowledgeBase, Macro
+from emora_stdm import DialogueFlow, KnowledgeBase, Macro, EnumByName
 from enum import Enum, auto
 import random
 
@@ -396,7 +396,7 @@ df.add_system_transition(State.MIS_TRANSPORT_FAIL, State.TRANS, '"That is a good
 ### (SYSTEM) RESPOND TO USER UNLIKELY
 df.add_system_transition(State.REC_TELEPORT_UNLIKELY, State.HARDEST_PART,
                          ['"We will just have to wait and see, I guess."', '"Yeah, at this point, it is just fiction, after all."'])
-df.add_system_transition(State.HARDEST_PART, State.REC_HARDEST_PART, '[! "What is the hardest part of actually making a teleportation device, do you think? The reconstruction of the teleported item, or sending it to a new location?" #UpdateNotAvailable(hardest_part)]')
+df.add_system_transition(State.HARDEST_PART, State.REC_HARDEST_PART, '[! "I am curious to know. What do you think is the hardest part of actually making a teleportation device?" #UpdateNotAvailable(hardest_part)]')
 df.update_state_settings(State.HARDEST_PART, system_multi_hop=True)
 construct_nlu = "{" \
                 "[taking, apart], [putting, together], [{deconstruct,deconstructing,construct,constructing,reconstruct,reconstructing,build,building,make,making,form,forming,break,breaking}], " \
@@ -412,7 +412,7 @@ df.set_error_successor(State.REC_HARDEST_PART, State.HARDEST_OTHER)
 
 df.add_system_transition(State.HARDEST_CONSTRUCTION, State.TRANS, '"Yeah, I think the item reconstruction is the hardest for sure. But I am not a scientist, so I could be wrong."')
 df.add_system_transition(State.HARDEST_TRANSPORTATION, State.TRANS, '"Yeah, I\'m not a scientist, so I have no idea how items can be transported immediately from one location to another."')
-df.add_system_transition(State.HARDEST_OTHER, State.TRANS, '"Yeah, there are probably many difficult pieces to the puzzle of teleportation. We can leave that up to the scientists."')
+df.add_system_transition(State.HARDEST_OTHER, State.TRANS, '"Yeah, that is true. There are probably many difficult pieces in the puzzle of teleportation, but we can leave that up to the scientists."')
 
 ### (SYSTEM) PICK NEXT QUESTION FROM THOSE NOT ASKED BEFORE
 df.update_state_settings(State.TRANS, system_multi_hop=True)
@@ -422,7 +422,7 @@ df.add_system_transition(State.TRANS, State.TRANSPORT_FAIL, "[! #Available(trans
 df.add_system_transition(State.TRANS, State.FINISH_TELEPORT, "[! #NotAvailable(hardest_part, first_person, transport_fail) .]")
 
 df.update_state_settings(State.FINISH_TELEPORT, system_multi_hop=True)
-df.add_system_transition(State.FINISH_TELEPORT, State.TRANSITION_OUT, '"I have really enjoyed talking about this invention in science fiction with you. I am interested in learning more about your opinions on other things too, too!"')
+df.add_system_transition(State.FINISH_TELEPORT, State.TRANSITION_OUT, '"I have really enjoyed talking about this invention in science fiction with you. I am interested in learning more about your opinions on other things too!"')
 
 ### (SYSTEM) RESPOND TO USER UNSURE
 df.add_system_transition(State.REC_TELEPORT_UNSURE, State.TRANS,
