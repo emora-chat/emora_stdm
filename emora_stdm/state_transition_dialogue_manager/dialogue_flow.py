@@ -92,7 +92,7 @@ class DialogueFlow:
         visited = {self.state()}
         responses = []
         while self.speaker() is Speaker.SYSTEM:
-            response, next_state = self.system_transition(debugging=debugging)
+            response, next_state = self.system_transition(self.state(), debugging=debugging)
             self.take_transition(next_state)
             responses.append(response)
             if next_state in visited and self._speaker is Speaker.SYSTEM:
@@ -115,7 +115,7 @@ class DialogueFlow:
         t1 = time()
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
-            next_state = self.user_transition(natural_language, debugging=debugging)
+            next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
             self.take_transition(next_state)
             if next_state in visited and self._speaker is Speaker.USER:
                 self.change_speaker()
@@ -127,7 +127,7 @@ class DialogueFlow:
 
     # HIGH LEVEL
 
-    def system_transition(self, state: Union[Enum, str] =None, debugging=False):
+    def system_transition(self, state: Union[Enum, str], debugging=False):
         """
         :param state:
         :param debugging:
@@ -176,7 +176,7 @@ class DialogueFlow:
         else:
             raise AssertionError('dialogue flow system transition found no valid options')
 
-    def user_transition(self, natural_language: str, state: Union[Enum, str] =None, debugging=False):
+    def user_transition(self, natural_language: str, state: Union[Enum, str], debugging=False):
         """
         :param state:
         :param natural_language:
@@ -400,6 +400,12 @@ class DialogueFlow:
 
     def graph(self):
         return self._graph
+
+    def vars(self):
+        return self._vars
+
+    def set_vars(self, vars):
+        self._vars = vars
 
     def transitions(self, source_state, speaker=None):
         """

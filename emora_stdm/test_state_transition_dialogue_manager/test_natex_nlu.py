@@ -81,7 +81,7 @@ def test_reference():
 def test_assignment():
     v = {'A': 'apple'}
     natex = NatexNLU('[!i ate a $A={orange, raddish} today]')
-    assert natex.match('i ate a orange today', vars=v)
+    assert natex.match('i ate a orange today', vars=v, debugging=True)
     assert v['A'] == 'orange'
     assert natex.match('i ate a raddish today', vars=v)
     assert v['A'] == 'raddish'
@@ -217,7 +217,12 @@ def test_ontology():
     df.user_turn("hello there", debugging=False)
     assert df.state() == States.E
 
-def test_negated_ontology():
+
+
+
+################################### INTEGRATION TESTS ####################################
+
+def test_integration_opening_component():
 
     kb = KnowledgeBase()
     kb.load_json_file("opening_database.json")
@@ -531,7 +536,7 @@ def test_negated_ontology():
     assert not m
     m = nlu.match("great how are you", debugging=False)
     assert not m
-    
+
 
 
 
