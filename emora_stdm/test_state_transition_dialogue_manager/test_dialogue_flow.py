@@ -35,12 +35,12 @@ def test_add_transitions():
 def test_single_system_transition():
     df = DialogueFlow(States.A)
     df.add_system_transition(States.A, States.B, 'hello')
-    assert df.system_transition() == ('hello', States.B)
+    assert df.system_transition(df.state()) == ('hello', States.B)
 
 def test_single_user_transition():
     df = DialogueFlow(States.B)
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
-    assert df.user_transition('oh hey there') == States.C
+    assert df.user_transition('oh hey there', df.state()) == States.C
 
 def test_system_transition():
     df = DialogueFlow(States.A)
@@ -48,15 +48,15 @@ def test_system_transition():
     df.add_system_transition(States.A, States.C, 'hey')
     responses = set()
     for i in range(100):
-        responses.add(df.system_transition())
+        responses.add(df.system_transition(df.state()))
     assert responses == {('hello', States.B), ('hey', States.C)}
 
 def test_user_transition():
     df = DialogueFlow(States.B)
     df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
     df.add_user_transition(States.B, States.D, '[{bye, goodbye, see you, see ya, later}]')
-    assert df.user_transition('oh hey there') == States.C
-    assert df.user_transition('well see ya later') == States.D
+    assert df.user_transition('oh hey there', df.state()) == States.C
+    assert df.user_transition('well see ya later', df.state()) == States.D
 
 def test_check():
     df = DialogueFlow(States.A)

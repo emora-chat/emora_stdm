@@ -24,8 +24,12 @@
     "son": ["boy"],
     "daughter": ["girl"],
 
-    "smart": ["smart", "intelligent", "bright", "capable", "sharp"]
-
+    "smart": ["intelligent", "bright", "capable", "sharp"],
+    "funny": ["humorous", "clever", "witty", "hilarious", "joker", "jokester"],
+    "outgoing": ["extraverted", "sociable", "social", "friendly", "warm"],
+    "shy": ["intraverted", "guarded", "loner"],
+    "polite": ["manners", "decent"],
+    "conceited": ["overconfident", "arrogant", "full of", "narcissistic", "egotistic", "egotistical", "selfish"]
 
   },
 
