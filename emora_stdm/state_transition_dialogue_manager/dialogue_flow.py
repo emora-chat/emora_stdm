@@ -1,5 +1,5 @@
 
-from enum import Enum
+from enum import Enum, auto
 
 from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
@@ -19,9 +19,13 @@ from time import time
 
 Graph = Database(MapMultidigraph)
 
-class Speaker(Enum):
-    SYSTEM = 0
-    USER = 1
+class EnumByName(Enum):
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+
+class Speaker(EnumByName):
+    SYSTEM = auto()
+    USER = auto()
 
 
 class DialogueFlow:
