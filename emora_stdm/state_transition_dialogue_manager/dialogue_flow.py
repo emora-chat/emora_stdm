@@ -28,7 +28,6 @@ class Speaker(EnumByName):
     SYSTEM = auto()
     USER = auto()
 
-
 class DialogueFlow:
 
     Speaker = Speaker
@@ -86,6 +85,8 @@ class DialogueFlow:
             else:
                 user_input = input("U: ")
                 self.user_turn(user_input, debugging=debugging)
+
+            print(self.state_settings(self.state()).memory._data)
 
     def system_turn(self, debugging=False):
         """

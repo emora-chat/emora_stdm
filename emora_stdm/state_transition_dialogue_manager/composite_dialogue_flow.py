@@ -9,6 +9,7 @@ class CompositeDialogueFlow:
     def __init__(self, initial_state = None, initial_speaker = None, macros=None, kb=None):
         # the dialogue flow currently controlling the conversation
         self._controller = DialogueFlow(initial_state, initial_speaker, macros, kb)
+        self._controller_name = 'SYSTEM'
         # namespace : dialogue flow mapping
         self._components = {'SYSTEM': self._controller}
 
@@ -38,7 +39,7 @@ class CompositeDialogueFlow:
             if isinstance(next_state, tuple):
                 ns, state = next_state
                 speaker = self._controller.speaker()
-                self._controller = self._components[ns]
+                self.set_controller(ns)
                 self._controller.set_state(state)
                 self._controller.set_speaker(speaker)
             responses.append(response)
@@ -63,7 +64,7 @@ class CompositeDialogueFlow:
             if isinstance(next_state, tuple):
                 ns, state = next_state
                 speaker = self._controller.speaker()
-                self._controller = self._components[ns]
+                self.set_controller(ns)
                 self._controller.set_speaker(speaker)
                 self._controller.set_state(state)
             if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.USER:
@@ -97,3 +98,26 @@ class CompositeDialogueFlow:
 
     def component(self, namespace):
         return self._components[namespace]
+
+    def set_state(self, state):
+        self._controller.set_state(state)
+
+    def set_controller(self, controller_name):
+        self._controller = self.component(controller_name)
+        self._controller_name = controller_name
+
+    def set_vars(self, vars):
+        self._controller.set_vars(vars)
+
+    def reset(self):
+        for name,component in self._components.items():
+            component.reset()
+
+    def controller(self):
+        return self._controller
+
+    def controller_name(self):
+        return self._controller_name
+
+    def state(self):
+        return self._controller, self._controller.state()

@@ -647,5 +647,26 @@ df.add_system_transition(State.UNRECOG_GENRE, State.CHECK_LOOP, fave_genre_error
 if __name__ == '__main__':
     # automatic verification of the DialogueFlow's structure (dumps warnings to stdout)
     df.check()
+
+    import json
+    x = json.dumps(str(("hello", "there")))
+    print(x)
+    y = json.loads(x)
+    print(type(y))
+    print(y)
+    z = eval(y)
+    print(type(z))
+    print(z)
+    a = json.dumps(str(State.INTRO))
+    print(a)
+    b = json.loads(a)
+    print(type(b))
+    print(b)
+    c = json.dumps(str(("hobby",State.INTRO)))
+    print(c)
+    d = json.loads(c)
+    print(type(d))
+    print(d)
+
     # run the DialogueFlow in interactive mode to test
     df.run(debugging=True)
