@@ -12,7 +12,7 @@ from emora_stdm.state_transition_dialogue_manager.knowledge_base import Knowledg
 
 wordnet_knowledge_base = KnowledgeBase()
 
-import importlib.resources as impr
+import importlib_resources as impr
 from . import data
 try:
     t1 = time()

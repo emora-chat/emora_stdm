@@ -175,7 +175,7 @@ class GetOpinion(Macro):
             return random.choice(hobby_opinion[vars["hobby"]])
         return ''
 
-class State(Enum):
+class State(EnumByName):
     START = auto()
     FIRST_ASK_HOBBY = auto()
     GEN_ASK_HOBBY = auto()

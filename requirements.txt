@@ -3,3 +3,4 @@ lark-parser
 regex
 pytz
 nltk
+importlib_resources
