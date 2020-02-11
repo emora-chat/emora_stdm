@@ -15,6 +15,7 @@ from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
+from emora_stdm.state_transition_dialogue_manager.state import State
 from time import time
 
 Graph = Database(MapMultidigraph)
@@ -35,10 +36,10 @@ class DialogueFlow:
     def __init__(self, initial_state: Union[Enum, str], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
         self._graph = Graph()
-        self._initial_state = initial_state
-        self._state = initial_state
+        self._initial_state = State(initial_state)
+        self._state = self._initial_state
         self._initial_speaker = initial_speaker
-        self._speaker = initial_speaker
+        self._speaker = self._initial_speaker
         self._vars = {}
         if kb is None:
             self._kb = KnowledgeBase()
@@ -140,6 +141,8 @@ class DialogueFlow:
         ti = time()
         if state is None:
             state = self._state
+        else:
+            state = State(state)
         transition_options = {}
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
@@ -191,6 +194,8 @@ class DialogueFlow:
         ti = time()
         if state is None:
             state = self._state
+        else:
+            state = State(state)
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
         for transition in self.transitions(state, Speaker.USER):
@@ -260,6 +265,8 @@ class DialogueFlow:
 
     def add_user_transition(self, source: Union[Enum, str], target: Union[Enum, str],
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
+        source = State(source)
+        target = State(target)
         if self.has_transition(source, target, Speaker.USER):
             if self.transition_global_nlu(source, target):
                 self.remove_transition(source, target, Speaker.USER)
@@ -278,6 +285,8 @@ class DialogueFlow:
 
     def add_system_transition(self, source: Union[Enum, str], target: Union[Enum, str],
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
+        source = State(source)
+        target = State(target)
         if self.has_transition(source, target, Speaker.SYSTEM):
             raise ValueError('system transition {} -> {} already exists'.format(source, target))
         natex_nlg = NatexNLG(natex_nlg, macros=self._macros)
@@ -292,6 +301,7 @@ class DialogueFlow:
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
 
     def add_state(self, state: Union[Enum, str], error_successor: Union[Union[Enum, str], None] =None, **settings):
+        state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
         state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=1)
@@ -299,6 +309,7 @@ class DialogueFlow:
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
         if error_successor is not None:
+            error_successor = State(error_successor)
             self.set_error_successor(state, error_successor)
         for global_target in self._global_states:
             if not self.has_transition(state, global_target, Speaker.USER):
@@ -321,33 +332,49 @@ class DialogueFlow:
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
     def transition_natex(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
+        source = State(source)
+        target = State(target)
         return self._graph.arc_data(source, target, speaker)['natex']
 
     def set_transition_natex(self, source, target, speaker, natex):
+        source = State(source)
+        target = State(target)
         self._graph.arc_data(source, target, speaker)['natex'] = natex
 
     def transition_settings(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
+        source = State(source)
+        target = State(target)
         return self._graph.arc_data(source, target, speaker)['settings']
 
     def set_transition_settings(self, source, target, speaker, settings):
+        source = State(source)
+        target = State(target)
         self._graph.arc_data(source, target, speaker)['settings'] = settings
 
     def update_transition_settings(self, source, target, speaker, **settings):
+        source = State(source)
+        target = State(target)
         self.transition_settings(source, target, speaker).update(settings)
 
     def transition_global_nlu(self, source: Union[Enum, str], target: Union[Enum, str]):
+        source = State(source)
+        target = State(target)
         if self.has_transition(source, target, Speaker.USER) \
         and 'global' in self._graph.arc_data(source, target, Speaker.USER):
             return self._graph.arc_data(source, target, Speaker.USER)['global']
         return False
 
     def set_transition_global(self, source, target, is_global):
+        source = State(source)
+        target = State(target)
         self._graph.arc_data(source, target, Speaker.USER)['global'] = is_global
 
     def state_settings(self, state: Enum):
+        state = State(state)
         return self._graph.data(state)['settings']
 
     def _update_global_states(self, state):
+        state = State(state)
         global_nlu = self.state_settings(state).global_nlu
         if global_nlu:
             self._global_states.add(state)
@@ -364,6 +391,7 @@ class DialogueFlow:
                             self.remove_transition(*transition)
 
     def update_state_settings(self, state, **settings):
+        state = State(state)
         if 'settings' not in self._graph.data(state):
             self._graph.data(state)['settings'] = Settings()
         if 'memory' in settings:
@@ -372,6 +400,8 @@ class DialogueFlow:
         self._update_global_states(state)
 
     def remove_transition(self, source, target, speaker):
+        source = State(source)
+        target = State(target)
         MapMultidigraph.remove_arc(self.graph(), source, target, speaker)
 
     def states(self):
@@ -381,12 +411,15 @@ class DialogueFlow:
         return self._state
 
     def set_state(self, state: Union[Enum, str]):
+        state = State(state)
         self._state = state
 
     def has_state(self, state):
+        state = State(state)
         return self._graph.has_node(state)
 
     def error_successor(self, state):
+        state = State(state)
         data = self._graph.data(state)
         if 'error' in data:
             return data['error']
@@ -394,6 +427,8 @@ class DialogueFlow:
             return None
 
     def set_error_successor(self, state, error_successor):
+        state = State(state)
+        error_successor = State(error_successor)
         self._graph.data(state)['error'] = error_successor
 
     def speaker(self):
@@ -419,6 +454,7 @@ class DialogueFlow:
         :param speaker: optionally, filter returned transitions by speaker
         :return: a generator over (source, target, speaker) 3-tuples
         """
+        source_state = State(source_state)
         if speaker is None:
             yield from self._graph.arcs_out(source_state)
         elif self._graph.has_arc_label(source_state, speaker):
@@ -427,9 +463,12 @@ class DialogueFlow:
             return
 
     def has_transition(self, source, target, speaker):
+        source = State(source)
+        target = State(target)
         return self._graph.has_arc(source, target, speaker)
 
     def incoming_transitions(self, target_state):
+        target_state = State(target_state)
         yield from self._graph.arcs_in(target_state)
 
     def change_speaker(self):

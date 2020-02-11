@@ -18,19 +18,19 @@ def test_constructor():
     assert df.speaker() == Speaker.SYSTEM
 
 def test_add_transitions():
-    df = DialogueFlow(States.A)
-    df.add_system_transition(States.A, States.B, 'hello')
-    df.add_user_transition(States.B, States.C, '[{hi, hello, hey, [how, you]}]')
-    df.add_user_transition(States.B, States.D, '[{dog, cat, parrot}]')
-    df.add_system_transition(States.D, States.A, 'so')
+    df = DialogueFlow('States.A')
+    df.add_system_transition('States.A', 'States.B', 'hello')
+    df.add_user_transition('States.B', 'States.C', '[{hi, hello, hey, [how, you]}]')
+    df.add_user_transition('States.B', 'States.D', '[{dog, cat, parrot}]')
+    df.add_system_transition('States.D', 'States.A', 'so')
     assert df.graph().arcs() == {
-        (States.A, States.B, DialogueFlow.Speaker.SYSTEM),
-        (States.B, States.C, DialogueFlow.Speaker.USER),
-        (States.B, States.D, DialogueFlow.Speaker.USER),
-        (States.D, States.A, DialogueFlow.Speaker.SYSTEM)
+        ('States.A', 'States.B', DialogueFlow.Speaker.SYSTEM),
+        ('States.B', 'States.C', DialogueFlow.Speaker.USER),
+        ('States.B', 'States.D', DialogueFlow.Speaker.USER),
+        ('States.D', 'States.A', DialogueFlow.Speaker.SYSTEM)
     }
-    assert isinstance(df.transition_natex(States.A, States.B, Speaker.SYSTEM), NatexNLG)
-    assert isinstance(df.transition_natex(States.B, States.C, Speaker.USER), NatexNLU)
+    assert isinstance(df.transition_natex('States.A', 'States.B', Speaker.SYSTEM), NatexNLG)
+    assert isinstance(df.transition_natex('States.B', 'States.C', Speaker.USER), NatexNLU)
 
 def test_single_system_transition():
     df = DialogueFlow(States.A)
@@ -49,7 +49,7 @@ def test_system_transition():
     responses = set()
     for i in range(100):
         responses.add(df.system_transition(df.state()))
-    assert responses == {('hello', States.B), ('hey', States.C)}
+    assert sorted(responses) == sorted([('hello', States.B), ('hey', States.C)])
 
 def test_user_transition():
     df = DialogueFlow(States.B)
@@ -115,19 +115,19 @@ def test_user_multi_hop():
     df.add_user_transition(States.C, States.E, '[{where, how, what}]')
     df.set_state(States.A)
     df.user_turn('hey', debugging=False)
-    assert df.state() is States.B
+    assert df.state() == States.B
     df.set_state(States.A)
     df.set_speaker(Speaker.USER)
     df.user_turn('hey how are you')
-    assert df.state() is States.D
+    assert df.state() == States.D
     df.set_state(States.A)
     df.set_speaker(Speaker.USER)
     df.user_turn('excuse me where do i go')
-    assert df.state() is States.E
+    assert df.state() == States.E
     df.set_state(States.A)
     df.set_speaker(Speaker.USER)
     df.user_turn('excuse me')
-    assert df.state() is States.A
+    assert df.state() == States.A
 
 def test_system_multi_hop():
     df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
