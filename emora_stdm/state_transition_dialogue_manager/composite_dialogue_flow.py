@@ -103,8 +103,12 @@ class CompositeDialogueFlow:
         self._controller.set_state(state)
 
     def set_controller(self, controller_name):
+        old_controller_vars = self._controller.vars()
         self._controller = self.component(controller_name)
         self._controller_name = controller_name
+        new_controller_vars = self._controller.vars()
+        new_controller_vars.update(old_controller_vars)
+        self._controller.set_vars(new_controller_vars)
 
     def set_vars(self, vars):
         self._controller.set_vars(vars)
@@ -112,6 +116,7 @@ class CompositeDialogueFlow:
     def reset(self):
         for name,component in self._components.items():
             component.reset()
+        self.set_controller("SYSTEM")
 
     def controller(self):
         return self._controller
@@ -120,4 +125,4 @@ class CompositeDialogueFlow:
         return self._controller_name
 
     def state(self):
-        return self._controller, self._controller.state()
+        return self._controller_name, self._controller.state()
