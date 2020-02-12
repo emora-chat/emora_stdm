@@ -269,3 +269,48 @@ class IsPlural(Macro):
         if pos == 'NNS':
             return True
         return False
+
+class FirstPersonPronoun(Macro):
+    def __init__(self, kb):
+        self.kb = kb
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if IsPlural()(None, None, [args[0]]):
+            return 'they'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
+            return 'she'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['male']):
+            return 'he'
+        elif args[0] not in ONTE(self.kb)({args[0]}, None, ['person']):
+            return 'it'
+        else:
+            return 'they'
+
+class ThirdPersonPronoun(Macro):
+    def __init__(self, kb):
+        self.kb = kb
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if IsPlural()(None, None, [args[0]]):
+            return 'them'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
+            return 'her'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['male']):
+            return 'him'
+        elif args[0] not in ONTE(self.kb)({args[0]}, None, ['person']):
+            return 'it'
+        else:
+            return 'them'
+
+class PossessivePronoun(Macro):
+    def __init__(self, kb):
+        self.kb = kb
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if IsPlural()(None, None, [args[0]]):
+            return 'their'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
+            return 'her'
+        elif args[0] in ONTE(self.kb)({args[0]}, None, ['male']):
+            return 'his'
+        elif args[0] not in ONTE(self.kb)({args[0]}, None, ['person']):
+            return 'its'
+        else:
+            return 'their'
