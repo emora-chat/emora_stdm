@@ -101,7 +101,7 @@ df.add_user_transition(State.START, State.PETS_Y, '[{pet,pets}]')
 df.set_error_successor(State.START, State.START)
 df.add_system_transition(State.START, State.START, NULL)
 
-df.add_system_transition(State.PETS_Y, State.ASK_PETS, '"that \' s great! I love pets! actually, my favorite dog is german shepherd. Do you have any pets?"')
+df.add_system_transition(State.PETS_Y, State.ASK_PETS, '"I love pets! actually, my favorite dog is german shepherd. Do you have any pets?"')
 df.update_state_settings(State.PETS_Y, system_multi_hop = True)
 df.add_user_transition(State.ASK_PETS, State.ASK_PETS_Y, '[{yes, yea, yup, yep, i do, yeah, a little, sure, of course, i have, i am, sometimes, too, as well, also, agree}]')
 df.add_user_transition(State.ASK_PETS, State.ASK_PETS_N, '[{no, nope, dont}]')
