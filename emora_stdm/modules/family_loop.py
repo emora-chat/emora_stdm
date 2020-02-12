@@ -10,10 +10,8 @@ df.add_system_transition('root', 'root', '{yeah, for sure, okay}', score=0)
 # related
 df.add_state('related', 'root', user_multi_hop=True)
 df.add_user_transition('root', 'related',
-                       [
-                           '[!my $related_type=#ONTE(partner)]',
-                           '[!my $related_type=#ONTE(parent)]'
-                       ])
+                       '[my $related_type=#ONTE(related_person)]')
+
 
 if __name__ == '__main__':
     df.run(debugging=True)

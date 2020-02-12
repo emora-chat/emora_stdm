@@ -66,7 +66,8 @@ class DialogueFlow:
             'DIF': Difference(),
             'SET': SetVars(),
             'ALL': CheckVarsConjunction(),
-            'ANY': CheckVarsDisjunction()
+            'ANY': CheckVarsDisjunction(),
+            'ISP': IsPlural()
         }
         if macros:
             self._macros.update(macros)

@@ -91,6 +91,14 @@ def test_assignment():
     assert natex.match('i ate a raddish today', vars=v)
     assert v['B'] == 'raddish'
 
+def test_assignment_within_disjunction():
+    vars = {}
+    natex = NatexNLU('{$A=hello, $A=hi}')
+    assert natex.match('hello', vars=vars)
+    assert vars['A'] == 'hello'
+    vars = {}
+    assert natex.match('hi', vars=vars, debugging=False)
+    assert vars['A'] == 'hi'
 
 def test_backreference():
     natex = NatexNLU('[!$A good eat $A={apple, banana}]')
