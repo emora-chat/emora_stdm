@@ -44,8 +44,11 @@ class UpdateCoveredHobbies(Macro):
     def run(self, ngrams, vars, args):
         if "covered_hobbies" not in vars:
             vars["covered_hobbies"] = set()
-        if "hobby" in vars and vars["hobby"] is not None:
-            vars["covered_hobbies"].add(vars["hobby"])
+        if len(args) == 0:
+            if "hobby" in vars and vars["hobby"] is not None:
+                vars["covered_hobbies"].add(vars["hobby"])
+        else:
+            vars["covered_hobbies"].add(args[0])
         return None
 
 class UpdateLikedHobbies(Macro):
@@ -279,7 +282,7 @@ df.add_system_transition(State.INTRO, State.INTRO_READING, open_hobby_nlg)
 df.update_state_settings(State.INTRO_READING, system_multi_hop=True)
 
 ### (SYSTEM) DIRECTED OPENING - READING CONVERSATION AS ONE OF EMORA'S HOBBIES
-ask_like_reading_nlg = ['[!"I have recently gotten back into reading. Do you read a lot too?"]',
+ask_like_reading_nlg = ['[!"I have recently gotten back into" $hobby=reading ". Do you read a lot too?" #UpdateCoveredHobbies(reading)]',
                         '[!"I have recently started reading again. Do you frequently read nowadays?"]']
 df.add_system_transition(State.INTRO_READING, State.ASK_LIKE_READING, ask_like_reading_nlg)
 
