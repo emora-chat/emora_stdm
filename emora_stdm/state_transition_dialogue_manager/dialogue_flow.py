@@ -146,19 +146,29 @@ class DialogueFlow:
         transition_options = {}
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
-            memory = self.state_settings(state).memory
-            if transition not in memory or len(transitions) <= len(memory):
-                t1 = time()
-                natex = self.transition_natex(*transition)
-                settings = self.transition_settings(*transition)
-                vars = HashableDict(self._vars)
-                generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-                if generation:
-                    transition_options[(generation, transition, vars)] = settings.score
-                t2 = time()
-                if debugging:
-                    print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
+            t1 = time()
+            natex = self.transition_natex(*transition)
+            settings = self.transition_settings(*transition)
+            vars = HashableDict(self._vars)
+            generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+            if generation:
+                transition_options[(generation, transition, vars)] = settings.score
+            t2 = time()
+            if debugging:
+                print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
+            memory = self.state_settings(state).memory
+            for item in memory:
+                if len(transition_options) > 1:
+                    key = None
+                    for k in transition_options:
+                        if k[1] == item:
+                            key = k
+                            break
+                    if key:
+                        del transition_options[key]
+                else:
+                    break
             options = StochasticOptions(transition_options)
             response, transition, vars = options.select()
             if debugging:

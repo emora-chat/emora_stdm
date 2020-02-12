@@ -154,6 +154,7 @@ def test_nlg_novelty():
     df.add_system_transition(States.A, States.C, 'C')
 
     for _ in range(100):
+        df.reset()
         df.set_state(States.A)
         df.set_speaker(Speaker.SYSTEM)
         response = df.system_turn()
@@ -172,6 +173,7 @@ def test_nlg_novelty():
     df.add_system_transition(States.A, States.E, 'E')
 
     for _ in range(100):
+        df.reset()
         df.set_state(States.A)
         df.set_speaker(Speaker.SYSTEM)
         response = df.system_turn()
