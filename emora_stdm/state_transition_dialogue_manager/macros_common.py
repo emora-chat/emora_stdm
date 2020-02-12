@@ -8,6 +8,10 @@ try:
     nltk.data.find('wordnet')
 except:
     nltk.download('wordnet')
+try:
+    nltk.find('averaged_perceptron_tagger')
+except:
+    nltk.download('averaged_perceptron_tagger')
 from nltk.corpus import wordnet
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
@@ -256,4 +260,12 @@ class CheckVarsDisjunction(Macro):
             var, val = _assignment_to_var_val(arg)
             if var in vars and vars[var] == val:
                 return True
+        return False
+
+class IsPlural(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        arg = args[0]
+        pos = nltk.pos_tag(arg.split())[-1][1]
+        if pos == 'NNS':
+            return True
         return False

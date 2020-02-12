@@ -32,7 +32,8 @@ macros = {
     'SET': SetVars(),
     'ALL': CheckVarsConjunction(),
     'ANY': CheckVarsDisjunction(),
-    'NOT': NOT()
+    'NOT': NOT(),
+    'ISP': IsPlural()
 }
 
 def test_ONT():
@@ -131,6 +132,10 @@ def test_ANY():
     assert natex.match('hello', vars={'b': 'banana'})
     assert not natex.match('hello', vars={'c': 'cat'})
 
+def test_ISP():
+    natex = NatexNLU('#ISP($X)', macros=macros)
+    assert natex.match('hello', vars={'X': 'dogs'}, debugging=True)
+    assert not natex.match('hello', vars={'X': 'dog'})
 
 
 ########################################## BUG TESTS ###############################################
