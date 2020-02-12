@@ -24,6 +24,7 @@ setuptools.setup(
          "Operating System :: OS Independent",
      ],
     package_data={
-        'emora_stdm': ['emora_stdm/state_transition_dialogue_manager/data/*.json']
-    }
+        'emora_stdm': ['state_transition_dialogue_manager/data/*.json']
+    },
+    include_package_data=True
  )
