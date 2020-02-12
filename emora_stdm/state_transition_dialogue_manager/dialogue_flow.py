@@ -86,8 +86,6 @@ class DialogueFlow:
                 user_input = input("U: ")
                 self.user_turn(user_input, debugging=debugging)
 
-            print(self.state_settings(self.state()).memory._data)
-
     def system_turn(self, debugging=False):
         """
         an entire system turn comprising a single system utterance and
