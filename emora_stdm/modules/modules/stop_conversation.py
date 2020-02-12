@@ -1,21 +1,22 @@
-from emora_stdm import DialogueFlow, KnowledgeBase
-from enum import Enum
+from emora_stdm import DialogueFlow, KnowledgeBase, EnumByName
+from enum import Enum, auto
 import json, os
 
-class State(Enum):
-    START = 0
-    REC_OFF = 1
-    REC_OFF_2 = 2
-    INSTRUCT_OFF = 3
-    INSTRUCT_OFF_2 = 4
-    REDIRECT = 5
+class State(EnumByName):
+    START = auto()
+    REC_OFF = auto()
+    REC_OFF_2 = auto()
+    INSTRUCT_OFF = auto()
+    INSTRUCT_OFF_2 = auto()
+    REDIRECT = auto()
+    END = auto()
 
 TRANSITION_OUT = ["movies", "music", "sports"]
 
 knowledge = KnowledgeBase()
 knowledge.load_json_file(os.path.join('modules',"stop_convo.json"))
 df = DialogueFlow(State.START, initial_speaker=DialogueFlow.Speaker.USER, kb=knowledge)
-df.add_state(State.START, error_successor=State.START)
+df.add_state(State.START)#, error_successor=State.START)
 df.add_state(State.INSTRUCT_OFF, error_successor=State.REDIRECT)
 df.add_state(State.INSTRUCT_OFF_2, error_successor=State.REDIRECT)
 df.add_system_transition(State.START, State.START, "NULL TRANSITION")
@@ -29,7 +30,7 @@ stop_nlu = [
     "[$off_phrase={goodnight, good night,shut up}]"
 ]
 
-df.add_user_transition(State.START, State.REC_OFF, stop_nlu)
+#df.add_user_transition(State.START, State.REC_OFF, stop_nlu)
 
 instr_nlg = ['[! I heard you say $off_phrase,"." If you would like to exit the conversation"," say Alexa stop"."]']
 df.add_system_transition(State.REC_OFF, State.INSTRUCT_OFF, instr_nlg)
@@ -46,7 +47,8 @@ redirect_nlg = ['[! Ok then"," I seem to have gotten my signals crossed"." What 
                 '[! Ok"," let us pick up where we left off then"." What were we talking about"?"]',
                 '[! I see"," could you remind me what we left off talking about before this"?"]',
                 ]
-df.add_system_transition(State.REDIRECT, State.START, redirect_nlg)
+df.add_system_transition(State.REDIRECT, State.END, redirect_nlg)
+df.update_state_settings(State.END, system_multi_hop=True)
 
 
 if __name__ == '__main__':
