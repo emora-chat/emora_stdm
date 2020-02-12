@@ -14,6 +14,8 @@ class NatexNLG:
         else:
             self._macros = macros
         if isinstance(expression, str):
+            if expression == '':
+                expression = '""'
             self._expression = expression
         elif isinstance(expression, list) or isinstance(expression, set):
             item = next(iter(expression))
@@ -60,7 +62,7 @@ class NatexNLG:
             string = self._expression
         if '_' in string:
             return False
-        return bool(regex.fullmatch(r'[^$]+', string))
+        return bool(regex.fullmatch(r'[^$]*', string))
 
     def ngrams(self):
         return self._ngrams
@@ -86,7 +88,7 @@ class NatexNLG:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-z_A-Z@.0-9]+( +[a-z_A-Z@.0-9]+)*/ | "\"" /[^\"]+/ "\""
+        literal: /[a-z_A-Z@.0-9]+( +[a-z_A-Z@.0-9]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
         parser = Lark(grammar)
@@ -182,9 +184,12 @@ class NatexNLG:
 
         def literal(self, tree):
             args = tree.children
-            tree.data = 'compiled'
-            (literal,) = args
-            tree.children[0] = literal
+            if args:
+                tree.data = 'compiled'
+                (literal,) = args
+                tree.children[0] = literal
+            else:
+                tree.children.append('')
 
         def symbol(self, tree):
             args = tree.children

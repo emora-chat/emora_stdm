@@ -69,3 +69,7 @@ def test_simple_macro():
     for i in range(100):
         forms.add(natex.generate())
     assert forms == {'i have a foo', 'i have a bar', 'i have a bat', 'i have a baz'}
+
+def test_empty_string_nlg():
+    natex = NatexNLG('')
+    assert natex.generate() == ''

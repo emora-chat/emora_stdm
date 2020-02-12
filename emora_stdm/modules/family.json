@@ -7,7 +7,9 @@
       "family": ["parent", "uncle", "aunt", "cousin", "neice", "nephew", "grandparent", "child"],
       "child": ["son", "daughter"],
       "sibling": ["brother", "sister"],
-      "relative": ["aunt", "uncle", "grandfather", "grandmother", "neice", "nephew", "cousin"]
+      "relative": ["aunt", "uncle", "grandfather", "grandmother", "neice", "nephew", "cousin"],
+
+      "personality_trait": []
     },
 
   "expressions": {
