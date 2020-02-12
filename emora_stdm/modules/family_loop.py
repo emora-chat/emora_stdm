@@ -22,7 +22,10 @@ df.add_state('ask related personality', error_successor='root')
 df.add_system_transition('root', 'ask related personality', '[!"Oh, what is your" $related_type "like?"]')
 df.add_state('respond related personality', error_successor='root', user_multi_hop=True)
 df.add_user_transition('ask related personality', 'respond related personality',
-                       '[$related_personality=[!#NOT(#EXP(negation)) #ONTE(personality)]]')
+                       '[$related_personality=[!#NOT(#EXP(negation)) #ONTE(personality_trait)]]')
+
+# Comment on $related_personality
+
 
 if __name__ == '__main__':
     df.run(debugging=True)

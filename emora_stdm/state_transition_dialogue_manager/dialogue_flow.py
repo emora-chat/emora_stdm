@@ -67,7 +67,10 @@ class DialogueFlow:
             'SET': SetVars(),
             'ALL': CheckVarsConjunction(),
             'ANY': CheckVarsDisjunction(),
-            'ISP': IsPlural()
+            'ISP': IsPlural(),
+            'FPP': FirstPersonPronoun(kb),
+            'TPP': ThirdPersonPronoun(kb),
+            'PSP': PossessivePronoun(kb)
         }
         if macros:
             self._macros.update(macros)

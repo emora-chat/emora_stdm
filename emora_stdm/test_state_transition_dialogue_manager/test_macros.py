@@ -19,7 +19,12 @@ kb = KnowledgeBase([
     ('also', 'type', 'also_syns'),
     ('too', 'type', 'also_syns'),
     ('basketball', 'type', 'unknown_hobby'),
-    ('basketball', 'expr', 'bball')
+    ('basketball', 'expr', 'bball'),
+    ('john', 'type', 'male'),
+    ('mary', 'type', 'female'),
+    ('male', 'type', 'person'),
+    ('female', 'type', 'person'),
+    ('friend', 'type', 'person')
 ])
 
 macros = {
@@ -33,7 +38,10 @@ macros = {
     'ALL': CheckVarsConjunction(),
     'ANY': CheckVarsDisjunction(),
     'NOT': NOT(),
-    'ISP': IsPlural()
+    'ISP': IsPlural(),
+    'FPP': FirstPersonPronoun(kb),
+    'PSP': PossessivePronoun(kb),
+    'TPP': ThirdPersonPronoun(kb)
 }
 
 def test_ONT():
@@ -137,6 +145,35 @@ def test_ISP():
     assert natex.match('hello', vars={'X': 'dogs'}, debugging=True)
     assert not natex.match('hello', vars={'X': 'dog'})
 
+def test_FPP():
+    natex = NatexNLG('[!#FPP(john) went to the store]', macros=macros)
+    assert natex.generate() == 'he went to the store'
+    natex = NatexNLG('[!#FPP(mary) went to the store]', macros=macros)
+    assert natex.generate() == 'she went to the store'
+    natex = NatexNLG('[!#FPP(friends) went to the store]', macros=macros)
+    assert natex.generate() == 'they went to the store'
+    natex = NatexNLG('[!#FPP(cat) went to the store]', macros=macros)
+    assert natex.generate() == 'it went to the store'
+
+def test_PSP():
+    natex = NatexNLG('[!#PSP(john) book]', macros=macros)
+    assert natex.generate() == 'his book'
+    natex = NatexNLG('[!#PSP(mary) book]', macros=macros)
+    assert natex.generate() == 'her book'
+    natex = NatexNLG('[!#PSP(friends) book]', macros=macros)
+    assert natex.generate() == 'their book'
+    natex = NatexNLG('[!#PSP(cat) book]', macros=macros)
+    assert natex.generate() == 'its book'
+
+def test_TPP():
+    natex = NatexNLG('[!killed #TPP(john)]', macros=macros)
+    assert natex.generate() == 'killed him'
+    natex = NatexNLG('[!killed #TPP(mary)]', macros=macros)
+    assert natex.generate() == 'killed her'
+    natex = NatexNLG('[!killed #TPP(friends)]', macros=macros)
+    assert natex.generate() == 'killed them'
+    natex = NatexNLG('[!killed #TPP(cat)]', macros=macros)
+    assert natex.generate() == 'killed it'
 
 ########################################## BUG TESTS ###############################################
 

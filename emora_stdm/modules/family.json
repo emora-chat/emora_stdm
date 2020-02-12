@@ -1,5 +1,8 @@
 {
     "ontology": {
+
+      "female": ["wife", "daughter", "sister", "aunt", "grandmother", "neice", "girlfriend"],
+      "male": ["husband", "son", "brother", "uncle", "grandfather", "nephew", "boyfriend"],
       "related_person": ["partner", "roommate", "sibling", "friend", "child", "parent", "relative"],
       "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
       "spouse": ["husband", "wife"],
@@ -9,7 +12,7 @@
       "sibling": ["brother", "sister"],
       "relative": ["aunt", "uncle", "grandfather", "grandmother", "neice", "nephew", "cousin"],
 
-      "personality_trait": []
+      "personality_trait": ["smart", "funny", "outgoing", "shy", "polite", "conceited", "beautiful"]
     },
 
   "expressions": {
@@ -35,8 +38,8 @@
     "outgoing": ["outgoing", "extraverted", "sociable", "social", "friendly", "warm"],
     "shy": ["shy", "intraverted", "guarded", "loner"],
     "polite": ["polite", "manners", "decent"],
-    "conceited": ["conceited", "overconfident", "arrogant", "full of", "narcissistic", "egotistic", "egotistical", "selfish"]
-
+    "conceited": ["conceited", "overconfident", "arrogant", "full of", "narcissistic", "egotistic", "egotistical", "selfish"],
+    "beautiful": ["gorgeous", "pretty", "hot", "sexy"]
   },
 
   "predicates": [
