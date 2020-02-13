@@ -1,3 +1,4 @@
+print('beginning imports...')
 import os, random
 from emora_stdm import DialogueFlow, Macro
 from emora_stdm.state_transition_dialogue_manager.composite_dialogue_flow import CompositeDialogueFlow
@@ -10,6 +11,7 @@ from modules.family import df as family
 from modules.stop_conversation import df as stop
 from modules.stop_conversation import State as stop_states
 from modules.stop_conversation import stop_nlu
+print('finished imports...')
 
 def add_global_nlu_to_components(components, state, nlu, knowledge_file=None):
     for name,component in components.items():
@@ -20,7 +22,11 @@ def add_global_nlu_to_components(components, state, nlu, knowledge_file=None):
         else:
             component.add_state(state, global_nlu=nlu)
 
-class Available(Macro):
+def add_macros_to_components(components, macros):
+    for name,component in components.items():
+        component._macros.update(macros)
+
+class DMAvailable(Macro):
     def run(self, ngrams, vars, args):
         if 'dm_not_available' in vars:
             if args[0] not in vars['dm_not_available']:
@@ -28,7 +34,7 @@ class Available(Macro):
             return False
         return True
 
-class NotAvailable(Macro):
+class DMNotAvailable(Macro):
     def run(self, ngrams, vars, args):
         if 'dm_not_available' in vars:
             for arg in args:
@@ -37,7 +43,7 @@ class NotAvailable(Macro):
             return True
         return False
 
-class UpdateNotAvailable(Macro):
+class DMUpdateNotAvailable(Macro):
     def run(self, ngrams, vars, args):
         if 'dm_not_available' not in vars:
             vars['dm_not_available'] = set()
@@ -60,7 +66,7 @@ class IsTopicSuggestion(Macro):
             return True
         return False
 
-macros = {"Available":Available(), "NotAvailable":NotAvailable(), "UpdateNotAvailable":UpdateNotAvailable(),
+macros = {"DMAvailable":DMAvailable(), "DMNotAvailable":DMNotAvailable(), "DMUpdateNotAvailable":DMUpdateNotAvailable(),
           "GetTopicSuggestions":GetTopicSuggestions(), "IsTopicSuggestion":IsTopicSuggestion()}
 
 cdf = CompositeDialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER, macros=macros)
@@ -78,20 +84,24 @@ opening.add_system_transition('transition_out', ('SYSTEM', 'get_to_know_intro'),
 opening.update_state_settings(('SYSTEM', 'get_to_know_intro'), system_multi_hop=True)
 
 cdf.add_system_transition('get_to_know_intro', 'topic_master', '"I want to get to know you a bit better so we can talk about things you are interested in. So, let\'s see."')
-cdf.add_system_transition('intermediate_topic_switch', 'topic_master', '"Ok, what else?"')
+cdf.add_system_transition('intermediate_topic_switch', 'topic_master', '"So, "')
 cdf.controller().update_state_settings('get_to_know_intro', system_multi_hop=True)
 cdf.controller().update_state_settings('intermediate_topic_switch', system_multi_hop=True)
 
 cdf.add_component(hobby, 'hobby')
-cdf.add_system_transition('topic_master', ('hobby', hobby_states.INTRO_READING), '[! #Available(hobby) #UpdateNotAvailable(hobby) "Ok, so, "]')
+cdf.add_system_transition('topic_master', 'hobby_intro', '[!#DMAvailable(hobby) "."]')
+cdf.add_system_transition('hobby_intro', ('hobby', hobby_states.INTRO_READING), '[!#DMUpdateNotAvailable(hobby) "."]')
+cdf.controller().update_state_settings('hobby_intro', system_multi_hop=True)
 cdf.controller().update_state_settings(('hobby', hobby_states.INTRO_READING), system_multi_hop=True)
-hobby.add_system_transition(hobby_states.TRANSITION_OUT, ('SYSTEM', 'intermediate_topic_switch'), '"I have really enjoyed talking about these inventions with you. I am interested in learning more about your opinions on other things too!"')
+hobby.add_system_transition(hobby_states.TRANSITION_OUT, ('SYSTEM', 'intermediate_topic_switch'), '[!"I have really enjoyed talking about these inventions with you."]')
 hobby.update_state_settings(('SYSTEM', 'intermediate_topic_switch'), system_multi_hop=True)
 
 cdf.add_component(pet, 'pet')
-cdf.add_system_transition('topic_master', ('pet', pet_states.PETS_Y), '[! #Available(pet) #UpdateNotAvailable(pet) "Oh, I know!"]')
+cdf.add_system_transition('topic_master', 'pet_intro', '[!#DMAvailable(pet) "."]')
+cdf.add_system_transition('pet_intro', ('pet', pet_states.PETS_Y), '[!#DMUpdateNotAvailable(pet) "."]')
+cdf.controller().update_state_settings('pet_intro', system_multi_hop=True)
 cdf.controller().update_state_settings(('pet', pet_states.PETS_Y), system_multi_hop=True)
-pet.add_system_transition(pet_states.END, ('SYSTEM', 'intermediate_topic_switch'), '"I have really liked learning about your experiences with pets."')
+pet.add_system_transition(pet_states.END, ('SYSTEM', 'intermediate_topic_switch'), '[!"I have really liked learning about your experiences with pets."]')
 pet.update_state_settings(('SYSTEM', 'intermediate_topic_switch'), system_multi_hop=True)
 
 # cdf.add_component(family, 'family')
@@ -109,6 +119,30 @@ stop.add_system_transition(stop_states.END, ('SYSTEM', 'topic_master'), '"."')
 # External components
 ########################
 
+cdf.controller().add_system_transition('topic_master', 'movies', '[!#DMAvailable(movies) "movies stub."]')
+cdf.controller().add_user_transition('movies', 'intermediate_topic_switch', '[!/.*/ #DMUpdateNotAvailable(movies)]')
+cdf.controller().add_system_transition('movies', 'movies', '[!#DMUpdateNotAvailable(movies) "movies stub."]')
+
+cdf.controller().add_system_transition('topic_master', 'music', '[!#DMAvailable(music) "music stub."]')
+cdf.controller().add_user_transition('music', 'intermediate_topic_switch', '[!/.*/ #DMUpdateNotAvailable(music)]')
+cdf.controller().add_system_transition('music', 'music', '[!#DMUpdateNotAvailable(music) "music stub."]')
+
+cdf.controller().add_system_transition('topic_master', 'news', '[!#DMAvailable(news) "news stub."]')
+cdf.controller().add_user_transition('news', 'intermediate_topic_switch', '[!/.*/ #DMUpdateNotAvailable(news)]')
+cdf.controller().add_system_transition('news', 'news', '[!#DMUpdateNotAvailable(news) "news stub."]')
+
+cdf.controller().add_system_transition('topic_master', 'sports', '[!#DMAvailable(sports) "sports stub."]')
+cdf.controller().add_user_transition('sports', 'intermediate_topic_switch', '[!/.*/ #DMUpdateNotAvailable(sports)]')
+cdf.controller().add_system_transition('sports', 'sports', '[!#DMUpdateNotAvailable(sports) "sports stub."]')
+
+cdf.controller().add_system_transition('topic_master', 'no_options', '"We can talk about different things like movies, music, or sports."', score=0.0)
+cdf.controller().set_error_successor('no_options', 'intermediate_topic_switch')
+
+
+########################
+# Global NLU tp all components
+########################
+
 add_global_nlu_to_components(cdf._components, ('SYSTEM','movies'), '[{movie,movies,film,films,tv,shows,television}]')
 add_global_nlu_to_components(cdf._components, ('SYSTEM','music'), '[{music,song,songs,melody,melodies,album,albums,concert,concerts}]')
 add_global_nlu_to_components(cdf._components, ('SYSTEM','sports'), '[{sport,sports,athletics,basketball,football,hockey,golf,tennis}]')
@@ -116,48 +150,15 @@ add_global_nlu_to_components(cdf._components, ('SYSTEM','news'), '[{news}]')
 add_global_nlu_to_components(cdf._components, ('pet', pet_states.PETS_Y), '[{pet,pets,animals,animal,cat,cats,dog,dogs}]')
 add_global_nlu_to_components(cdf._components, ('hobby', hobby_states.INTRO_READING), '[{hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]')
 
+########################
+# Macros to all components
+########################
 
-# cdf.controller().add_state('movies', global_nlu='[{movie,movies,film,films,tv,shows,television}]')
-# cdf.controller().add_state('music', global_nlu='[{music,song,songs,melody,melodies,album,albums,concert,concerts}]')
-# cdf.controller().add_state('sports', global_nlu='[{sport,sports,athletics,basketball,football,hockey,golf,tennis}]')
-# cdf.controller().add_state('news', global_nlu='[{news}]')
-# cdf.controller().update_state_settings(('pet', pet_states.PETS_Y), global_nlu='[{pet,pets,animals,animal,cat,cats,dog,dogs}]')
-# cdf.controller().update_state_settings(('hobby', hobby_states.INTRO_READING), global_nlu='[{hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]')
+add_macros_to_components(cdf._components, macros)
 
-cdf.controller().add_system_transition('movies', 'topic_master', '[! #UpdateNotAvailable(movies) "Movie stub."]')
-cdf.controller().update_state_settings('movies', system_multi_hop=True)
-cdf.controller().set_error_successor('movies', 'topic_master')
-cdf.controller().add_system_transition('music', 'topic_master', '[! #UpdateNotAvailable(music) "Music stub."]')
-cdf.controller().update_state_settings('music', system_multi_hop=True)
-cdf.controller().set_error_successor('music', 'topic_master')
-cdf.controller().add_system_transition('sports', 'topic_master', '[! #UpdateNotAvailable(sports) "Sport stub."]')
-cdf.controller().update_state_settings('sports', system_multi_hop=True)
-cdf.controller().set_error_successor('sports', 'topic_master')
-cdf.controller().add_system_transition('news', 'topic_master', '[! #UpdateNotAvailable(news) "News stub."]')
-cdf.controller().update_state_settings('news', system_multi_hop=True)
-cdf.controller().set_error_successor('news', 'topic_master')
+########################
+# Testing
+########################
 
-
-cdf.add_state('suggest_topic', 'topic_master')
-cdf.controller().update_state_settings('suggest_topic', memory=0)
-cdf.add_state('no_topic', 'catchall')
-cdf.add_state('catchall', 'catchall')
-cdf.add_system_transition('topic_master', 'suggest_topic', '"."', score=0.0)
-cdf.controller().update_state_settings('suggest_topic', system_multi_hop=True)
-
-cdf.add_system_transition('suggest_topic', 'chosen_topic', '[! "We can talk about" #GetTopicSuggestions() ". Would you like to?"]')
-cdf.add_user_transition('chosen_topic', 'accept_topic', '{[#EXP(yes)],[ok]}')
-cdf.add_user_transition('chosen_topic', 'reject_topic', '{[#EXP(no)],[{i dont, i do not, no i dont, no i do not}]}')
-cdf.add_system_transition('accept_topic', 'movies', '[! #IsTopicSuggestion(movies) "."]')
-cdf.add_system_transition('accept_topic', 'music', '[! #IsTopicSuggestion(music) "."]')
-cdf.add_system_transition('accept_topic', 'sports', '[! #IsTopicSuggestion(sports) "."]')
-cdf.add_system_transition('accept_topic', 'news', '[! #IsTopicSuggestion(news) "."]')
-cdf.controller().update_state_settings('accept_topic', memory=0)
-cdf.add_system_transition('reject_topic', 'topic_master', '[! "Ok, of course. Let\'s find something else to talk about." #UpdateNotAvailable($dm_suggested_topic)]')
-
-cdf.add_system_transition('suggest_topic', 'no_topic', '"We have covered a lot of topics so far. What else would you like to talk about now?"', score=0.0)
-cdf.add_system_transition('catchall', 'catchall', '"Interesting! Tell me more."')
-
-
-
-cdf.run(debugging=True)
+if __name__ == '__main__':
+    cdf.run(debugging=True)
