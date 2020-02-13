@@ -4,6 +4,7 @@ import pytest
 from emora_stdm import NatexNLU, NatexNLG
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
+from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
 from time import time
 
 
@@ -27,6 +28,10 @@ kb = KnowledgeBase([
     ('friend', 'type', 'person')
 ])
 
+df = DialogueFlow(initial_state='start')
+df.add_state('start', 'start')
+df.add_system_transition('start', 'start', 'hello')
+
 macros = {
     'ONT': ONTE(kb),
     'KBQ': KBE(kb),
@@ -41,7 +46,10 @@ macros = {
     'ISP': IsPlural(),
     'FPP': FirstPersonPronoun(kb),
     'PSP': PossessivePronoun(kb),
-    'TPP': ThirdPersonPronoun(kb)
+    'TPP': ThirdPersonPronoun(kb),
+    'EQ': Equal(),
+    'GATE': Gate(df),
+    'CLR': Clear()
 }
 
 def test_ONT():
@@ -174,6 +182,14 @@ def test_TPP():
     assert natex.generate() == 'killed them'
     natex = NatexNLG('[!killed #TPP(cat)]', macros=macros)
     assert natex.generate() == 'killed it'
+
+def test_EQ():
+    vars = {'animal': 'cat', 'focus': 'dog'}
+    natex = NatexNLG('#EQ($animal, $focus)', macros=macros)
+    assert natex.generate(vars=vars) is None
+    vars['focus'] = 'cat'
+    assert natex.generate(vars=vars) == ''
+
 
 ########################################## BUG TESTS ###############################################
 

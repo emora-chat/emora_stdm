@@ -1,8 +1,9 @@
 {
     "ontology": {
 
-      "female": ["wife", "daughter", "sister", "aunt", "grandmother", "neice", "girlfriend"],
-      "male": ["husband", "son", "brother", "uncle", "grandfather", "nephew", "boyfriend"],
+      "person": ["male", "female", "friend"],
+      "female": ["wife", "daughter", "sister", "aunt", "grandmother", "neice", "girlfriend", "mother"],
+      "male": ["husband", "son", "brother", "uncle", "grandfather", "nephew", "boyfriend", "father"],
       "related_person": ["partner", "roommate", "sibling", "friend", "child", "parent", "relative"],
       "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
       "spouse": ["husband", "wife"],

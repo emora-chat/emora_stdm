@@ -101,6 +101,7 @@ class NatexNLG:
             self._assignments = {}
             self._debugging = debugging
             self._previous_compile_output = ''
+            self._failed = False
 
         def compile(self, natex):
             self._tree = self.parser.parse(natex)
@@ -152,7 +153,8 @@ class NatexNLG:
             elif symbol in self._vars:
                 value = self._vars[symbol]
             else:
-                value = '_{}_NOT_FOUND_'.format(symbol)
+                value = None
+                self._failed = True
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
@@ -206,7 +208,10 @@ class NatexNLG:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = ' '.join(self.to_strings(args))
+            if self._failed:
+                tree.children[0] = '_SOME_VAR(S)_NOT_FOUND_'
+            else:
+                tree.children[0] = ' '.join(self.to_strings(args))
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):

@@ -2,6 +2,8 @@
 from collections import defaultdict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
+from emora_stdm.state_transition_dialogue_manager.memory import Memory
+from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 try:
@@ -314,3 +316,35 @@ class PossessivePronoun(Macro):
             return 'its'
         else:
             return 'their'
+
+class Equal(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for i in range(len(args)-1):
+            if args[i] != args[i+1]:
+                return False
+        return True
+
+class Gate(Macro):
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = HashableSet(args)
+        if any([x is None for x in args]):
+            return False
+        transition = (self.dialogue_flow.state(),
+                      self.dialogue_flow.potential_target_state(),
+                      self.dialogue_flow.speaker())
+        if transition in self.dialogue_flow.gates():
+            if args in self.dialogue_flow.gates()[transition]:
+                return False
+            else:
+                self.dialogue_flow.gate_buffer()[transition].add(args)
+        else:
+            self.dialogue_flow.gate_buffer()[transition].add(args)
+        return True
+
+class Clear(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for arg in args:
+            if arg in vars:
+                vars[arg] = None

@@ -7,7 +7,7 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from structpy.graph.labeled_digraph import MapMultidigraph
 from structpy.graph import Database
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn
-
+from emora_stdm.state_transition_dialogue_manager.utilities import AlterationTrackingDict
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.settings import Settings
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
@@ -37,9 +37,13 @@ class DialogueFlow:
         self._graph = Graph()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
+        self._potential_target_state = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
         self._vars = {}
+        self._gates = defaultdict(set)
+        self._gate_buffer = defaultdict(set)
+        self._var_dependencies = defaultdict(set)
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -68,9 +72,12 @@ class DialogueFlow:
             'ALL': CheckVarsConjunction(),
             'ANY': CheckVarsDisjunction(),
             'ISP': IsPlural(),
-            'FPP': FirstPersonPronoun(kb),
-            'TPP': ThirdPersonPronoun(kb),
-            'PSP': PossessivePronoun(kb)
+            'FPP': FirstPersonPronoun(self._kb),
+            'TPP': ThirdPersonPronoun(self._kb),
+            'PSP': PossessivePronoun(self._kb),
+            'EQ': Equal(),
+            'GATE': Gate(self),
+            'CLR': Clear()
         }
         if macros:
             self._macros.update(macros)
@@ -147,14 +154,16 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = {}
+        self.gate_buffer().clear()
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
+            self._potential_target_state = transition[1]
             t1 = time()
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
             generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-            if generation:
+            if generation is not None:
                 transition_options[(generation, transition, vars)] = settings.score
             t2 = time()
             if debugging:
@@ -186,7 +195,8 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self._vars.update(vars)
+            self.gates()[transition].update(self.gate_buffer()[transition])
+            self.update_vars(vars)
             next_state = transition[1]
             if debugging:
                 tf = time()
@@ -212,12 +222,13 @@ class DialogueFlow:
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
         for transition in self.transitions(state, Speaker.USER):
+            self._potential_target_state = transition[1]
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
-            vars = dict(self._vars)
+            vars = HashableDict(self._vars)
             match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
                 print('Transition {} matched "{}"'.format(transition[:2], natural_language))
@@ -239,7 +250,7 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self._vars.update(vars)
+            self.update_vars(vars)
             next_state = transition[1]
             if debugging:
                 print('User transition in {:.5f}'.format(time() - ti))
@@ -317,7 +328,7 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=1)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=10)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
@@ -496,3 +507,24 @@ class DialogueFlow:
         self._vars = {}
         for state in self.graph().nodes():
             self.state_settings(state).memory.clear()
+
+    def update_vars(self, vars: HashableDict):
+        for k in vars.altered():
+            if k in self._var_dependencies:
+                dependencies = self._var_dependencies[k]
+                for dependency in dependencies:
+                    if dependency in self._vars:
+                        self._vars[dependency] = None
+        self._vars.update({k: vars[k] for k in vars.altered()})
+
+    def potential_target_state(self):
+        return self._potential_target_state
+
+    def gates(self):
+        return self._gates
+
+    def gate_buffer(self):
+        return self._gate_buffer
+
+    def var_dependencies(self):
+        return self._var_dependencies
