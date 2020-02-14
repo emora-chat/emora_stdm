@@ -18,6 +18,15 @@ class HashableDict(dict):
     def __hash__(self):
         return id(self)
 
+class ConfigurationDict(dict):
+    def __hash__(self):
+        value = 0
+        for e in self:
+            value = value ^ hash(e)
+        return value
+    def __eq__(self, other):
+        return dict.__eq__(self, other)
+
 class HashableSet(set):
     def __hash__(self):
         value = 0

@@ -37,12 +37,13 @@ class DialogueFlow:
         self._graph = Graph()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
-        self._potential_target_state = None
+        self._potential_transition = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
         self._vars = {}
+        self._gate_requirements = defaultdict(dict)
         self._gates = defaultdict(set)
-        self._gate_buffer = defaultdict(set)
+        self._gate_buffer = {}
         self._var_dependencies = defaultdict(set)
         if kb is None:
             self._kb = KnowledgeBase()
@@ -154,10 +155,10 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = {}
-        self.gate_buffer().clear()
+        self._gate_buffer.clear()
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
-            self._potential_target_state = transition[1]
+            self._potential_transition = transition
             t1 = time()
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
@@ -195,7 +196,8 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self.gates()[transition].update(self.gate_buffer()[transition])
+            if transition in self.gate_buffer():
+                self.gates()[transition].add(self.gate_buffer()[transition])
             self.update_vars(vars)
             next_state = transition[1]
             if debugging:
@@ -221,8 +223,9 @@ class DialogueFlow:
             state = State(state)
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
+        self._gate_buffer.clear()
         for transition in self.transitions(state, Speaker.USER):
-            self._potential_target_state = transition[1]
+            self._potential_transition = transition
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
@@ -250,6 +253,8 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
+            if transition in self.gate_buffer():
+                self.gates()[transition].add(self.gate_buffer()[transition])
             self.update_vars(vars)
             next_state = transition[1]
             if debugging:
@@ -517,8 +522,8 @@ class DialogueFlow:
                         self._vars[dependency] = None
         self._vars.update({k: vars[k] for k in vars.altered()})
 
-    def potential_target_state(self):
-        return self._potential_target_state
+    def potential_transition(self):
+        return self._potential_transition
 
     def gates(self):
         return self._gates
@@ -526,5 +531,32 @@ class DialogueFlow:
     def gate_buffer(self):
         return self._gate_buffer
 
+    def buffer_configuration(self, configuration):
+        self._gate_buffer[self._potential_transition] = configuration
+
+    def gate_requirements(self):
+        return self._gate_requirements
+
+    def set_gate_requirements(self, requirements):
+        self._gate_requirements[self._potential_transition] = requirements
+
     def var_dependencies(self):
         return self._var_dependencies
+
+    def passes_gate(self, var_config):
+        if var_config in self._gates[self._potential_transition]:
+            return False
+        for k, v in self._gate_requirements[self._potential_transition].items():
+            if k not in var_config:
+                if v is not None:
+                    return False
+            else:
+                if v != var_config[k]:
+                    return False
+        for k, v in var_config.items():
+            if v is None:
+                if k not in self._gate_requirements[self._potential_transition] \
+                    or self._gate_requirements[self._potential_transition][k] is not None:
+                    return False
+        return True
+

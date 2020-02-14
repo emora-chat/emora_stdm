@@ -1,6 +1,6 @@
 
 import regex
-from lark import Lark, Transformer, Tree, Visitor
+from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 
@@ -88,7 +88,7 @@ class NatexNLG:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-z_A-Z@.0-9]+( +[a-z_A-Z@.0-9]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
+        literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
         parser = Lark(grammar)
@@ -172,6 +172,9 @@ class NatexNLG:
             tree.data = 'compiled'
             symbol = args[0]
             macro_args = args[1:]
+            for i in range(len(macro_args)):
+                if isinstance(macro_args[i], Token):
+                    macro_args[i] = str(macro_args[i])
             if symbol in self._macros:
                 macro = self._macros[symbol]
                 try:

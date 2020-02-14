@@ -1,6 +1,6 @@
 
 import regex
-from lark import Lark, Transformer, Tree, Visitor
+from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 
@@ -93,7 +93,7 @@ class NatexNLU:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-z_A-Z@.]+( +[a-z_A-Z@.]+)*/ | "\"" /[^\"]+/ "\""
+        literal: /[a-z_A-Z@.:]+( +[a-z_A-Z@.:]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
@@ -217,6 +217,9 @@ class NatexNLU:
             tree.data = 'compiled'
             symbol = args[0]
             macro_args = args[1:]
+            for i in range(len(macro_args)):
+                if isinstance(macro_args[i], Token):
+                    macro_args[i] = str(macro_args[i])
             if symbol in self._macros:
                 macro = self._macros[symbol]
                 try:
