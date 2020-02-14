@@ -45,6 +45,7 @@ class DialogueFlow:
         self._gates = defaultdict(set)
         self._gate_buffer = {}
         self._var_dependencies = defaultdict(set)
+        self._error_transitioned = False
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -91,11 +92,16 @@ class DialogueFlow:
         test in interactive mode
         :return: None
         """
+        t1 = time()
         while True:
             if self.speaker() == Speaker.SYSTEM:
-                print("S:", self.system_turn(debugging=debugging))
+                system_response = self.system_turn(debugging=debugging)
+                if debugging:
+                    print('Time delta: {:.5f}'.format(time() - t1))
+                print("S:", system_response)
             else:
                 user_input = input("U: ")
+                t1 = time()
                 self.user_turn(user_input, debugging=debugging)
 
     def system_turn(self, debugging=False):
@@ -132,6 +138,14 @@ class DialogueFlow:
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
+            if self._error_transitioned and next_state != self.state():
+                try:
+                    nns = self.user_transition(natural_language, next_state, debugging=debugging)
+                    if nns not in visited:
+                        next_state = nns
+                except RuntimeError:
+                    if debugging:
+                        print("Couldn't error hop")
             self.take_transition(next_state)
             if next_state in visited and self._speaker is Speaker.USER:
                 self.change_speaker()
@@ -216,6 +230,7 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        self._error_transitioned = False
         ti = time()
         if state is None:
             state = self._state
@@ -262,6 +277,7 @@ class DialogueFlow:
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
             return next_state
         else:
+            self._error_transitioned = True
             next_state = self.error_successor(self.state())
             if debugging:
                 print('User transition in {:.5f}'.format(time() - ti))
