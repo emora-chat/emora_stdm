@@ -711,6 +711,33 @@ component.add_system_transition('feeling_neutral_and_received_how_are_you_no_fol
     ]
 )
 
+component.add_system_transition('opening_chat_choices', 'valentines response', '"Valentines day is practically here. Do you have any plans?"', score=100.0)
+component.add_user_transition('valentines response', 'valentines no person',
+                         "[#ONT(ont_negation), {[have, {#ONT(partner)}],[married],[dating],[relationship],[[!{seeing,with,have} {anyone,anybody,someone,somebody}]]}]")
+component.add_user_transition('valentines response', 'valentines person',
+                         "[!#ONT_NEG(ont_negation), -{wish, want} [$valentine={#ONT(partner)}]]", score=2.0)
+component.add_user_transition('valentines response', 'valentines broke up',
+                       '[{divorce, divorced, broke up, split up, left me}]', score=2.0)
+component.set_error_successor('valentines response', 'valentines appreciation')
+component.add_user_transition('valentines response', 'valentines yes',
+                       '[!#ONT_NEG(ont_negation), {yes, yeah, yep, yup, yea, sure}]')
+component.add_system_transition('valentines yes', 'valentines response', '"Thats exciting! What are you going to do?"')
+component.add_user_transition('valentines response', 'valentines plans', '[$activity={dinner, date, movies, bowling, movie, theatre, going out, go out, dance, dancing, trip}]')
+component.add_system_transition('valentines plans', 'valentines plans reaction',
+                         '[!$activity, sounds like a lot of, "fun. Hope you have a good time."]')
+component.set_error_successor('valentines plans reaction', 'valentines appreciation')
+component.add_system_transition('valentines broke up', 'valentines broke up reaction',
+                         '"Oh. I am really sorry to hear that. Being apart from someone who used to be in your life can be hard."')
+component.add_system_transition('valentines person', 'valentines person reaction',
+                         '[!Well I hope you and your $valentine have a good time"."]')
+component.add_system_transition('valentines no person', 'valentines no person reaction',
+                         '[!Even if you are not in a relationship"," you should still do something fun yourself"." Maybe go out with some friends"."]')
+component.set_error_successor('valentines broke up reaction', 'valentines appreciation')
+component.set_error_successor('valentines person reaction', 'valentines appreciation')
+component.set_error_successor('valentines no person reaction', 'valentines appreciation')
+component.add_system_transition('valentines appreciation', 'transition_out',
+                         "I think valentines day is just a good time to let someone know you appreciate them. If you can just do that, you will make someone very happy.")
+
 # component.add_system_transition('transition_out', 'end', transition_out)
 component.update_state_settings('transition_out', system_multi_hop=True)
 # component.add_system_transition('end', 'end', NULL)

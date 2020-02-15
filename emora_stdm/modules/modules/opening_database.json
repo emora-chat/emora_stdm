@@ -1,5 +1,11 @@
 {
     "ontology": {
+        "person": ["partner", "roommate"],
+      "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
+      "spouse": ["husband", "wife"],
+      "parent": ["mother", "father"],
+      "family": ["parent", "uncle", "aunt", "cousin", "neice", "nephew", "grandparent", "child"],
+      "child": ["son", "daughter"],
         "ont_downers": [
             "death",
             "lost",
