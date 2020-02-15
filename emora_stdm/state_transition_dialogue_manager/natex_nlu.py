@@ -1,7 +1,8 @@
 
 import regex
-from lark import Lark, Transformer, Tree, Visitor
+from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
+from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 
 
 class NatexNLU:
@@ -27,16 +28,16 @@ class NatexNLU:
     def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
         natural_language += ' _END_'
         if vars is None:
-            vars = {}
+            vars = HashableDict()
         original_vars = vars
-        vars = dict(vars)
+        vars = HashableDict(vars)
         if ngrams is None:
             ngrams = Ngrams(natural_language)
         self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
-            original_vars.update(vars)
+            original_vars.update({k: vars[k] for k in vars.altered()})
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):
@@ -92,7 +93,7 @@ class NatexNLU:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
-        literal: /[a-z_A-Z@.]+( +[a-z_A-Z@.]+)*/ | "\"" /[^\"]+/ "\""
+        literal: /[a-z_A-Z@.:]+( +[a-z_A-Z@.:]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
@@ -199,7 +200,7 @@ class NatexNLU:
             elif symbol in self._vars:
                 value = self._vars[symbol]
             else:
-                value = '_{}_NOT_FOUND_'.format(symbol)
+                value = None
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
@@ -216,6 +217,9 @@ class NatexNLU:
             tree.data = 'compiled'
             symbol = args[0]
             macro_args = args[1:]
+            for i in range(len(macro_args)):
+                if isinstance(macro_args[i], Token):
+                    macro_args[i] = str(macro_args[i])
             if symbol in self._macros:
                 macro = self._macros[symbol]
                 try:

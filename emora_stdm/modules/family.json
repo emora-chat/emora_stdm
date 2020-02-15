@@ -1,18 +1,22 @@
 {
     "ontology": {
 
-      "female": ["wife", "daughter", "sister", "aunt", "grandmother", "neice", "girlfriend"],
-      "male": ["husband", "son", "brother", "uncle", "grandfather", "nephew", "boyfriend"],
+      "person": ["male", "female", "friend"],
+      "female": ["wife", "daughter", "sister", "aunt", "grandmother", "niece", "girlfriend", "mother"],
+      "male": ["husband", "son", "brother", "uncle", "grandfather", "nephew", "boyfriend", "father"],
       "related_person": ["partner", "roommate", "sibling", "friend", "child", "parent", "relative"],
       "partner": ["spouse", "romantic_partner", "boyfriend", "girlfriend"],
       "spouse": ["husband", "wife"],
       "parent": ["mother", "father"],
-      "family": ["parent", "uncle", "aunt", "cousin", "neice", "nephew", "grandparent", "child"],
+      "family": ["parent", "uncle", "aunt", "cousin", "niece", "nephew", "grandparent", "child"],
       "child": ["son", "daughter"],
       "sibling": ["brother", "sister"],
-      "relative": ["aunt", "uncle", "grandfather", "grandmother", "neice", "nephew", "cousin"],
+      "relative": ["aunt", "uncle", "grandfather", "grandmother", "niece", "nephew", "cousin"],
 
-      "personality_trait": ["smart", "funny", "outgoing", "shy", "polite", "conceited", "beautiful"]
+      "personality_trait": ["smart", "funny", "outgoing", "shy", "polite", "conceited", "beautiful"],
+
+      "life_event_triggers": ["marriage", "divorce", "birth", "death", "relocation", "new_job",
+                              "illness", "graduation", "new partner", "vacation"]
     },
 
   "expressions": {

@@ -27,5 +27,11 @@ class Memory:
     def __iter__(self):
         return self._data.__iter__()
 
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
     def __str__(self):
         return 'Memory({})'.format(', '.join(self._data))

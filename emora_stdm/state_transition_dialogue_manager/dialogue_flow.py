@@ -7,7 +7,7 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from structpy.graph.labeled_digraph import MapMultidigraph
 from structpy.graph import Database
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn
-
+from emora_stdm.state_transition_dialogue_manager.utilities import AlterationTrackingDict
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.settings import Settings
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
@@ -37,9 +37,15 @@ class DialogueFlow:
         self._graph = Graph()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
+        self._potential_transition = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
         self._vars = {}
+        self._gate_requirements = defaultdict(dict)
+        self._gates = defaultdict(set)
+        self._gate_buffer = {}
+        self._var_dependencies = defaultdict(set)
+        self._error_transitioned = False
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -68,9 +74,12 @@ class DialogueFlow:
             'ALL': CheckVarsConjunction(),
             'ANY': CheckVarsDisjunction(),
             'ISP': IsPlural(),
-            'FPP': FirstPersonPronoun(kb),
-            'TPP': ThirdPersonPronoun(kb),
-            'PSP': PossessivePronoun(kb)
+            'FPP': FirstPersonPronoun(self._kb),
+            'TPP': ThirdPersonPronoun(self._kb),
+            'PSP': PossessivePronoun(self._kb),
+            'EQ': Equal(),
+            'GATE': Gate(self),
+            'CLR': Clear()
         }
         if macros:
             self._macros.update(macros)
@@ -83,11 +92,16 @@ class DialogueFlow:
         test in interactive mode
         :return: None
         """
+        t1 = time()
         while True:
             if self.speaker() == Speaker.SYSTEM:
-                print("S:", self.system_turn(debugging=debugging))
+                system_response = self.system_turn(debugging=debugging)
+                if debugging:
+                    print('Time delta: {:.5f}'.format(time() - t1))
+                print("S:", system_response)
             else:
                 user_input = input("U: ")
+                t1 = time()
                 self.user_turn(user_input, debugging=debugging)
 
     def system_turn(self, debugging=False):
@@ -124,6 +138,14 @@ class DialogueFlow:
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
+            if self._error_transitioned and next_state != self.state():
+                try:
+                    nns = self.user_transition(natural_language, next_state, debugging=debugging)
+                    if nns not in visited:
+                        next_state = nns
+                except RuntimeError:
+                    if debugging:
+                        print("Couldn't error hop")
             self.take_transition(next_state)
             if next_state in visited and self._speaker is Speaker.USER:
                 self.change_speaker()
@@ -147,14 +169,16 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = {}
+        self._gate_buffer.clear()
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
+            self._potential_transition = transition
             t1 = time()
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
             generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-            if generation:
+            if generation is not None:
                 transition_options[(generation, transition, vars)] = settings.score
             t2 = time()
             if debugging:
@@ -186,7 +210,9 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self._vars.update(vars)
+            if transition in self.gate_buffer():
+                self.gates()[transition].add(self.gate_buffer()[transition])
+            self.update_vars(vars)
             next_state = transition[1]
             if debugging:
                 tf = time()
@@ -204,6 +230,7 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        self._error_transitioned = False
         ti = time()
         if state is None:
             state = self._state
@@ -211,13 +238,15 @@ class DialogueFlow:
             state = State(state)
         transition_options = []
         ngrams = Ngrams(natural_language, n=10)
+        self._gate_buffer.clear()
         for transition in self.transitions(state, Speaker.USER):
+            self._potential_transition = transition
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
-            vars = dict(self._vars)
+            vars = HashableDict(self._vars)
             match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
                 print('Transition {} matched "{}"'.format(transition[:2], natural_language))
@@ -239,13 +268,16 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self._vars.update(vars)
+            if transition in self.gate_buffer():
+                self.gates()[transition].add(self.gate_buffer()[transition])
+            self.update_vars(vars)
             next_state = transition[1]
             if debugging:
                 print('User transition in {:.5f}'.format(time() - ti))
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
             return next_state
         else:
+            self._error_transitioned = True
             next_state = self.error_successor(self.state())
             if debugging:
                 print('User transition in {:.5f}'.format(time() - ti))
@@ -317,7 +349,7 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=1)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=10)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
@@ -496,3 +528,51 @@ class DialogueFlow:
         self._vars = {}
         for state in self.graph().nodes():
             self.state_settings(state).memory.clear()
+
+    def update_vars(self, vars: HashableDict):
+        for k in vars.altered():
+            if k in self._var_dependencies:
+                dependencies = self._var_dependencies[k]
+                for dependency in dependencies:
+                    if dependency in self._vars:
+                        self._vars[dependency] = None
+        self._vars.update({k: vars[k] for k in vars.altered()})
+
+    def potential_transition(self):
+        return self._potential_transition
+
+    def gates(self):
+        return self._gates
+
+    def gate_buffer(self):
+        return self._gate_buffer
+
+    def buffer_configuration(self, configuration):
+        self._gate_buffer[self._potential_transition] = configuration
+
+    def gate_requirements(self):
+        return self._gate_requirements
+
+    def set_gate_requirements(self, requirements):
+        self._gate_requirements[self._potential_transition] = requirements
+
+    def var_dependencies(self):
+        return self._var_dependencies
+
+    def passes_gate(self, var_config):
+        if var_config in self._gates[self._potential_transition]:
+            return False
+        for k, v in self._gate_requirements[self._potential_transition].items():
+            if k not in var_config:
+                if v is not None:
+                    return False
+            else:
+                if v != var_config[k]:
+                    return False
+        for k, v in var_config.items():
+            if v is None:
+                if k not in self._gate_requirements[self._potential_transition] \
+                    or self._gate_requirements[self._potential_transition][k] is not None:
+                    return False
+        return True
+
