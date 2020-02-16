@@ -24,9 +24,9 @@ df.add_system_transition(State.START, State.START, "NULL TRANSITION")
 stop_nlu = [
     "[$off_phrase=[!#ONT(ontturn), #ONT(ontoff)]]",
     "[$off_phrase=[!#ONT(ontturn), to, #ONT(ontoff)]]",
-    "$off_phrase=[! alexa?, #ONT(ontoff)]",
-    "[$off_phrase=[!#ONT(ontturn), #ONT(ontoffpaired)]]",
-    "[$off_phrase=[!#ONT(ontturn), to, #ONT(ontoffpaired)]]",
+    "$off_phrase=[!{alexa,echo,computer}?, #ONT(ontoff)]",
+    "[$off_phrase=[!{alexa,echo,computer,#ONT(ontturn)}, #ONT(ontoffpaired)]]",
+    "[$off_phrase=[!{alexa,echo,computer,#ONT(ontturn)}, to, #ONT(ontoffpaired)]]",
     "[$off_phrase={goodnight, good night,shut up}]"
 ]
 
@@ -43,9 +43,9 @@ instr_nlg_strong = ['[! I am sorry"," but I have a hard time understanding phras
                     + ' or '.join(TRANSITION_OUT) + "]"]
 df.add_system_transition(State.REC_OFF_2, State.INSTRUCT_OFF_2, instr_nlg_strong)
 
-redirect_nlg = ['[! Ok then"," I seem to have gotten my signals crossed"." What would you like to talk about next"?" My favorite topics are ' + ' or '.join(TRANSITION_OUT) + ']',
-                '[! Ok"," let us pick up where we left off then"." What were we talking about"?"]',
-                '[! I see"," could you remind me what we left off talking about before this"?"]',
+redirect_nlg = ['[! Ok then"," I seem to have gotten my signals crossed"."]',
+                '[! Ok"," let us pick up the conversation again"."]',
+                '[! I see"," let us get back to talking then"."]',
                 ]
 df.add_system_transition(State.REDIRECT, State.END, redirect_nlg)
 df.update_state_settings(State.END, system_multi_hop=True)

@@ -68,16 +68,16 @@ class UnCoveredHobby(Macro):
     def __init__(self, d):
         self.ontn = d._macros["ONTN"]
     def run(self, ngrams, vars, args):
-        hobbies = self.ontn(None, vars, ["deep_hobby"])
+        hobbies = self.ontn(None, vars, ["known_hobby"])
         if "covered_hobbies" in vars:
             covered = vars["covered_hobbies"]
             uncovered = hobbies - covered
             if len(uncovered) > 0:
                 return uncovered
-            hobbies = self.ontn(None, vars, ["known_hobby"])
-            uncovered = hobbies - covered
-            if len(uncovered) > 0:
-                return uncovered
+            # hobbies = self.ontn(None, vars, ["known_hobby"])
+            # uncovered = hobbies - covered
+            # if len(uncovered) > 0:
+            #     return uncovered
             hobbies = self.ontn(None, vars, ["unknown_hobby"])
             uncovered = hobbies - covered
             if len(uncovered) > 0:
@@ -270,7 +270,8 @@ df._macros.update(macros)
 
 ### if user initiates
 request_hobby_nlu = '[#EXP(chat)? {hobby,hobbies,activity,activities,fun things,things to do,pasttimes}]'
-df.add_user_transition(State.START, State.INTRO, request_hobby_nlu)
+#df.add_user_transition(State.START, State.INTRO, request_hobby_nlu)
+df.add_user_transition(State.START, State.INTRO_READING, "[{reading,read,book,books}]")
 df.set_error_successor(State.START, State.START)
 df.add_system_transition(State.START, State.START, NULL)
 
@@ -294,13 +295,13 @@ df.add_user_transition(State.ASK_LIKE_READING, State.YES_LIKE_READING, '{'
 df.add_user_transition(State.ASK_LIKE_READING, State.NO_LIKE_READING, '{'
                                                                       '[#EXP(no)],'
                                                                       '[{i dont, i do not, no i dont, no i do not}],'
-                                                                      '[not, #ONT(often_qualifier)],'
+                                                                      '[not, {#ONT(often_qualifier),much}],'
                                                                       '[#EXP(dislike) {reading, to read, it}]'
                                                                       '}')
 df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_SCHOOL, '[{school, textbooks, homework, assignments}]')
 df.add_user_transition(State.ASK_LIKE_READING, State.READ_NOT_BY_CHOICE, '{[not, choice],[{forced,requirement,obligation,made to,makes me}]}')
 df.add_user_transition(State.ASK_LIKE_READING, State.READ_FOR_WORK, '[{job, career, occupation, boss, work}]')
-df.add_user_transition(State.ASK_LIKE_READING, State.OCCASIONALLY_READ, '[#ONT(sometimes_qualifier)]')
+df.add_user_transition(State.ASK_LIKE_READING, State.OCCASIONALLY_READ, '[{#ONT(sometimes_qualifier),[less, now],[not, time]}]')
 df.add_user_transition(State.ASK_LIKE_READING, State.USED_TO_READ, '[{used to, in the past, younger, young, years ago}]')
 df.add_user_transition(State.ASK_LIKE_READING, State.READ_NEWSPAPER, '[#EXP(like)?, {#EXP(like),#EXP(reading)}?, {newspaper,newspapers,articles}]')
 df.add_user_transition(State.ASK_LIKE_READING, State.READ_MAGAZINE, '[#EXP(like)?, {#EXP(like),#EXP(reading)}?, {magazines,gossip,magazine}]')
@@ -313,10 +314,11 @@ df.add_system_transition(State.USED_TO_READ, State.SCIFI, '"I see. You used to r
 df.add_system_transition(State.READ_FOR_WORK, State.TRANSITION_OUT, '"Yeah, reading for your job is sometimes necessary. I would not know too much about any job-focused material, though. So, "')
 df.add_system_transition(State.READ_NEWSPAPER, State.TRANSITION_OUT, '"That is great to hear. Newspapers are a really good way to stay up to date with recent events! I do not read the newspaper too often."')
 df.add_system_transition(State.READ_MAGAZINE, State.TRANSITION_OUT, '"Magazines are so colorful and fun. They always have something interesting to read! Unfortunately, I do not know much about them. So, "')
-df.add_system_transition(State.OCCASIONALLY_READ, State.PICK_GENRE, '"Oh, you sometimes read?"')
+df.add_system_transition(State.OCCASIONALLY_READ, State.PICK_GENRE, '"It is good to read when you have the time, even if it is not that frequently."')
 df.update_state_settings(State.TRANSITION_OUT, system_multi_hop=True)
 
-df.add_system_transition(State.MISUNDERSTOOD, State.TRANSITION_OUT, '"Hmm. I am not sure what you mean by that."')
+
+df.add_system_transition(State.MISUNDERSTOOD, State.PICK_GENRE, '"Ok, good to know. Well, personally,"')
 df.update_state_settings(State.MISUNDERSTOOD, system_multi_hop=True)
 #df.add_system_transition(State.TRANSITION_OUT, State.END, '"What would you like to chat about next? I think %s would be good."'%(', or '.join(TRANSITION_OUT)))
 
@@ -349,12 +351,12 @@ teleport_fun = '{' \
                '[!#ONT_NEG(ont_negation) [{agree, [! think {so,that} too]}]],' \
                '[!#ONT_NEG(ont_negation) [{fun,exciting,excited,[looking,forward],good,great,cool,awesome,neat,amazing,wonderful,fantastic,sweet}]],' \
                '[!#ONT_NEG(ont_negation) [i,{like,into},{it,teleportation,teleport}]]' \
-               '[!#ONT(ont_negation) [{scary,scared,terrifying,terrified,horrified,horrifying,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened}]]' \
+               '[!#ONT(ont_negation) [{scary,scared,terrifying,terrified,horrified,horrifying,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened,frightens}]]' \
                '}'
 df.add_user_transition(State.ASK_TELEPORT_OPI, State.REC_TELEPORT_FUN, teleport_fun)
 teleport_scary = '{' \
                '[!#ONT(ont_negation) [{agree, [! think {so,that} too]}]],' \
-               '[!#ONT_NEG(ont_negation) [{scary,scared,scares,terrifying,terrified,terrifies,horrified,horrifying,horrifies,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened,worry,worrying,worried,pain,painful,suffering,death,misery,die,dying}]],' \
+               '[!#ONT_NEG(ont_negation) [{scary,scared,scares,terrifying,terrified,terrifies,horrified,horrifying,horrifies,fear,fearful,bad,horrible,terrible,danger,dangerous,frightening,frightened,frightens,worry,worrying,worried,pain,painful,suffering,death,misery,die,dying}]],' \
                '[!#ONT(ont_negation) [{fun,exciting,good,great,cool,awesome,neat,amazing,wonderful,fantastic,sweet}]],' \
                '[!#ONT(ont_negation) [i,{like,into},{it,teleportation,teleport}]]' \
                '}'
@@ -452,7 +454,7 @@ df.add_system_transition(State.SHARE_ALIENS_SCARY, State.ASK_ALIENS_SCARY,
 ################################################################################################################################
 ################################################################################################################################
 
-#df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+df.add_user_transition(State.START, State.FIRST_ASK_HOBBY, request_hobby_nlu)
 ### (SYSTEM) TWO OPTIONS FOR UNDIRECTED HOBBY OPENING - what hobby do you like vs ive heard of hobby, do you like it
 
 first_ask_hobby_nlg = ['"So, it seems like you want to talk about some activities. There are so many choices of what to do these days for fun. I never know what to choose. What is one of your hobbies?"',
@@ -563,7 +565,8 @@ end_nlg = ['[!"It has been fun talking about these different activities with you
            '[!"This has been great. Ive learned some new things and some new activities I may end up trying. But until then, what would you like to chat about next? I think %s would be good."]'%(', or '.join(TRANSITION_OUT))
             ]
 df.add_system_transition(State.ACK_END, State.END, end_nlg)
-df.add_user_transition(State.END, State.FIRST_ASK_HOBBY, request_hobby_nlu)
+df.add_user_transition(State.END, State.FIRST_ASK_HOBBY, request_hobby_nlu),
+df.add_user_transition(State.END, State.PICK_GENRE, "[{reading,read,book,books}]")
 df.set_error_successor(State.END, State.END)
 df.add_system_transition(State.END, State.END, NULL)
 
