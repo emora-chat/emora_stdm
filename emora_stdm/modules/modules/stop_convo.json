@@ -3,17 +3,17 @@
         "ontoff": [
           "off",
           "stop",
-          "close",
           "end",
           "finish",
-          "quiet",
           "sleep",
           "quit",
           "exit"
         ],
         "ontoffpaired": [
           "down",
-          "away"
+          "away",
+          "quiet",
+          "close"
         ],
         "ontturn": [
           "turn",
