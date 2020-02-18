@@ -49,7 +49,8 @@ macros = {
     'TPP': ThirdPersonPronoun(kb),
     'EQ': Equal(),
     'GATE': Gate(df),
-    'CLR': Clear()
+    'CLR': Clear(),
+    'NER': NamedEntity()
 }
 
 def test_ONT():
@@ -189,6 +190,21 @@ def test_EQ():
     assert natex.generate(vars=vars) is None
     vars['focus'] = 'cat'
     assert natex.generate(vars=vars) == ''
+
+def test_NER():
+    natex = NatexNLU('[this is a test for #NER()]', macros=macros)
+    match = natex.match('this is a test for America by Mike', debugging=False)
+    assert match
+    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+    match = natex.match('this is a test for America', debugging=False)
+    assert not match
+    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+    match = natex.match('this is a test for Mike', debugging=False)
+    assert match
+    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+    match = natex.match('this is a test for someone', debugging=False)
+    assert not match
+
 
 
 ########################################## BUG TESTS ###############################################

@@ -2,6 +2,8 @@
 from emora_stdm import DialogueFlow
 from enum import Enum
 
+from emora_stdm import NatexNLU
+
 class State(Enum):
     START = 0
     FAM_ANS = 1
@@ -22,7 +24,19 @@ df.add_system_transition(State.FAM_ERR, State.WHATEV, 'im not sure i understand'
 df.set_error_successor(State.FAM_ANS, State.FAM_ERR)
 df.set_error_successor(State.WHATEV, State.START)
 
+
+user_not_have_dog = NatexNLU('[dont, dog]')
+user_has_dog_or_cat = NatexNLU('[![{cat, dog}] #NOT(dont)]')
+
 if __name__ == '__main__':
-    df.check()
-    df.run(debugging=True)
+
+    #match = user_not_have_dog.match('i dont have a dog', debugging=True)
+    #print('Match:', match)
+
+    match = user_has_dog_or_cat.match('i have dont cat', debugging=True)
+
+    print('Match:', match)
+
+    #df.check()
+    #df.run(debugging=True)
 

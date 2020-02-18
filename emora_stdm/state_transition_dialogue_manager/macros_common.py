@@ -6,6 +6,9 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet, HashableDict, ConfigurationDict
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
+from spacy.pipeline import EntityRecognizer
+import spacy
+nlp = spacy.load("en_core_web_sm")
 try:
     nltk.data.find('wordnet')
 except:
@@ -354,8 +357,26 @@ class Gate(Macro):
         else:
             return False
 
+
 class Clear(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
             if arg in vars:
                 vars[arg] = None
+
+
+class NamedEntity(Macro):
+    """
+    NER tags: PERSON, NORP, FAC, ORG, GPE, LOC, PRODUCT, EVENT, WORK_OF_ART, LAW, LANGUAGE,
+              DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
+        https://spacy.io/api/annotation
+    """
+    def __init__(self):
+        pass
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        doc = nlp(ngrams.text())
+        entities = set()
+        for ent in doc.ents:
+            if not args or ent.label_.lower() in {x.lower() for x in args}:
+                entities.add(ent.text)
+        return entities

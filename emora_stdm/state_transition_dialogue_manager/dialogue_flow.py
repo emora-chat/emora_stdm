@@ -399,7 +399,7 @@ class DialogueFlow:
     def update_transition_settings(self, source, target, speaker, **settings):
         source = State(source)
         target = State(target)
-        self.transition_settings(source, target, speaker).update(settings)
+        self.transition_settings(source, target, speaker).update(**settings)
 
     def transition_global_nlu(self, source: Union[Enum, str], target: Union[Enum, str]):
         source = State(source)
@@ -413,6 +413,7 @@ class DialogueFlow:
         source = State(source)
         target = State(target)
         self._graph.arc_data(source, target, Speaker.USER)['global'] = is_global
+        self.update_transition_settings(source, target, Speaker.USER, score=0.5)
 
     def state_settings(self, state: Enum):
         state = State(state)

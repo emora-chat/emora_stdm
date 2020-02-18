@@ -3,6 +3,8 @@
 class Ngrams(set):
 
     def __init__(self, text, n=None):
+        if '_END_' == text[-5:]:
+            text = text[:-5]
         self._text = text
         tokens = text.split()
         if n is None:

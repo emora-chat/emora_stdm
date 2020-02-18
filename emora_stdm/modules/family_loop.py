@@ -80,7 +80,7 @@ df.add_user_transition('personality', 'fun', '[{fun, carefree}]')
 df.add_user_transition('personality', 'worrying', '[{worries, worrying, worrisome}]')
 df.add_user_transition('personality', 'beautiful', '[{beautiful, pretty, gorgeous, hot, sexy}]')
 
-df.add_system_transition('smart', root, '{"A sharp cookie, huh? They say intelligence is the strongest indicator of carrer success, but has little impact on a person\'s happiness."}')
+df.add_system_transition('smart', root, '{"A sharp cookie, huh? They say intelligence is the strongest indicator of career success, but has little impact on a person\'s happiness."}')
 df.add_system_transition('funny', root, '"Its good to live with a sense of humor"')
 df.add_system_transition('outgoing', root, '"Ok. I think its nice to be around someone who is outgoing"')
 df.add_system_transition('shy', root, '"Some people just like keeping to themselves"')

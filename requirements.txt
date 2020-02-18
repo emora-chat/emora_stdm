@@ -4,3 +4,4 @@ regex
 pytz
 nltk
 importlib_resources
+spacy
