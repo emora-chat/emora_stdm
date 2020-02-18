@@ -243,7 +243,7 @@ All the above constructs share the same syntax as the NatexNLU syntax.
 
 ### Ontology reference
 
-###`#NER(ner_tag)`
+### `#NER(ner_tag)`
 runs SpaCy Named Entity Recognizer to tag the user utterance, and returns a set representing
 all named entities present in the user utterance. Optionally, a ner_tag from the below set
 of tags can be provided to filter by entity type.
@@ -274,28 +274,28 @@ defines a knowledge base traversal starting at `node`,
 and traversing relations labeled `relation1`, then `relation2`, and so on. All nodes that can be reached
 by the specified relation path from `node` are returned as a set of strings.
 
-###`#EXP(node)`
+### `#EXP(node)`
 returns the set of all expressions associated with a node.
 
-###`#NOT(term1, term2, ...)`
+### `#NOT(term1, term2, ...)`
 returns `False` if any term string matches any ngram of the user utterance, 
 `True` otherwise.
 
-###`#U(set_or_str_1, set_or_str_2, ...)`
+### `#U(set_or_str_1, set_or_str_2, ...)`
 returns a set representing the union of all arguments. 
 String arguments are converted to a set containing the string as a single element.
 
-###`#I(set1, set2, ...)`
+### `#I(set1, set2, ...)`
 returns a set representing the intersection of all arguments.
 
-###`#ALL($var1=val1, $var2=val2, ...)`
+### `#ALL($var1=val1, $var2=val2, ...)`
 returns `True` if all variables are set to their provided values, 
 where each argument is a string of the form `$var=val`
 
-###`ANY($var1=val1, $var2=val2, ...)`
+### `#ANY($var1=val1, $var2=val2, ...)`
 returns `True` if any of the variables are set to their provided values, 
 where each argument is a string of the form `$var=val`
 
-###`EQ(arg1, arg2, ...)`
+### `#EQ(arg1, arg2, ...)`
 returns `True` if all arguments are equal, `False` otherwise
 
