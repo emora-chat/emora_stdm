@@ -213,18 +213,3 @@ def test_bug_1_ONT():
     natex = NatexNLU("[[! #ONT(also_syns)?, i, #ONT(also_syns)?, like, $like_hobby=#ONT(unknown_hobby), #ONT(also_syns)?]]",
                      macros=macros)
     assert natex.match('i also like basketball', debugging=False)
-
-kb2 = KnowledgeBase()
-import os
-print(os.getcwd())
-kb2.load_json_file("../modules/hobbies.json")
-macros2 = {
-    'ONT': ONTE(kb2),
-    'KBQ': KBE(kb2),
-    'EXP': EXP(kb2)
-}
-
-def test_bug_2_EXP():
-    natex = NatexNLU('[[! -{not,dont} {#EXP(yes),#ONT(yes_qualifier),#EXP(like)}]]', macros=macros2)
-    assert natex.match('i like', debugging=False)
-    assert natex.match('i love')

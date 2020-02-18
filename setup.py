@@ -3,7 +3,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
      name='emora-stdm',
-     version='1.15',
+     version='1.16',
      scripts=[],
      author="James Finch",
      author_email="jdfinch@emory.edu",
@@ -16,7 +16,8 @@ setuptools.setup(
          "structpy==0.2",
          "lark-parser",
          "regex",
-         "nltk"
+         "nltk",
+         "spacy"
      ],
      classifiers=[
          "Programming Language :: Python :: 3",
