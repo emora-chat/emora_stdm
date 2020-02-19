@@ -8,7 +8,12 @@ from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from spacy.pipeline import EntityRecognizer
 import spacy
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except IOError:
+    print('Error loading Spacy')
+    print('Please run the following command:')
+    print('python -m spacy download en_core_web_sm')
 try:
     nltk.data.find('wordnet')
 except:

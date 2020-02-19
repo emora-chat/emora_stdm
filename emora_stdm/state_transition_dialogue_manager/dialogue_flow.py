@@ -79,7 +79,8 @@ class DialogueFlow:
             'PSP': PossessivePronoun(self._kb),
             'EQ': Equal(),
             'GATE': Gate(self),
-            'CLR': Clear()
+            'CLR': Clear(),
+            'NER': NamedEntity()
         }
         if macros:
             self._macros.update(macros)
@@ -531,12 +532,15 @@ class DialogueFlow:
             self.state_settings(state).memory.clear()
 
     def update_vars(self, vars: HashableDict):
+        if not isinstance(vars, HashableDict):
+            vars = HashableDict(vars)
         for k in vars.altered():
             if k in self._var_dependencies:
                 dependencies = self._var_dependencies[k]
                 for dependency in dependencies:
                     if dependency in self._vars:
                         self._vars[dependency] = None
+
         self._vars.update({k: vars[k] for k in vars.altered()})
 
     def potential_transition(self):
