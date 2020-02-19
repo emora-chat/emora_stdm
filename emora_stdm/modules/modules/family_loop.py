@@ -3,7 +3,7 @@ from emora_stdm import DialogueFlow, NatexNLU, NatexNLG, Macro
 import os
 
 
-df = DialogueFlow(initial_state="root", initial_speaker=DialogueFlow.Speaker.USER, kb=os.path.join('modules','family.json'))
+df = DialogueFlow(initial_state="root", kb=os.path.join('modules','family.json'))
 
 
 root = 'root'
@@ -61,9 +61,9 @@ df.add_user_transition(root, 'related',
 root = 'root'
 df.add_state('personality', error_successor='default personality', user_multi_hop=True)
 df.add_system_transition(root, 'personality',
-                         '[!#GATE(related_type, related_personality:None) "Oh, what is your" $related_type "like?"]')
+                         '[!#GATE(related_type, related_personality:None) "So, what is your" $related_type "like?"]')
 
-df.add_system_transition('default personality', root, '"Interesting."')
+df.add_system_transition('default personality', root, '"It sounds like your" $related_type "is even more interesting than you\'re letting on"')
 
 df.add_user_transition(root, 'personality',
 '[my $related_type=#ONTE(related_person) #NOT(#EXP(negation)) $related_personality=#ONTE(personality_trait)]')
@@ -123,7 +123,7 @@ root = 'root'
 df.add_state('life event', error_successor='life event default', user_multi_hop=True)
 df.add_system_transition(root, 'life event',
 '[!#GATE(related_type, related_new_event:None) "So what is new with your" $related_type "?"]')
-df.add_system_transition('life event default', root, '"I see."')
+df.add_system_transition('life event default', root, '"Yeah." {"I\'ve just been socializing today", "Personally, I\'ve just been talking to people all day."}')
 
 df.add_user_transition('life event', 'marriage', '[{married, wedding, proposed, engaged}]')
 df.add_user_transition('life event', 'birth', '[{new baby, [had, baby], birth}]')
@@ -153,11 +153,9 @@ df.add_system_transition('just work', root, '"Probably working too hard."')
 df.add_system_transition('vacation', root, '"A relaxing trip somewhere sounds so nice."')
 df.add_system_transition('retired', root, '"Wow, finally done with work then. That\'s great, I think people should get to enjoy the last chapters of their life with the freedom to do what they always wanted."')
 
-
-
+df.add_system_transition('root', 'root', '{sure, for sure, yeah}', score=0.0)
 
 # Ask $related_type occupation
 
 if __name__ == '__main__':
     df.run(debugging=False)
-
