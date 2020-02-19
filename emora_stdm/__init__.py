@@ -7,3 +7,4 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
+from emora_stdm.state_transition_dialogue_manager.composite_dialogue_flow import CompositeDialogueFlow
