@@ -3,7 +3,7 @@ from emora_stdm import DialogueFlow, NatexNLU, NatexNLG, Macro
 import os
 
 
-df = DialogueFlow(initial_state="root", kb=os.path.join('modules','family.json'))
+df = DialogueFlow(initial_state="root", initial_speaker=DialogueFlow.Speaker.USER, kb=os.path.join('modules','family.json'))
 
 
 root = 'root'
@@ -160,3 +160,4 @@ df.add_system_transition('retired', root, '"Wow, finally done with work then. Th
 
 if __name__ == '__main__':
     df.run(debugging=False)
+
