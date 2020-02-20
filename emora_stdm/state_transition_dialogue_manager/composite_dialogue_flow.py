@@ -90,6 +90,10 @@ class CompositeDialogueFlow:
         self._controller.set_speaker(speaker)
         self._controller.set_state(state)
 
+    def precache_transitions(self):
+        for df in self._components.values():
+            df.precache_transitions()
+
     def add_state(self, state, error_successor=None):
         if isinstance(state, tuple):
             ns, state = state

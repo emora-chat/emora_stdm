@@ -285,6 +285,14 @@ class DialogueFlow:
                 print('Error transition {} -> {}'.format(self.state(), next_state))
             return next_state
 
+    def precache_transitions(self):
+        """
+        Make DialogueFlow fast from the start with the power of precache!
+        """
+        for transition in self._graph.arcs():
+            data = self._graph.arc_data(*transition)
+            data['natex'].precache()
+
     def check(self, debugging=False):
         all_good = True
         for state in self._graph.nodes():

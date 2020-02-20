@@ -65,6 +65,9 @@ class NatexNLG:
             return False
         return bool(regex.fullmatch(r'[^$]*', string))
 
+    def precache(self):
+        self._compiler.parse()
+
     def ngrams(self):
         return self._ngrams
 
@@ -95,7 +98,8 @@ class NatexNLG:
         parser = Lark(grammar)
 
         def __init__(self, natex):
-            self._parsed_tree = self.parser.parse(natex)
+            self._natex = natex
+            self._parsed_tree = None
             self._tree = deepcopy(self._parsed_tree)
             self._vars = None
             self._ngrams = None
@@ -104,15 +108,22 @@ class NatexNLG:
             self._debugging = False
             self._failed = False
 
+        def parse(self):
+            self._parsed_tree = self.parser.parse(self._natex)
+
         def compile(self, ngrams, vars, macros, debugging=False):
+            if self._parsed_tree is None:
+                self.parse()
+            self._tree = deepcopy(self._parsed_tree)
+            self._assignments = {}
             self._ngrams = ngrams
             self._vars = vars
             self._macros = macros
             self._debugging = debugging
+            self._failed = False
             generated = self.visit(self._tree).children[0]
             if self._debugging:
                 print('  {:15} {}'.format('Final', generated))
-            self._tree = deepcopy(self._parsed_tree)
             return generated
 
         def assignments(self):
