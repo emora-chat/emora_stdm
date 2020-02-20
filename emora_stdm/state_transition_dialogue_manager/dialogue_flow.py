@@ -250,7 +250,8 @@ class DialogueFlow:
             vars = HashableDict(self._vars)
             match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             if match:
-                print('Transition {} matched "{}"'.format(transition[:2], natural_language))
+                if debugging:
+                    print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 transition_options.append((settings.score, transition, vars))
             t2 = time()
             if debugging:
@@ -536,6 +537,7 @@ class DialogueFlow:
         self._state = self._initial_state
         self._speaker = self._initial_speaker
         self._vars = {}
+        self._gates = defaultdict(set)
         for state in self.graph().nodes():
             self.state_settings(state).memory.clear()
 

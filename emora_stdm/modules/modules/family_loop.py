@@ -159,10 +159,4 @@ df.add_system_transition('root', 'root', '{sure, for sure, yeah}', score=0.0)
 
 if __name__ == '__main__':
 
-    for i in range(100):
-        df.system_turn()
-        df.user_turn('my wife')
-        df.system_turn()
-        df.user_turn('maybe')
-        df.reset()
-        print(df.system_turn())
+    df.run(debugging=True)
