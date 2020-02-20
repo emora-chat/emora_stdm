@@ -3,6 +3,7 @@ import regex
 from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from copy import deepcopy
 
 
 class NatexNLG:
@@ -27,6 +28,7 @@ class NatexNLG:
             self._expression = expression.expression()
             self._macros = dict(expression.macros())
             self._macros.update(macros)
+        self._compiler = NatexNLG.Compiler(self._expression)
 
     def generate(self, ngrams=None, vars=None, macros=None, debugging=False):
         if vars is None:
@@ -49,8 +51,7 @@ class NatexNLG:
             print('  {:15} {}'.format('Vars', ', '.join([k + '=' + str(v) for k, v in vars.items()])))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
-        compiler = NatexNLG.Compiler(ngrams, vars, macros, debugging)
-        generation = compiler.compile(self._expression)
+        generation = self._compiler.compile(ngrams, vars, macros, debugging)
         if self.is_complete(generation):
             original_vars.update(vars)
             return generation
@@ -93,21 +94,25 @@ class NatexNLG:
         """
         parser = Lark(grammar)
 
-        def __init__(self, ngrams, vars, macros, debugging=False):
-            self._tree = None
-            self._vars = vars
-            self._ngrams = ngrams
-            self._macros = macros
+        def __init__(self, natex):
+            self._parsed_tree = self.parser.parse(natex)
+            self._tree = deepcopy(self._parsed_tree)
+            self._vars = None
+            self._ngrams = None
+            self._macros = None
             self._assignments = {}
-            self._debugging = debugging
-            self._previous_compile_output = ''
+            self._debugging = False
             self._failed = False
 
-        def compile(self, natex):
-            self._tree = self.parser.parse(natex)
+        def compile(self, ngrams, vars, macros, debugging=False):
+            self._ngrams = ngrams
+            self._vars = vars
+            self._macros = macros
+            self._debugging = debugging
             generated = self.visit(self._tree).children[0]
             if self._debugging:
                 print('  {:15} {}'.format('Final', generated))
+            self._tree = deepcopy(self._parsed_tree)
             return generated
 
         def assignments(self):

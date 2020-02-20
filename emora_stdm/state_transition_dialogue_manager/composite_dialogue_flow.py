@@ -6,12 +6,19 @@ from emora_stdm.state_transition_dialogue_manager.knowledge_base import Knowledg
 
 class CompositeDialogueFlow:
 
-    def __init__(self, initial_state = None, initial_speaker = None, macros=None, kb=None):
+    def __init__(self, initial_state, system_error_state, user_error_state,
+                 initial_speaker = None, macros=None, kb=None):
+        if isinstance(system_error_state, str):
+            system_error_state = ('SYSTEM', system_error_state)
+        if isinstance(user_error_state, str):
+            user_error_state = ('SYSTEM', user_error_state)
         # the dialogue flow currently controlling the conversation
         self._controller = DialogueFlow(initial_state, initial_speaker, macros, kb)
         self._controller_name = 'SYSTEM'
         # namespace : dialogue flow mapping
         self._components = {'SYSTEM': self._controller}
+        self._system_error_state = system_error_state
+        self._user_error_state = user_error_state
 
     def run(self, debugging=False):
         """
@@ -34,14 +41,17 @@ class CompositeDialogueFlow:
         visited = {self._controller.state()}
         responses = []
         while self._controller.speaker() is DialogueFlow.Speaker.SYSTEM:
-            response, next_state = self._controller.system_transition(self._controller.state(), debugging=debugging)
-            self._controller.take_transition(next_state)
+            try:
+                response, next_state = self._controller.system_transition(self._controller.state(), debugging=debugging)
+                self._controller.take_transition(next_state)
+            except Exception as e:
+                if debugging:
+                    print(e)
+                    print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                response, next_state = '', self._system_error_state
+                visited = visited - {next_state}
             if isinstance(next_state, tuple):
-                ns, state = next_state
-                speaker = self._controller.speaker()
-                self.set_controller(ns)
-                self._controller.set_state(state)
-                self._controller.set_speaker(speaker)
+                self.set_control(*next_state)
             responses.append(response)
             if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.SYSTEM:
                 self._controller.change_speaker()
@@ -59,18 +69,26 @@ class CompositeDialogueFlow:
         """
         visited = {self._controller.state()}
         while self._controller.speaker() is DialogueFlow.Speaker.USER:
-            next_state = self._controller.user_transition(natural_language, self._controller.state(), debugging=debugging)
-            self._controller.take_transition(next_state)
+            try:
+                next_state = self._controller.user_transition(natural_language, self._controller.state(), debugging=debugging)
+                self._controller.take_transition(next_state)
+            except RuntimeError as e:
+                if debugging:
+                    print(e)
+                    print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                next_state = self._user_error_state
             if isinstance(next_state, tuple):
-                ns, state = next_state
-                speaker = self._controller.speaker()
-                self.set_controller(ns)
-                self._controller.set_speaker(speaker)
-                self._controller.set_state(state)
+                self.set_control(*next_state)
             if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.USER:
                 self._controller.change_speaker()
                 break
             visited.add(next_state)
+
+    def set_control(self, namespace, state):
+        speaker = self._controller.speaker()
+        self.set_controller(namespace)
+        self._controller.set_speaker(speaker)
+        self._controller.set_state(state)
 
     def add_state(self, state, error_successor=None):
         if isinstance(state, tuple):

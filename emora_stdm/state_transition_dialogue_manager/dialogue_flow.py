@@ -32,7 +32,7 @@ class DialogueFlow:
 
     Speaker = Speaker
 
-    def __init__(self, initial_state: Union[Enum, str], initial_speaker = Speaker.SYSTEM,
+    def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
         self._graph = Graph()
         self._initial_state = State(initial_state)
@@ -158,7 +158,7 @@ class DialogueFlow:
 
     # HIGH LEVEL
 
-    def system_transition(self, state: Union[Enum, str], debugging=False):
+    def system_transition(self, state: Union[Enum, str, tuple], debugging=False):
         """
         :param state:
         :param debugging:
@@ -223,7 +223,7 @@ class DialogueFlow:
         else:
             raise AssertionError('dialogue flow system transition found no valid options')
 
-    def user_transition(self, natural_language: str, state: Union[Enum, str], debugging=False):
+    def user_transition(self, natural_language: str, state: Union[Enum, str, tuple], debugging=False):
         """
         :param state:
         :param natural_language:
@@ -309,7 +309,7 @@ class DialogueFlow:
                     all_good = False
         return all_good
 
-    def add_user_transition(self, source: Union[Enum, str], target: Union[Enum, str],
+    def add_user_transition(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple],
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
         source = State(source)
         target = State(target)
@@ -329,7 +329,7 @@ class DialogueFlow:
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.USER, transition_settings)
 
-    def add_system_transition(self, source: Union[Enum, str], target: Union[Enum, str],
+    def add_system_transition(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple],
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
         source = State(source)
         target = State(target)
@@ -346,7 +346,7 @@ class DialogueFlow:
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
 
-    def add_state(self, state: Union[Enum, str], error_successor: Union[Union[Enum, str], None] =None, **settings):
+    def add_state(self, state: Union[Enum, str, tuple], error_successor: Union[Union[Enum, str, tuple], None] =None, **settings):
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
@@ -377,7 +377,7 @@ class DialogueFlow:
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
-    def transition_natex(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
+    def transition_natex(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
         source = State(source)
         target = State(target)
         return self._graph.arc_data(source, target, speaker)['natex']
@@ -387,7 +387,7 @@ class DialogueFlow:
         target = State(target)
         self._graph.arc_data(source, target, speaker)['natex'] = natex
 
-    def transition_settings(self, source: Union[Enum, str], target: Union[Enum, str], speaker: Enum):
+    def transition_settings(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
         source = State(source)
         target = State(target)
         return self._graph.arc_data(source, target, speaker)['settings']
@@ -402,7 +402,7 @@ class DialogueFlow:
         target = State(target)
         self.transition_settings(source, target, speaker).update(**settings)
 
-    def transition_global_nlu(self, source: Union[Enum, str], target: Union[Enum, str]):
+    def transition_global_nlu(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple]):
         source = State(source)
         target = State(target)
         if self.has_transition(source, target, Speaker.USER) \
@@ -457,7 +457,7 @@ class DialogueFlow:
     def state(self):
         return self._state
 
-    def set_state(self, state: Union[Enum, str]):
+    def set_state(self, state: Union[Enum, str, tuple]):
         state = State(state)
         self._state = state
 
