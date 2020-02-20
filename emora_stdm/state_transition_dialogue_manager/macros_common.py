@@ -111,6 +111,8 @@ class NOT(Macro):
                 processedargs.add(str(arg))
             elif isinstance(arg, set):
                 processedargs.update(arg)
+            elif isinstance(arg, bool):
+                return not bool
             else:
                 raise Exception("Args to WN were of wrong format: must be list, str, or set")
         if processedargs & ngrams:
