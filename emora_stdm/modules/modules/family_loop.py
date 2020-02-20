@@ -158,4 +158,11 @@ df.add_system_transition('root', 'root', '{sure, for sure, yeah}', score=0.0)
 # Ask $related_type occupation
 
 if __name__ == '__main__':
-    df.run(debugging=False)
+
+    for i in range(100):
+        df.system_turn()
+        df.user_turn('my wife')
+        df.system_turn()
+        df.user_turn('maybe')
+        df.reset()
+        print(df.system_turn())
