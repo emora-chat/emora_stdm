@@ -197,8 +197,7 @@ class DialogueFlow:
                         del transition_options[key]
                 else:
                     break
-            options = StochasticOptions(transition_options)
-            response, transition, vars = options.select()
+            response, transition, vars = max(transition_options, key=lambda x: transition_options[x])
             if debugging:
                 updates = {}
                 for k, v in vars.items():

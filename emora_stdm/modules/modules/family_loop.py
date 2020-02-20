@@ -158,5 +158,5 @@ df.add_system_transition('root', 'root', '{sure, for sure, yeah}', score=0.0)
 # Ask $related_type occupation
 
 if __name__ == '__main__':
-
-    df.run(debugging=True)
+    df.precache_transitions()
+    df.run(debugging=False)
