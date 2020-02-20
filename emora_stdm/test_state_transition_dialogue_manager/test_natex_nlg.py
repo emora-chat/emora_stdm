@@ -37,7 +37,9 @@ def test_completion():
     v = {'X': 'apple'}
     natex = NatexNLG('i have $X in my $Y')
     assert natex.generate(vars=v) is None
-    assert not NatexNLG('i have $X"').is_complete()
+    natex = NatexNLG('i have $X')
+    assert not natex.is_complete()
+
 
 def SIMPLE(ngrams, vars, args):
     return {'foo', 'bar', 'bat', 'baz'}

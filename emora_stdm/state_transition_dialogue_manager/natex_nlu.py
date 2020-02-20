@@ -3,7 +3,7 @@ import regex
 from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
-
+from copy import deepcopy
 
 class NatexNLU:
 
@@ -24,6 +24,7 @@ class NatexNLU:
             self._expression = expression.expression()
             self._macros = dict(expression.macros())
             self._macros.update(macros)
+        self._compiler = NatexNLU.Compiler(self._expression)
 
     def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
         natural_language += ' _END_'
@@ -56,7 +57,7 @@ class NatexNLU:
             print('  {:15} {}'.format('Vars', ', '.join([k + '=' + str(v) for k, v in vars.items()])))
             print('  {:15} {}'.format('Steps', '  ' + '-' * 60))
             print('    {:15} {}'.format('Original', self._expression))
-        self._regex = NatexNLU.Compiler(ngrams, vars, macros, debugging).compile(self._expression)
+        self._regex = self._compiler.compile(ngrams, vars, macros, debugging)
 
     def regex(self):
         return self._regex
@@ -99,20 +100,24 @@ class NatexNLU:
         """
         parser = Lark(grammar)
 
-        def __init__(self, ngrams, vars, macros, debugging=False):
-            self._tree = None
+        def __init__(self, natex):
+            self._parsed_tree = self.parser.parse(natex)
+            self._tree = deepcopy(self._parsed_tree)
+            self._ngrams = None
+            self._vars = None
+            self._macros = None
+            self._assignments = set()
+            self._debugging = False
+
+        def compile(self, ngrams, vars, macros, debugging=False):
             self._ngrams = ngrams
             self._vars = vars
             self._macros = macros
-            self._assignments = set()
             self._debugging = debugging
-            self._previous_compile_output = ''
-
-        def compile(self, natex):
-            self._tree = self.parser.parse(natex)
             re = self.visit(self._tree).children[0]
             if self._debugging:
                 print('  {:15} {}'.format('Final', re))
+            self._tree = deepcopy(self._parsed_tree)
             return re
 
         def to_strings(self, args):
