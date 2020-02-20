@@ -83,7 +83,7 @@ macros = {"DMAvailable":DMAvailable(), "DMNotAvailable":DMNotAvailable(), "DMUpd
           "SetTopicSuggestion":SetTopicSuggestion(), "CheckExternalComp":CheckExternalComp(), "ChooseTransitionOut": ChooseTransitionOut(),
           "ResetLoop": ResetLoop()}
 
-cdf = CompositeDialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER, macros=macros)
+cdf = CompositeDialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER, macros=macros, system_error_state='topic_master', user_error_state='topic_master')
 cdf.add_component(opening, 'opening')
 cdf.add_user_transition('start', ('opening', 'prestart'), '/.*/')
 cdf.controller().update_state_settings(('opening', 'prestart'), user_multi_hop=True)
@@ -223,6 +223,7 @@ add_knowledge_to_components(cdf._components, [('hobby',os.path.join('modules',"h
                                               ('family',os.path.join('modules',"family.json")),
                                               ('stop',os.path.join('modules', "stop_convo.json"))])
 
+cdf.precache_transitions()
 ########################
 # Testing
 ########################
@@ -389,7 +390,7 @@ if __name__ == '__main__':
     # print(n.match("i would like to talk about movies"))
     # print(n.match("i do like movies too"))
 
-    # cdf.run(debugging=True)
+    cdf.run(debugging=True)
 
-    import cProfile
-    cProfile.run('first_turn()')
+    # import cProfile
+    # cProfile.run('first_turn()')
