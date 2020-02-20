@@ -227,13 +227,39 @@ add_knowledge_to_components(cdf._components, [('hobby',os.path.join('modules',"h
 # Testing
 ########################
 
-import json
+import json, time
 from emora_stdm import HashableDict
-from collections import defaultdict
+from collections import defaultdict, deque
 
 PUBLIC_ENUMS = {
     'Speaker': DialogueFlow.Speaker
 }
+
+class EnumEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if type(obj) in PUBLIC_ENUMS.values():
+            return {"__enum__": str(obj)}
+        return json.JSONEncoder.default(self, obj)
+
+
+def as_enum(d):
+    if "__enum__" in d:
+        name, member = d["__enum__"].split(".")
+        return getattr(PUBLIC_ENUMS[name], member)
+    else:
+        return d
+
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return {"__set__": list(obj)}
+        return json.JSONEncoder.default(self, obj)
+
+def as_set(d):
+    if "__set__" in d:
+        return set(d["__set__"])
+    else:
+        return d
 
 class SpecializedEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -266,6 +292,84 @@ def decode_state(item):
         return item[0], item[1]
     return item[0]
 
+def first_turn():
+    cdf.user_turn("hello", debugging=False)
+    intermediate_state = cdf.state()
+    response = cdf.system_turn(debugging=False)
+
+def task():
+    while True:
+        text = input("U: ")
+        start = time.time()
+        cdf.user_turn(text, debugging=False)
+        intermediate_state = cdf.state()
+        response = cdf.system_turn(debugging=False)
+        final_state = cdf.state()
+        print("State after sys trans: %s" % str(final_state))
+        print("ELAPSED: ", time.time() - start)
+
+        start = time.time()
+        # MEMORY SERIALIZATION
+        mem = {}
+        for name, component in cdf._components.items():
+            mem[name] = {}
+            for state in component.graph().nodes():
+                encoded_state = encode_state(state)
+                mem[name][encoded_state] = [
+                    (encode_state(item[0]), encode_state(item[1]), item[2]) if item is not None else None for item in
+                    list(component.state_settings(state).memory._data)]
+                # for item in list(component.state_settings(state).memory._data):
+                #     if item is not None:
+                #         new_tup = (encode_state(item[0]),encode_state(item[1]),item[2])
+                #         mem[name][encoded_state].append(new_tup)
+                #     else:
+                #         mem[name][encoded_state].append(None)
+        saved_mem = json.dumps(mem, cls=EnumEncoder)
+
+        # GATE SERIALIZATION
+        json_gates = {}
+        for name, component in cdf._components.items():
+            json_gates[name] = {
+                encode_state(trans[0]) + "||" + encode_state(trans[1]) + "||" + str(trans[2]): hash_dicts for
+                trans, hash_dicts in component.gates().items()}
+            # for trans,hash_dicts in component.gates().items():
+            #     new_tup = encode_state(trans[0]) + "||" + encode_state(trans[1]) + "||" + str(trans[2])
+            #     json_gates[name][new_tup] = hash_dicts
+        json_gates = json.dumps(json_gates, cls=SpecializedEncoder)
+        print("SERIAL ELAPSED: ", time.time() - start)
+
+        start = time.time()
+        #DESERIALIZATION
+        if saved_mem is not None:
+            saved_mem = json.loads(saved_mem, object_hook=as_enum)
+            for name, mem in saved_mem.items():
+                component = cdf.component(name)
+                for state in component.graph().nodes():
+                    encoded_state = encode_state(state)
+                    decoded_trans = [
+                        (decode_state(item[0]), decode_state(item[1]), item[2]) if item is not None else None for item
+                        in mem[encoded_state]]
+                    # for item in mem[encoded_state]:
+                    #     if item is not None:
+                    #         decoded_trans.append()
+                    #     else:
+                    #         decoded_trans.append(None)
+                    component.state_settings(state).memory._data = deque(decoded_trans)
+        if json_gates is not None:
+            saved_gates = json.loads(json_gates, object_hook=as_specialized)
+            for name, gates in saved_gates.items():
+                component = cdf.component(name)
+                new_gates = defaultdict(set)
+                for encoded_trans, dict_set in gates.items():
+                    trans_split = encoded_trans.split("||")
+                    enum, member = trans_split[2].split(".")
+                    speaker = getattr(PUBLIC_ENUMS[enum], member)
+                    new_gates[(decode_state(trans_split[0]), decode_state(trans_split[1]), speaker)] = dict_set
+                component._gates = new_gates
+        print("DESERIAL ELAPSED: ", time.time() - start)
+
+        print("S: %s"%response)
+
 if __name__ == '__main__':
     # movies_str = '{movie,movies,film,films,tv,shows,television}'
     # music_str = '{music,song,songs,melody,melodies,album,albums,concert,concerts}'
@@ -287,50 +391,5 @@ if __name__ == '__main__':
 
     # cdf.run(debugging=True)
 
-    while True:
-        text = input("U: ")
-        cdf.user_turn(text, debugging=True)
-        intermediate_state = cdf.state()
-        response = cdf.system_turn(debugging=True)
-        final_state = cdf.state()
-        print("State after sys trans: %s" % str(final_state))
-
-        print()
-        print("NORMAL GATES (controller): ")
-        print(cdf.controller().gates())
-        print()
-
-        # GATE SERIALIZATION
-        json_gates = {}
-        for name, component in cdf._components.items():
-            json_gates[name] = {}
-            for trans,hash_dicts in component.gates().items():
-                new_tup = encode_state(trans[0]) + "||" + encode_state(trans[1]) + "||" + str(trans[2])
-                json_gates[name][new_tup] = hash_dicts
-        json_gates = json.dumps(json_gates, cls=SpecializedEncoder)
-
-        print()
-        print("SERIALIZED GATES (controller): ")
-        print(json_gates)
-        print()
-
-        # GATE DESERIALIZATION
-        if json_gates is not None:
-            saved_gates = json.loads(json_gates, object_hook=as_specialized)
-            for name, gates in saved_gates.items():
-                component = cdf.component(name)
-                new_gates = defaultdict(set)
-                for encoded_trans, dict_set in gates.items():
-                    trans_split = encoded_trans.split("||")
-                    enum, member = trans_split[2].split(".")
-                    speaker = getattr(PUBLIC_ENUMS[enum], member)
-                    new_gates[(decode_state(trans_split[0]), decode_state(trans_split[1]), speaker)] = dict_set
-                component._gates = new_gates
-
-        print()
-        print("DESERIALIZED GATES (controller): ")
-        print(cdf.controller().gates())
-        print()
-
-        print("S: %s"%response)
-
+    import cProfile
+    cProfile.run('first_turn()')
