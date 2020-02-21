@@ -31,6 +31,11 @@ class Speaker(EnumByName):
 class DialogueFlow:
 
     Speaker = Speaker
+    _autostate = '-1'
+    @classmethod
+    def autostate(cls):
+        cls._autostate = str(int(cls._autostate) + 1)
+        return cls._autostate
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
@@ -155,6 +160,84 @@ class DialogueFlow:
         t2 = time()
         if debugging:
             print('User turn in {:.5f}'.format(t2 - t1))
+
+
+    def load_transitions(self, json_dict, speaker=Speaker.USER, root=None):
+        """
+        wheeeeeeee!
+        """
+        if 'state' in json_dict:
+            source = json_dict['state']
+        else:
+            source = DialogueFlow.autostate()
+        if root is None:
+            root = self._initial_state
+
+        hop = None
+        error = None
+
+        # read settings and transitions for state
+        transitions = []
+        for key, value in json_dict.items():
+            if key == 'transitions':
+                assert isinstance(value, list)
+                transitions = value
+            elif key == 'error':
+                error = json_dict['error']
+            elif key == 'root':
+                root = json_dict['root']
+            elif key not in {'state', 'hop', 'score'}:
+                transitions.append((key, value))
+
+        # set up state settings
+        if not self.has_state(source):
+            self.add_state(source)
+            self.set_error_successor(source, root)
+        if hop:
+            if speaker == Speaker.USER:
+                speaker = Speaker.SYSTEM
+                self.state_settings(source).update(system_multi_hop=True)
+            elif speaker == Speaker.SYSTEM:
+                speaker = Speaker.USER
+                self.state_settings(source).update(user_multi_hop=True)
+        if error:
+            if not self.has_state(error):
+                self.add_state(error)
+                self.set_error_successor(error, root)
+            self.set_error_successor(source, error)
+
+        # set up transitions
+        expanded_transitions = []
+        for natex, target in transitions:
+            score = 1.0
+            if isinstance(target, dict):
+                if 'state' not in target:
+                    target['state'] = DialogueFlow.autostate()
+                if 'hop' in target:
+                    hop = bool(target['hop'])
+                else:
+                    hop = False
+                if 'score' in target:
+                    score = target['score']
+                expanded_transitions.append(target)
+                target = target['state']
+                if not self.has_state(target):
+                    self.add_state(target)
+                    self.set_error_successor(target, root)
+            if speaker == Speaker.USER:
+                self.add_user_transition(source, target, natex, score=score, user_multi_hop=hop)
+            elif speaker == Speaker.SYSTEM:
+                self.add_system_transition(source, target, natex, score=score, system_multi_hop=hop)
+
+        # swtich turn (will be switched back if multi hop detected on next recursive call)
+        if speaker == Speaker.USER:
+            speaker = Speaker.SYSTEM
+        elif speaker == Speaker.SYSTEM:
+            speaker = Speaker.USER
+
+        # recurse to load nested turns
+        for transition in expanded_transitions:
+            self.load_transitions(transition, speaker)
 
     # HIGH LEVEL
 

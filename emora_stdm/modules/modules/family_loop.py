@@ -23,12 +23,12 @@ df.var_dependencies()['related_type'] = {'related_personality'}
 root = 'root'
 df.add_state('opening live with', error_successor='opening live with repeat')
 df.add_system_transition(root, 'opening live with',
-'[!#GATE() "So, who do you live with?"]', score=0.00001)
+'[!#GATE() "So, who do you live with?"]', score=0.1)
 df.add_system_transition('opening live with repeat', 'opening live with',
 '[!#GATE() "Wait, I didn\'t catch that. Who do you live with?"]')
 
 df.add_system_transition('opening live with repeat', 'live with me',
-'[!"Sorry, I do not seem to know who that is. But I guess you live with me in a way, right?"]', score=0.00001)
+'[!"Sorry, I do not seem to know who that is. But I guess you live with me in a way, right?"]', score=0.1)
 
 df.add_user_transition('live with me', 'live with me agree', agree)
 df.add_user_transition('live with me', 'live with me disagree', disagree)
@@ -49,7 +49,7 @@ root = 'root'
 df.add_state('opening close to', system_multi_hop=True)
 df.add_system_transition('opening close to', root, '')
 df.add_system_transition(root, 'opening close to',
-'[!#GATE() "So tell me, who are you closest to in your life?"]', score=0.00001)
+'[!#GATE() "So tell me, who are you closest to in your life?"]', score=0.1)
 
 # U: my $related_type
 root = 'root'
@@ -157,6 +157,47 @@ df.add_system_transition('root', 'root', '{sure, for sure, yeah}', score=0.0)
 
 # Ask $related_type occupation
 
+
+flow = {
+    'name': 'root',
+    'hello': {
+        'name': 'greet',
+        'score': 2.0,
+        'error': 'somewhere',
+
+        'how are you': {
+            'good': 'root',
+            'bad': 'greet'
+        },
+        'so...': {
+            'yeah': 'how are you'
+        }
+    }
+}
+
 if __name__ == '__main__':
     df.precache_transitions()
     df.run(debugging=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
