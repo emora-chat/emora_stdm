@@ -8,7 +8,6 @@ df = DialogueFlow(initial_state="system_root", kb=os.path.join('modules','family
 
 '''
 birthday_friend: told user friend's bday is coming
-birthday_friend_name: told user friend's name
 birthday_friend_gift: told user planned gift
 birthday_friend_gift_rec: planned gift to get friend
 birthday_friend_no_help: user is not helping emora
@@ -18,9 +17,9 @@ birthday_friend_no_help: user is not helping emora
 flow = {
     'state': 'system_root',
 
-    '"Oh, did i tell you? My friend\'s birthday is coming up. I\'m thinking of getting her a music box. What do you think, is it a good gift?"': {
-        'prepend': '#GATE(birthday_friend:None) #SET($birthday_friend=True, $birthday_friend_gift=True)',
-
+    '"Oh, did i tell you? My friend\'s birthday is coming up. I\'m thinking of getting her a music box. What do you think, is it a good gift?"'
+    '#GATE(birthday_friend:None) #SET($birthday_friend=True, $birthday_friend_gift=True)': {
+        'state': 'gift_suggestion',
         'error': 'user_root',
 
         natexes.agree: {
@@ -35,10 +34,17 @@ flow = {
         }
     }
 }
-
 user_flow = {
     'state': 'user_root',
-    'error': 'system_root'
+    'error': 'system_root',
+
+    '[{friend, "friend\'s", friends} name]': {
+        'Her name is Shannon': 'system_root'
+    },
+    '[how, old]':{
+        '"She\'s turning twenty."': 'gift_suggestion',
+    }
+
 }
 
 df.load_transitions(flow)
