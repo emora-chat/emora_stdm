@@ -77,6 +77,23 @@ class NatexNLG:
     def macros(self):
         return self._macros
 
+    def __add__(self, other):
+        if isinstance(other, str):
+            return NatexNLG('[!' + self._expression + ', ' + other + ']',
+                            macros=self._macros, ngrams=self._ngrams)
+        elif isinstance(other, NatexNLG):
+            return NatexNLG('[!' + self._expression + ', ' + other._expression + ']',
+                            macros=self._macros, ngrams=self._ngrams)
+        return self
+
+    def __radd__(self, other):
+        if isinstance(other, str):
+            return NatexNLG('[!' + other + ', ' + self._expression + ']',
+                            macros=self._macros, ngrams=self._ngrams)
+        elif isinstance(other, NatexNLG):
+            return NatexNLG('[!' + other._expression + ', ' + self._expression + ']',
+                            macros=self._macros, ngrams=self._ngrams)
+
     def __str__(self):
         return 'NatexNlg({})'.format(self._expression)
 
@@ -91,7 +108,9 @@ class NatexNLG:
         disjunction: "{" term (","? " "? term)* "}"
         reference: "$" symbol
         assignment: "$" symbol "=" term
-        macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
+        macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
+        macro_arg: macro_literal | macro
+        macro_literal: /[^#), ][^#),]*/
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
@@ -203,6 +222,13 @@ class NatexNLG:
                 if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
                 tree.children[0] = '_MACRO_NOT_FOUND_'
 
+        def macro_arg(self, tree):
+            tree.children[0] = tree.children[0].children[0]
+            tree.data = 'compiled'
+
+        def macro_literal(self, tree):
+            tree.data = 'compiled'
+
         def literal(self, tree):
             args = tree.children
             if args:
@@ -245,6 +271,10 @@ class NatexNLG:
                 def macro(self, args):
                     return '#' + args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
                 def literal(self, args):
+                    return str(args[0])
+                def macro_arg(self, args):
+                    return str(args[0])
+                def macro_literal(self, args):
                     return str(args[0])
                 def symbol(self, args):
                     return str(args[0])

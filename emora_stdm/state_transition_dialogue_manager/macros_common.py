@@ -4,6 +4,8 @@ from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet, HashableDict, ConfigurationDict
+from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
+from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from spacy.pipeline import EntityRecognizer
@@ -27,6 +29,13 @@ from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
 import regex
 
+
+def _process_args_set(args, vars):
+    for i, e in enumerate(args):
+        if isinstance(e, str) and '$' == e[0]:
+            args[i] = vars[e[1:]]
+    return args
+
 class ONTE(Macro):
     """
     get the set of expressions matching the entire descendent subtree
@@ -37,14 +46,7 @@ class ONTE(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if isinstance(args, list):
-            node_set = set(args)
-        elif isinstance(args, str):
-            node_set = {args}
-        elif isinstance(args, set):
-            node_set = args
-        else:
-            raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
+        node_set = set(_process_args_set(args, vars))
         ont_result = self.kb.expressions(self.kb.subtypes(node_set))
         if ngrams:
             lemma_map = defaultdict(set)
@@ -67,14 +69,7 @@ class ONTN(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if isinstance(args, list):
-            node_set = set(args)
-        elif isinstance(args, str):
-            node_set = {args}
-        elif isinstance(args, set):
-            node_set = args
-        else:
-            raise Exception("Args to ONTE were of wrong format: must be list, str, or set")
+        node_set = set(_process_args_set(args, vars))
         ont_result = self.kb.subtypes(node_set) - node_set
         if ngrams:
             lemma_map = defaultdict(set)
@@ -108,6 +103,8 @@ class NOT(Macro):
             if isinstance(arg, list):
                 processedargs.update(set(arg))
             elif isinstance(arg, str):
+                if arg[0] == '$':
+                    arg = vars[arg[1:]]
                 processedargs.add(str(arg))
             elif isinstance(arg, set):
                 processedargs.update(arg)
@@ -131,6 +128,7 @@ class KBE(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         kb_result = self.kb.expressions(self.kb.query(*args))
         if ngrams:
             lemma_map = defaultdict(set)
@@ -149,6 +147,7 @@ class EXP(Macro):
         self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         kb_result = self.kb.expressions(*args)
         if ngrams:
             lemma_map = defaultdict(set)
@@ -170,14 +169,7 @@ class WN(Macro):
         self.lemmatizer.lemmatize('initialize')
 
     def run(self, ngrams: Union[Ngrams, None], vars: Dict[str, Any], args: List[Any]):
-        if isinstance(args, list):
-            node_set = set(args)
-        elif isinstance(args, str):
-            node_set = {args}
-        elif isinstance(args, set):
-            node_set = args
-        else:
-            raise Exception("Args to WN were of wrong format: must be list, str, or set")
+        node_set = set(_process_args_set(args, vars))
         expanded_set = set()
         for word in node_set:
             expanded_set.update({x.name() for x in related_synsets(word)})
@@ -211,6 +203,8 @@ class UnionMacro(Macro):
             if isinstance(arg, set):
                 sets.append(arg)
             if isinstance(arg, str):
+                if arg[0] == '$':
+                    arg = vars[arg[1:]]
                 sets.append({arg})
             elif isinstance(arg, list):
                 sets.append(set(arg))
@@ -223,6 +217,8 @@ class Intersection(Macro):
             if isinstance(arg, set):
                 sets.append(arg)
             if isinstance(arg, str):
+                if arg[0] == '$':
+                    arg = vars[arg[1:]]
                 sets.append({arg})
             elif isinstance(arg, list):
                 sets.append(set(arg))
@@ -240,14 +236,16 @@ class Difference(Macro):
             if isinstance(arg, set):
                 sets.append(arg)
             if isinstance(arg, str):
+                if arg[0] == '$':
+                    arg = vars[arg[1:]]
                 sets.append({arg})
             elif isinstance(arg, list):
                 sets.append(set(arg))
         return sets[0] - sets[1]
 
 def _assignment_to_var_val(arg):
-    var = arg[arg.find('<') + 1:arg.find('>')]
-    val = arg[arg.find('>') + 1:-1]
+    match = regex.match(r'\$([^=]+)=(.*)', arg)
+    var, val = match.groups()
     return var, val
 
 class SetVars(Macro):
@@ -277,6 +275,8 @@ class CheckVarsDisjunction(Macro):
 class IsPlural(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         arg = args[0]
+        if isinstance(arg, str) and arg[0] == '$':
+            arg = vars[arg[1:]]
         pos = nltk.pos_tag(arg.split())[-1][1]
         if pos == 'NNS':
             return True
@@ -286,6 +286,7 @@ class FirstPersonPronoun(Macro):
     def __init__(self, kb):
         self.kb = kb
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         if IsPlural()(None, None, [args[0]]):
             return 'they'
         elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
@@ -301,6 +302,7 @@ class ThirdPersonPronoun(Macro):
     def __init__(self, kb):
         self.kb = kb
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         if IsPlural()(None, None, [args[0]]):
             return 'them'
         elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
@@ -316,6 +318,7 @@ class PossessivePronoun(Macro):
     def __init__(self, kb):
         self.kb = kb
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         if IsPlural()(None, None, [args[0]]):
             return 'their'
         elif args[0] in ONTE(self.kb)({args[0]}, None, ['female']):
@@ -329,6 +332,7 @@ class PossessivePronoun(Macro):
 
 class Equal(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        args = _process_args_set(args, vars)
         for i in range(len(args)-1):
             if args[i] != args[i+1]:
                 return False

@@ -125,6 +125,8 @@ def HAPPY(ngrams, vars, args):
 def FIRSTS(ngrams, vars, args):
     firsts = ''
     for arg in args:
+        if isinstance(arg, str) and arg[0] == '$':
+            arg = vars[arg[1:]]
         firsts += arg[0]
     return {firsts, firsts[::-1]}
 

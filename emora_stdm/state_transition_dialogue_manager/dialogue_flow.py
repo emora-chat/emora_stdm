@@ -51,6 +51,7 @@ class DialogueFlow:
         self._gate_buffer = {}
         self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
+        self._prepends = {}
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -162,10 +163,12 @@ class DialogueFlow:
             print('User turn in {:.5f}'.format(t2 - t1))
 
 
-    def load_transitions(self, json_dict, speaker=Speaker.USER, root=None):
+    def load_transitions(self, json_dict, speaker=None, root=None):
         """
         wheeeeeeee!
         """
+        if speaker is None:
+            speaker = self._initial_speaker
         if 'state' in json_dict:
             source = json_dict['state']
         else:
@@ -174,7 +177,6 @@ class DialogueFlow:
             root = self._initial_state
 
         hop = None
-        error = None
 
         # read settings and transitions for state
         transitions = []
@@ -182,10 +184,13 @@ class DialogueFlow:
             if key == 'transitions':
                 assert isinstance(value, list)
                 transitions = value
-            elif key == 'error':
-                error = json_dict['error']
             elif key == 'root':
                 root = json_dict['root']
+            elif key == 'hop':
+                hop = json_dict['hop']
+            elif key == 'prepend':
+                prepend = json_dict['prepend']
+                self.set_state_prepend(source, prepend)
             elif key not in {'state', 'hop', 'score'}:
                 transitions.append((key, value))
 
@@ -200,34 +205,37 @@ class DialogueFlow:
             elif speaker == Speaker.SYSTEM:
                 speaker = Speaker.USER
                 self.state_settings(source).update(user_multi_hop=True)
-        if error:
-            if not self.has_state(error):
-                self.add_state(error)
-                self.set_error_successor(error, root)
-            self.set_error_successor(source, error)
 
         # set up transitions
         expanded_transitions = []
         for natex, target in transitions:
-            score = 1.0
-            if isinstance(target, dict):
-                if 'state' not in target:
-                    target['state'] = DialogueFlow.autostate()
-                if 'hop' in target:
-                    hop = bool(target['hop'])
-                else:
-                    hop = False
-                if 'score' in target:
-                    score = target['score']
-                expanded_transitions.append(target)
-                target = target['state']
-                if not self.has_state(target):
-                    self.add_state(target)
-                    self.set_error_successor(target, root)
-            if speaker == Speaker.USER:
-                self.add_user_transition(source, target, natex, score=score, user_multi_hop=hop)
-            elif speaker == Speaker.SYSTEM:
-                self.add_system_transition(source, target, natex, score=score, system_multi_hop=hop)
+            if natex == 'error':
+                if isinstance(target, dict):
+                    if 'state' not in target:
+                        target['state'] = DialogueFlow.autostate()
+                    expanded_transitions.append(target)
+                    target = target['state']
+                    if not self.has_state(target):
+                        self.add_state(target)
+                        self.set_error_successor(target, root)
+                self.set_error_successor(source, target)
+
+            else:
+                score = 1.0
+                if isinstance(target, dict):
+                    if 'state' not in target:
+                        target['state'] = DialogueFlow.autostate()
+                    if 'score' in target:
+                        score = target['score']
+                    expanded_transitions.append(target)
+                    target = target['state']
+                    if not self.has_state(target):
+                        self.add_state(target)
+                        self.set_error_successor(target, root)
+                if speaker == Speaker.USER:
+                    self.add_user_transition(source, target, natex, score=score)
+                elif speaker == Speaker.SYSTEM:
+                    self.add_system_transition(source, target, natex, score=score)
 
         # swtich turn (will be switched back if multi hop detected on next recursive call)
         if speaker == Speaker.USER:
@@ -419,6 +427,10 @@ class DialogueFlow:
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.USER, transition_settings)
+        if target in self._prepends:
+            prepend = self._prepends[target]
+            natex = self.transition_natex(source, target, Speaker.USER)
+            self.set_transition_natex(source, target, Speaker.USER, prepend + natex)
 
     def add_system_transition(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple],
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
@@ -436,6 +448,10 @@ class DialogueFlow:
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
+        if target in self._prepends:
+            prepend = self._prepends[target]
+            natex = self.transition_natex(source, target, Speaker.SYSTEM)
+            self.set_transition_natex(source, target, Speaker.SYSTEM, prepend + natex)
 
     def add_state(self, state: Union[Enum, str, tuple], error_successor: Union[Union[Enum, str, tuple], None] =None, **settings):
         state = State(state)
@@ -507,7 +523,7 @@ class DialogueFlow:
         self._graph.arc_data(source, target, Speaker.USER)['global'] = is_global
         self.update_transition_settings(source, target, Speaker.USER, score=0.5)
 
-    def state_settings(self, state: Enum):
+    def state_settings(self, state):
         state = State(state)
         return self._graph.data(state)['settings']
 
@@ -655,6 +671,13 @@ class DialogueFlow:
 
     def var_dependencies(self):
         return self._var_dependencies
+
+    def set_state_prepend(self, state, prepend):
+        self._prepends[state] = prepend
+        if self.has_state(state):
+            for transition in self._graph.arcs_in(state):
+                natex = self.transition_natex(*transition)
+                self.set_transition_natex(*transition, prepend + natex)
 
     def passes_gate(self, var_config):
         if var_config in self._gates[self._potential_transition]:

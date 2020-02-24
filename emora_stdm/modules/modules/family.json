@@ -22,6 +22,7 @@
   "expressions": {
     "negation": ["no", "not", "don't", "dont", "won't", "wont", "shouldn't", "shouldnt",
                  "can't", "cant", "isn't", "isnt"],
+
     "someone": ["someone", "somebody", "some body", "some one"],
     "anyone":  ["any one", "anyone", "any body", "anybody"],
 

@@ -74,8 +74,22 @@ class NatexNLU:
     def set_macros(self, macros):
         self._macros = macros
 
+    def __add__(self, other):
+        if isinstance(other, str):
+            return NatexNLU('[!' + self._expression + ', ' + other + ']', macros=self._macros)
+        elif isinstance(other, NatexNLU):
+            return NatexNLU('[!' + self._expression + ', ' + other._expression + ']', macros=self._macros)
+        return self
+
+    def __radd__(self, other):
+        if isinstance(other, str):
+            return NatexNLU('[!' + other + ', ' + self._expression + ']', macros=self._macros)
+        elif isinstance(other, NatexNLU):
+            return NatexNLU('[!' + other._expression + ', ' + self._expression + ']', macros=self._macros)
+        return self
+
     def __str__(self):
-        return 'Natex({})'.format(self._expression)
+        return 'NatexNLU({})'.format(self._expression)
 
     def __repr__(self):
         return str(self)
@@ -96,7 +110,9 @@ class NatexNLU:
         regex: "/" regex_value "/"
         reference: "$" symbol
         assignment: "$" symbol "=" term
-        macro: "#" symbol ( "(" term? (","? " "? term)* ")" )? 
+        macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
+        macro_arg: macro_literal | macro
+        macro_literal: /[^#), ][^#),]*/
         literal: /[a-z_A-Z@.:]+( +[a-z_A-Z@.:]+)*/ | "\"" /[^\"]+/ "\""
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
@@ -247,6 +263,13 @@ class NatexNLU:
                 if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
                 tree.children[0] = '_MACRO_NOT_FOUND_'
 
+        def macro_arg(self, tree):
+            tree.children[0] = tree.children[0].children[0]
+            tree.data = 'compiled'
+
+        def macro_literal(self, tree):
+            tree.data = 'compiled'
+
         def literal(self, tree):
             args = tree.children
             tree.data = 'compiled'
@@ -299,6 +322,10 @@ class NatexNLU:
                 def macro(self, args):
                     return '#' + args[0] + '(' + ', '.join([str(arg) for arg in args[1:]]) + ')'
                 def literal(self, args):
+                    return str(args[0])
+                def macro_arg(self, args):
+                    return str(args[0])
+                def macro_literal(self, args):
                     return str(args[0])
                 def symbol(self, args):
                     return str(args[0])
