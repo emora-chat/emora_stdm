@@ -22,6 +22,10 @@
   "expressions": {
     "negation": ["no", "not", "don't", "dont", "won't", "wont", "shouldn't", "shouldnt",
                  "can't", "cant", "isn't", "isnt"],
+    "positive_sentiment": ["good", "great", "fantastic", "lovely", "awesome", "wonderful", "spectacular",
+                            "superb", "excellent", "nice", "sweet", "cute", "adorable", "fun", "perfect",
+                            "super"],
+    "negative_sentiment": ["bad", "stupid", "horrible", "awful", "dumb", "sad", "terrible"],
 
     "someone": ["someone", "somebody", "some body", "some one"],
     "anyone":  ["any one", "anyone", "any body", "anybody"],

@@ -269,7 +269,14 @@ class DialogueFlow:
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
-            generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+            try:
+                generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+            except Exception as e:
+                print()
+                print(e)
+                print('Transition {}: {} failed'.format(str(transition), natex))
+                print()
+                generation = None
             if generation is not None:
                 transition_options[(generation, transition, vars)] = settings.score
             t2 = time()
@@ -338,7 +345,14 @@ class DialogueFlow:
             natex = self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
-            match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
+            try:
+                match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
+            except Exception as e:
+                print()
+                print(e)
+                print('Transition {}: {} failed'.format(str(transition), natex))
+                print()
+                match = None
             if match:
                 if debugging:
                     print('Transition {} matched "{}"'.format(transition[:2], natural_language))
