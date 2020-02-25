@@ -53,6 +53,9 @@ flow = {
                         'score': 0.9
                     }
                 },
+                '[why, you, {that, music box}]':{
+                    '"I just think a music box is a unique gift. It\'s kind of an intricate mechanism and it\'s beautiful to listen to."': 'gift_suggestion'
+                },
                 '[name]': {
                     '"Her name is Shannon."': 'gift_suggestion'
                 },
