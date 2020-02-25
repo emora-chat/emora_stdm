@@ -122,7 +122,8 @@ flow = {
                 '[{i, "i\'m"}, {know, sure}]}]': {
                     'score': 1.1,
                     'state': 'gift_thanks',
-                    '"Okay, well, if you\'re sure, then I\'ll get her a" $birthday_friend_gift "! Thanks so much for helping me!"': 'end'
+                    '"Okay, well, if you\'re sure, then I\'ll get her the music box! '
+                    'I think she\'ll appreciate how unique it is as a gift. Thanks so much for helping me!"': 'end'
                 },
                 '{[!a /.*/] [{get, buy, give, gift} {her, friend, Shannon}]}':{
                     'score': 0.2,
