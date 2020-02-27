@@ -391,3 +391,10 @@ class NamedEntity(Macro):
             if not args or ent.label_.lower() in {x.lower() for x in args}:
                 entities.add(ent.text)
         return entities
+
+class PartOfSpeech(Macro):
+    def __init__(self):
+        pass
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        doc = nlp(ngrams.text())
+        return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
