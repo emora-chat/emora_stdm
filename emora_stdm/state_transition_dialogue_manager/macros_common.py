@@ -391,3 +391,28 @@ class NamedEntity(Macro):
             if not args or ent.label_.lower() in {x.lower() for x in args}:
                 entities.add(ent.text)
         return entities
+
+class PartOfSpeech(Macro):
+    def __init__(self):
+        pass
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        doc = nlp(ngrams.text())
+        return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
+
+class Lemma(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer.lemmatize('initialize')
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if ngrams:
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & args
+            return set().union(*[lemma_map[match] for match in matches])

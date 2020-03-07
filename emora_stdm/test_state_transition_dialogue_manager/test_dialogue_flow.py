@@ -253,7 +253,6 @@ def test_information_state_based_dialogue():
     df.user_turn('candy')
     assert df.system_turn().strip() == 'i am a smart info state manager'
     df.user_turn('ice cream', debugging=True)
-    assert df.state() == 'root'
     assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
     df.user_turn('ice cream', debugging=True)
     assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
