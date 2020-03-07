@@ -87,7 +87,8 @@ class DialogueFlow:
             'GATE': Gate(self),
             'CLR': Clear(),
             'NER': NamedEntity(),
-            'POS': PartOfSpeech()
+            'POS': PartOfSpeech(),
+            'LEM': Lemma()
         }
         if macros:
             self._macros.update(macros)

@@ -50,7 +50,8 @@ macros = {
     'EQ': Equal(),
     'GATE': Gate(df),
     'CLR': Clear(),
-    'NER': NamedEntity()
+    'NER': NamedEntity(),
+    'LEM': Lemma()
 }
 
 def test_ONT():
@@ -203,6 +204,22 @@ def test_NER():
     assert match
     natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
     match = natex.match('this is a test for someone', debugging=False)
+    assert not match
+
+def test_LEM():
+    natex = NatexNLU('[Swimming has same lemma as #LEM(swim)]', macros=macros)
+    match = natex.match('Swimming has same lemma as swim', debugging=True)
+    assert match
+    match = natex.match('Swimming has same lemma as swims', debugging=False)
+    assert match
+    match = natex.match('Swimming has same lemma as running', debugging=False)
+    assert not match
+    natex = NatexNLU('[good lemmas #LEM(good)]', macros=macros)
+    match = natex.match('good lemmas are good', debugging=False)
+    assert match
+    match = natex.match('good lemmas are better', debugging=False)
+    assert match
+    match = natex.match('good lemmas are wonderful', debugging=False)
     assert not match
 
 
