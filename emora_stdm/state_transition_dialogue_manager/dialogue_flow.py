@@ -16,6 +16,7 @@ from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.state import State
+from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
 from time import time
 
 Graph = Database(MapMultidigraph)
@@ -45,6 +46,7 @@ class DialogueFlow:
         self._potential_transition = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
+        self._response = None
         self._vars = {}
         self._gate_requirements = defaultdict(dict)
         self._gates = defaultdict(set)
@@ -91,6 +93,7 @@ class DialogueFlow:
         if macros:
             self._macros.update(macros)
         self._global_states = set()
+        self._rules = UpdateRules(vars=self._vars, macros=self._macros)
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
 
@@ -142,6 +145,7 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
+        self.state_update(natural_language, debugging)
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
@@ -261,6 +265,9 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = {}
+        if self._response is not None:
+            response, vars, dest, score = self._response
+            transition_options[(response, (self._state, dest, self._speaker), vars)] = score
         self._gate_buffer.clear()
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
@@ -709,4 +716,15 @@ class DialogueFlow:
                     or self._gate_requirements[self._potential_transition][k] is not None:
                     return False
         return True
+
+    def add_update_rule(self, precondition, postcondition=None):
+        self._rules.add(precondition, postcondition)
+
+    def state_update(self, user_input, debugging=False):
+        vars = HashableDict(self.vars())
+        self._rules.set_vars(vars)
+        result = self._rules.update(user_input, debugging)
+        if result is not None:
+            response, score = result
+            self._response = response, vars, self._state, score
 

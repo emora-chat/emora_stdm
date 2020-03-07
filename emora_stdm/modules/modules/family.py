@@ -13,6 +13,8 @@ birthday_friend_gift: told user planned gift
 birthday_friend_gift_rec: planned gift to get friend
 birthday_friend_no_help: user is not helping emora
 
+#ANY($intent=something)
+
 '''
 
 flow = {

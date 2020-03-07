@@ -1,0 +1,19 @@
+
+
+{
+  "state": "root",
+  "[I, {saw, watched} $movie=#MOVIELOOKUP()]": {
+    "I've seen $movie too. {Did you like it?, You liked it, right?}": {
+      "state": "response_state",
+      "error": {
+        "Sorry, I didn't catch that. Did you like $movie?": "response_state"
+      },
+      "{#SENT(positive), [yes]}": {
+
+      },
+      "{#SENT(negative), [no]}": {
+
+      }
+    }
+  }
+}

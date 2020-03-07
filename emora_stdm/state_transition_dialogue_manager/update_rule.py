@@ -1,0 +1,58 @@
+
+import regex
+from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
+
+class UpdateRule:
+
+    def __init__(self, precondition, postcondition='', vars=None, macros=None):
+        self.precondition = None
+        self.precondition_score = 1.0
+        self.postcondition = None
+        self.postcondition_score = None
+        if macros is None:
+            macros = {}
+        if vars is None:
+            vars = {}
+        self.vars = vars
+        self.macros = macros
+        self.set_precondition(precondition)
+        if postcondition:
+            self.set_postcondition(postcondition)
+
+    def set_precondition(self, natex_string):
+        natex, score = self._natex_string_score(natex_string)
+        self.precondition = NatexNLU(natex, macros=self.macros)
+        if score:
+            self.precondition_score = score
+
+    def set_postcondition(self, natex_string):
+        natex, score = self._natex_string_score(natex_string)
+        self.postcondition = NatexNLG(natex, macros=self.macros)
+        self.postcondition_score = score
+
+    def _natex_string_score(self, natex_string):
+        i = natex_string.rfind(' (')
+        if i != -1:
+            for c in natex_string[i + len(' ('):-1]:
+                if c not in set('0123456789.'):
+                    return natex_string, None
+            return natex_string[:i], float(natex_string[i + len(' ('):-1])
+        return natex_string, None
+
+    def satisfied(self, user_input, debugging=False):
+        return self.precondition.match(user_input, vars=self.vars, debugging=debugging)
+
+    def apply(self, debugging=False):
+        return self.postcondition.generate(vars=self.vars, debugging=debugging)
+
+    def set_vars(self, vars):
+        self.vars = vars
+
+    def __str__(self):
+        return '{} ==> {}'.format(self.precondition, self.postcondition)
+
+    def __repr__(self):
+        return str(self)
+
+

@@ -241,3 +241,26 @@ def test_reset():
     assert df.state() == States.E
 
 
+def test_information_state_based_dialogue():
+    df = DialogueFlow('root', initial_speaker=Speaker.USER)
+    df.add_user_transition('root', 'one', '$x=[{cat, dog}]')
+    df.set_error_successor('root', 'one')
+    df.add_system_transition('one', 'root', 'i am a stupid state machine')
+    df.add_update_rule('[$x={ice cream, candy}]')
+    df.add_update_rule('#ANY($x=candy)', '$y=blah')
+    df.add_update_rule('#ANY($y=blah)', 'i am a smart info state manager (2.0)')
+
+    df.user_turn('candy')
+    assert df.system_turn().strip() == 'i am a smart info state manager'
+    df.user_turn('ice cream', debugging=True)
+    assert df.state() == 'root'
+    assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
+    df.user_turn('ice cream', debugging=True)
+    assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
+    df.user_turn('ice cream', debugging=True)
+    assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
+    df.user_turn('ice cream', debugging=True)
+    assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
+
+
+

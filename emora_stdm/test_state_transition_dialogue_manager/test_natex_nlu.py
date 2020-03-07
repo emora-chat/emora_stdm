@@ -136,7 +136,10 @@ def SET(ngrams, vars, args):
 def INTER(ngrams, vars, args):
     return set.intersection(*args)
 
-macros = {'SIMPLE': SIMPLE, 'HAPPY': HAPPY, 'FIRSTS': FIRSTS, 'INTER': INTER, 'SET': SET}
+def MOVIE(ngrams, vars, args):
+    return ngrams & {'Avengers', 'Star Wars'}
+
+macros = {'SIMPLE': SIMPLE, 'HAPPY': HAPPY, 'FIRSTS': FIRSTS, 'INTER': INTER, 'SET': SET, 'MOVIE': MOVIE}
 
 def test_simple_macro():
     natex = NatexNLU('[!i #SIMPLE]', macros=macros)
@@ -165,6 +168,14 @@ def test_nested_macro():
     natex = NatexNLU('#INTER(#SET(apple, banana), #SET(apple, orange))', macros=macros)
     assert natex.match('apple', debugging=False)
     assert not natex.match('orange')
+
+def test_sigdial_natex1():
+    natex = NatexNLU('[{have, did} you {seen, watch} $MOVIE={avengers, star wars}]', macros=macros)
+    assert natex.match('so have you seen avengers', debugging=True)
+
+def test_sigdial_natex2():
+    natex = NatexNLU('[I {watched, saw} $MOVIE={avengers, star wars}]', macros=macros)
+    assert natex.match('last night I saw avengers', debugging=True)
 
 class States(Enum):
     A = 0
