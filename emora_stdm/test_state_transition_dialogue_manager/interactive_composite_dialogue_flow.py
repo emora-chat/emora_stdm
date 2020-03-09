@@ -29,7 +29,8 @@ if __name__ == '__main__':
     df2.add_state(('SYSTEM', 'topic_err'), global_nlu='back')
     df2.add_state(('one', 6), global_nlu='dog')
 
-    cdf = CompositeDialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER)
+    cdf = CompositeDialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER,
+                                system_error_state='topic_err', user_error_state='topic_err')
     cdf.add_component(df1, 'one')
     cdf.add_component(df2, 'two')
     cdf.add_state('start', 'greet')

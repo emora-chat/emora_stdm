@@ -72,7 +72,7 @@ class CompositeDialogueFlow:
             try:
                 next_state = self._controller.user_transition(natural_language, self._controller.state(), debugging=debugging)
                 self._controller.take_transition(next_state)
-            except RuntimeError as e:
+            except Exception as e:
                 if debugging:
                     print(e)
                     print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
