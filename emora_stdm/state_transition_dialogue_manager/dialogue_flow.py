@@ -1,6 +1,5 @@
 
 from enum import Enum, auto
-
 from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
@@ -18,8 +17,14 @@ from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
 from time import time
+#from multiprocessing import Pool
+from pathos.multiprocessing import ProcessingPool as Pool
 
-Graph = Database(MapMultidigraph)
+
+def precache(transition_datas):
+    for tran_datas in transition_datas:
+        tran_datas['natex'].precache()
+    return transition_datas
 
 class EnumByName(Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -40,7 +45,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
-        self._graph = Graph()
+        self._graph = Database(MapMultidigraph)()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
         self._potential_transition = None
@@ -403,9 +408,31 @@ class DialogueFlow:
         """
         Make DialogueFlow fast from the start with the power of precache!
         """
+        n = 3
+        transitions = []
+        transition_data_sets = []
+        for i in range(n):
+            transitions.append([])
+            transition_data_sets.append([])
+        count = 0
         for transition in self._graph.arcs():
-            data = self._graph.arc_data(*transition)
-            data['natex'].precache()
+            transition_data_sets[count].append(self._graph.arc_data(*transition))
+            transitions[count].append(transition)
+            count = (count + 1) % n
+
+        print(transitions)
+        print()
+        print(transition_data_sets)
+        print()
+        print()
+        print("beginning multiprocessing...")
+        print()
+        start = time()
+        p = Pool(n)
+        results = p.map(precache, transition_data_sets)
+        print(results)
+        print()
+        print("Elapsed: ", time() - start)
 
     def check(self, debugging=False):
         all_good = True
@@ -729,4 +756,3 @@ class DialogueFlow:
         if result is not None:
             response, score = result
             self._response = response, vars, self._state, score
-
