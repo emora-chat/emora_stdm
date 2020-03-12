@@ -114,7 +114,7 @@ class NatexNLG:
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
-        parser = Lark(grammar)
+        parser = Lark(grammar, parser='earley')
 
         def __init__(self, natex):
             self._natex = natex

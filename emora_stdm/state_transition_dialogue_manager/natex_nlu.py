@@ -117,7 +117,7 @@ class NatexNLU:
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
-        parser = Lark(grammar)
+        parser = Lark(grammar, parser='earley')
 
         def __init__(self, natex):
             self._natex = natex
