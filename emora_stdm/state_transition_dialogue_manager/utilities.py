@@ -1,4 +1,22 @@
 
+import random
+
+
+def random_max(collection, key=None):
+    max_collection = []
+    if key is not None:
+        for item in collection:
+            if not max_collection or key(item) > key(max_collection[0]):
+                max_collection = [item]
+            elif key(max_collection[0]) == key(item):
+                max_collection.append(item)
+    else:
+        for item in collection:
+            if not max_collection or item > max_collection[0]:
+                max_collection = [item]
+            elif item == max_collection[0]:
+                max_collection.append(item)
+    return random.choice(max_collection)
 
 class ConfigurationDict(dict):
 

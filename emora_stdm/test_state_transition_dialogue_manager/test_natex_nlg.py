@@ -75,3 +75,8 @@ def test_simple_macro():
 def test_empty_string_nlg():
     natex = NatexNLG('')
     assert natex.generate() == ''
+
+
+################################ Bugs ##########################################
+
+# test for markup in nlg literal

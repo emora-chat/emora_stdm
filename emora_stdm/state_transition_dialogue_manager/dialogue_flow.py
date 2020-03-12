@@ -17,6 +17,7 @@ from emora_stdm.state_transition_dialogue_manager.knowledge_base import Knowledg
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
+from emora_stdm.state_transition_dialogue_manager.utilities import random_max
 from time import time
 
 Graph = Database(MapMultidigraph)
@@ -304,7 +305,7 @@ class DialogueFlow:
                         del transition_options[key]
                 else:
                     break
-            response, transition, vars = max(transition_options, key=lambda x: transition_options[x])
+            response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -370,7 +371,7 @@ class DialogueFlow:
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
-            score, transition, vars = max(transition_options, key=lambda x: x[0])
+            score, transition, vars = random_max(transition_options, key=lambda x: x[0])
             if debugging:
                 updates = {}
                 for k, v in vars.items():
