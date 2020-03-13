@@ -240,9 +240,20 @@ class DialogueFlow:
                         self.add_state(target)
                         self.set_error_successor(target, root)
                 if speaker == Speaker.USER:
-                    self.add_user_transition(source, target, natex, score=score)
+                    if self.has_transition(source, target, Speaker.USER):
+                        intermediate = self.autostate()
+                        self.add_state(intermediate, target, user_multi_hop=True)
+                        self.add_user_transition(source, intermediate, natex, score=score)
+                    else:
+                        self.add_user_transition(source, target, natex, score=score)
                 elif speaker == Speaker.SYSTEM:
-                    self.add_system_transition(source, target, natex, score=score)
+                    if self.has_transition(source, target, Speaker.SYSTEM):
+                        intermediate = self.autostate()
+                        self.add_state(intermediate, system_multi_hop=True)
+                        self.add_system_transition(intermediate, target, '')
+                        self.add_system_transition(source, intermediate, natex, score=score)
+                    else:
+                        self.add_system_transition(source, target, natex, score=score)
 
         # swtich turn (will be switched back if multi hop detected on next recursive call)
         if speaker == Speaker.USER:
@@ -730,4 +741,7 @@ class DialogueFlow:
         if result is not None:
             response, score = result
             self._response = response, vars, self._state, score
+
+    def knowledge_base(self):
+        return self._kb
 
