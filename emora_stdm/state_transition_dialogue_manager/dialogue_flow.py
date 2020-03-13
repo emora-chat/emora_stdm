@@ -22,6 +22,8 @@ from time import time
 
 Graph = Database(MapMultidigraph)
 
+_autostate = '-1'
+
 class EnumByName(Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name
@@ -33,11 +35,12 @@ class Speaker(EnumByName):
 class DialogueFlow:
 
     Speaker = Speaker
-    _autostate = '-1'
+
     @classmethod
     def autostate(cls):
-        cls._autostate = str(int(cls._autostate) + 1)
-        return cls._autostate
+        global _autostate
+        _autostate = str(int(_autostate) + 1)
+        return _autostate
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
@@ -255,7 +258,7 @@ class DialogueFlow:
                     else:
                         self.add_system_transition(source, target, natex, score=score)
 
-        # swtich turn (will be switched back if multi hop detected on next recursive call)
+        # switch turn (will be switched back if multi hop detected on next recursive call)
         if speaker == Speaker.USER:
             speaker = Speaker.SYSTEM
         elif speaker == Speaker.SYSTEM:

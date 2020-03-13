@@ -96,7 +96,7 @@ class NatexNLU:
 
     class Compiler(Visitor):
         grammar = r"""
-        start: term
+        start: term (","? " "? term)*
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | optional | negation 
               | kleene_star | kleene_plus | regex | reference | assignment | macro | literal
         flexible_sequence: "[" " "? term (","? " "? term)* "]"
@@ -291,7 +291,7 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = self.to_strings(args)[0] + ' _END_'
+            tree.children[0] = r'\b' + r'\b\W*\b'.join(self.to_strings(args)) + r'\b' + ' _END_'
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
