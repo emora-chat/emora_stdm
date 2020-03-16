@@ -416,3 +416,15 @@ class Lemma(Macro):
                     lemma_map[lemma].add(gram)
             matches = lemma_map.keys() & args
             return set().union(*[lemma_map[match] for match in matches])
+
+class Score(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        score = None
+        for arg in args:
+            if '=' in arg:
+                var, val = _assignment_to_var_val(arg)
+                if var not in vars or vars[var] != val:
+                    return
+            else:
+                score = float(arg)
+        vars['__score__'] = score

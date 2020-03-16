@@ -94,7 +94,8 @@ class DialogueFlow:
             'CLR': Clear(),
             'NER': NamedEntity(),
             'POS': PartOfSpeech(),
-            'LEM': Lemma()
+            'LEM': Lemma(),
+            'SCORE': Score()
         }
         if macros:
             self._macros.update(macros)
@@ -302,7 +303,12 @@ class DialogueFlow:
                 print()
                 generation = None
             if generation is not None:
-                transition_options[(generation, transition, vars)] = settings.score
+                if '__score__' in vars:
+                    score = vars['__score__']
+                    del vars['__score__']
+                else:
+                    score = settings.score
+                transition_options[(generation, transition, vars)] = score
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -380,7 +386,12 @@ class DialogueFlow:
             if match:
                 if debugging:
                     print('Transition {} matched "{}"'.format(transition[:2], natural_language))
-                transition_options.append((settings.score, transition, vars))
+                if '__score__' in vars:
+                    score = vars['__score__']
+                    del vars['__score__']
+                else:
+                    score = settings.score
+                transition_options.append((score, transition, vars))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))

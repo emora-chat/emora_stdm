@@ -130,7 +130,11 @@ class NatexNLU:
             self._debugging = False
 
         def parse(self):
-            self._parsed_tree = self.parser.parse(self._natex)
+            try:
+                self._parsed_tree = self.parser.parse(self._natex)
+            except Exception as e:
+                print('Error parsing {}'.format(self._natex))
+                raise e
 
         def compile(self, ngrams, vars, macros, debugging=False):
             if self._parsed_tree is None:
