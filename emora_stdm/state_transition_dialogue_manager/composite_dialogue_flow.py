@@ -91,8 +91,10 @@ class CompositeDialogueFlow:
     def precache_transitions(self, process_num=1):
         start = time()
         for name,df in self._components.items():
+            start2 = time()
             print(name)
             df.precache_transitions(process_num)
+            print("Elapsed: ", time() - start2)
         print("Elapsed: ", time() - start)
 
     def add_state(self, state, error_successor=None):

@@ -1,12 +1,9 @@
 
-from structpy.graph.labeled_digraph import MapMultidigraph
-import structpy
+from emora_stdm.state_transition_dialogue_manager.database import GraphDatabase as Graph
 from structpy.graph.traversal import preset as traversal
 import json
 from collections import defaultdict
 import regex
-
-Graph = structpy.graph.database.Database(MapMultidigraph)
 
 _type = 'type'
 _attr = 'attr'

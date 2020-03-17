@@ -44,4 +44,5 @@ if __name__ == '__main__':
     cdf.add_user_transition(('one', 'A'), ('SYSTEM', 'topic_err'), 'back')
 
     cdf.precache_transitions()
-    cdf.run(debugging=True)
+
+    cdf.run(debugging=False)
