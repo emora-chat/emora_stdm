@@ -96,7 +96,7 @@ class NatexNLU:
 
     class Compiler(Visitor):
         grammar = r"""
-        start: term
+        start: term (","? " "? term)*
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | optional | negation 
               | kleene_star | kleene_plus | regex | reference | assignment | macro | literal
         flexible_sequence: "[" " "? term (","? " "? term)* "]"
@@ -117,7 +117,7 @@ class NatexNLU:
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
-        parser = Lark(grammar)
+        parser = Lark(grammar, parser='earley')
 
         def __init__(self, natex):
             self._natex = natex
@@ -130,7 +130,11 @@ class NatexNLU:
             self._debugging = False
 
         def parse(self):
-            self._parsed_tree = self.parser.parse(self._natex)
+            try:
+                self._parsed_tree = self.parser.parse(self._natex)
+            except Exception as e:
+                print('Error parsing {}'.format(self._natex))
+                raise e
 
         def compile(self, ngrams, vars, macros, debugging=False):
             if self._parsed_tree is None:
@@ -291,7 +295,7 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = self.to_strings(args)[0] + ' _END_'
+            tree.children[0] = r'\b' + r'\b\W*\b'.join(self.to_strings(args)) + r'\b' + ' _END_'
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):

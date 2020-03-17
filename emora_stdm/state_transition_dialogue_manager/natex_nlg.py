@@ -114,7 +114,7 @@ class NatexNLG:
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
         symbol: /[a-z_A-Z.0-9]+/
         """
-        parser = Lark(grammar)
+        parser = Lark(grammar, parser='earley')
 
         def __init__(self, natex):
             self._natex = natex
@@ -128,7 +128,11 @@ class NatexNLG:
             self._failed = False
 
         def parse(self):
-            self._parsed_tree = self.parser.parse(self._natex)
+            try:
+                self._parsed_tree = self.parser.parse(self._natex)
+            except Exception as e:
+                print('Error parsing {}'.format(self._natex))
+                raise e
 
         def compile(self, ngrams, vars, macros, debugging=False):
             if self._parsed_tree is None:

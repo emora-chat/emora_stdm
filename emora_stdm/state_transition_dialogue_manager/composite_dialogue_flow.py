@@ -45,9 +45,8 @@ class CompositeDialogueFlow:
                 response, next_state = self._controller.system_transition(self._controller.state(), debugging=debugging)
                 self._controller.take_transition(next_state)
             except Exception as e:
-                if debugging:
-                    print(e)
-                    print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                print(e)
                 response, next_state = '', self._system_error_state
                 visited = visited - {next_state}
             if isinstance(next_state, tuple):
@@ -72,10 +71,9 @@ class CompositeDialogueFlow:
             try:
                 next_state = self._controller.user_transition(natural_language, self._controller.state(), debugging=debugging)
                 self._controller.take_transition(next_state)
-            except RuntimeError as e:
-                if debugging:
-                    print(e)
-                    print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+            except Exception as e:
+                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                print(e)
                 next_state = self._user_error_state
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
