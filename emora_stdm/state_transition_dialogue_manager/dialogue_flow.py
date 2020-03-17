@@ -434,24 +434,29 @@ class DialogueFlow:
         """
         Make DialogueFlow fast from the start with the power of precache!
         """
-        transition_data_sets = []
-        for i in range(process_num):
-            transition_data_sets.append([])
-        count = 0
-        for transition in self._graph.arcs():
-            transition_data_sets[count].append(self._graph.arc_data(*transition))
-            count = (count + 1) % process_num
+        if process_num == 1:
+            for transition in self._graph.arcs():
+                data = self._graph.arc_data(*transition)
+                data['natex'].precache()
+        else:
+            transition_data_sets = []
+            for i in range(process_num):
+                transition_data_sets.append([])
+            count = 0
+            for transition in self._graph.arcs():
+                transition_data_sets[count].append(self._graph.arc_data(*transition))
+                count = (count + 1) % process_num
 
-        print("beginning multiprocessing...")
-        p = Pool(process_num)
-        results = p.map(precache, transition_data_sets)
-        for i in range(len(results)):
-            result_list = results[i]
-            t_list = transition_data_sets[i]
-            for j in range(len(result_list)):
-                parsed_tree = result_list[j]
-                t = t_list[j]
-                t['natex']._compiler._parsed_tree = parsed_tree
+            print("multiprocessing...")
+            p = Pool(process_num)
+            results = p.map(precache, transition_data_sets)
+            for i in range(len(results)):
+                result_list = results[i]
+                t_list = transition_data_sets[i]
+                for j in range(len(result_list)):
+                    parsed_tree = result_list[j]
+                    t = t_list[j]
+                    t['natex']._compiler._parsed_tree = parsed_tree
 
 
     def check(self, debugging=False):
