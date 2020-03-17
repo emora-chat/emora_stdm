@@ -4,7 +4,7 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from structpy.graph.labeled_digraph import MapMultidigraph
-from structpy.graph import Database
+import structpy
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn
 from emora_stdm.state_transition_dialogue_manager.utilities import AlterationTrackingDict
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
@@ -17,9 +17,8 @@ from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
 from time import time
-#from multiprocessing import Pool
+import dill
 from pathos.multiprocessing import ProcessingPool as Pool
-
 
 def precache(transition_datas):
     for tran_datas in transition_datas:
@@ -45,7 +44,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
-        self._graph = Database(MapMultidigraph)()
+        self._graph = structpy.graph.database.Database(MapMultidigraph)()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
         self._potential_transition = None
