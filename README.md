@@ -89,9 +89,10 @@ are arbitrarily nestable and concatenable.
 
 ### Literal
 ```
-'hello there'
+`she said "hi" 3 times`
 ```
-directly match a literal substring
+directly match a literal substring. Can also be used to escape from natex syntax,
+inserting symbols, numbers, and punctuation into Natex generations.
 
 ### Disjunction
 ```
@@ -220,9 +221,11 @@ response string instead of match a user utterance.
 ```python
 from emora_stdm import NatexNLG
 
-natex = NatexNLG('[!{this, here} is a {example, test}]')
+natex = NatexNLG('[!{this, here} is a {example, test}, `, testing! 1, 2, 3...`]')
 print(natex.generate())
 ```
+
+The above example might print "this is a test, testing! 1, 2, 3..."
 
 Options (disjunctions) in a NatexNLG will result in one of the set of options to be selected
 to generate the response. 

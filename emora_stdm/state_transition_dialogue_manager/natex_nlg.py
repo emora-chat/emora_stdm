@@ -111,7 +111,7 @@ class NatexNLG:
         macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
         macro_arg: macro_literal | macro
         macro_literal: /[^#), ][^#),]*/
-        literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\""
+        literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\"" | "`" /[^`]+/ "`"
         symbol: /[a-z_A-Z.0-9]+/
         """
         parser = Lark(grammar, parser='earley')
