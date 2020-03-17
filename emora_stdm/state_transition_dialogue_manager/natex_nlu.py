@@ -297,6 +297,7 @@ class NatexNLU:
             tree.data = 'compiled'
             tree.children[0] = r'\b\W*\b'.join(self.to_strings(args)) + ' _END_'
 
+
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
                 def flexible_sequence(self, args):
