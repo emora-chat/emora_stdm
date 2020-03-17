@@ -4,6 +4,7 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from emora_stdm.state_transition_dialogue_manager.database import GraphDatabase
+from structpy.graph.labeled_digraph import MapMultidigraph
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn
 from emora_stdm.state_transition_dialogue_manager.utilities import AlterationTrackingDict
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
