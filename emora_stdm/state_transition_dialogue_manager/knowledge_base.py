@@ -1,12 +1,12 @@
 
 from structpy.graph.labeled_digraph import MapMultidigraph
-from structpy.graph import Database
+import structpy
 from structpy.graph.traversal import preset as traversal
 import json
 from collections import defaultdict
 import regex
 
-Graph = Database(MapMultidigraph)
+Graph = structpy.graph.database.Database(MapMultidigraph)
 
 _type = 'type'
 _attr = 'attr'

@@ -2,7 +2,7 @@
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
-
+from time import time
 
 class CompositeDialogueFlow:
 
@@ -90,9 +90,12 @@ class CompositeDialogueFlow:
         self._controller.set_speaker(speaker)
         self._controller.set_state(state)
 
-    def precache_transitions(self):
-        for df in self._components.values():
-            df.precache_transitions()
+    def precache_transitions(self, process_num=1):
+        start = time()
+        for name,df in self._components.items():
+            print(name)
+            df.precache_transitions(process_num)
+        print("Elapsed: ", time() - start)
 
     def add_state(self, state, error_successor=None):
         if isinstance(state, tuple):

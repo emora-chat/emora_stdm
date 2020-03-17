@@ -23,7 +23,8 @@ from pathos.multiprocessing import ProcessingPool as Pool
 def precache(transition_datas):
     for tran_datas in transition_datas:
         tran_datas['natex'].precache()
-    return transition_datas
+    parsed_trees = [x['natex']._compiler._parsed_tree for x in transition_datas]
+    return parsed_trees
 
 class EnumByName(Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -403,35 +404,29 @@ class DialogueFlow:
                 print('Error transition {} -> {}'.format(self.state(), next_state))
             return next_state
 
-    def precache_transitions(self):
+    def precache_transitions(self, process_num=1):
         """
         Make DialogueFlow fast from the start with the power of precache!
         """
-        n = 3
-        transitions = []
         transition_data_sets = []
-        for i in range(n):
-            transitions.append([])
+        for i in range(process_num):
             transition_data_sets.append([])
         count = 0
         for transition in self._graph.arcs():
             transition_data_sets[count].append(self._graph.arc_data(*transition))
-            transitions[count].append(transition)
-            count = (count + 1) % n
+            count = (count + 1) % process_num
 
-        print(transitions)
-        print()
-        print(transition_data_sets)
-        print()
-        print()
         print("beginning multiprocessing...")
-        print()
-        start = time()
-        p = Pool(n)
+        p = Pool(process_num)
         results = p.map(precache, transition_data_sets)
-        print(results)
-        print()
-        print("Elapsed: ", time() - start)
+        for i in range(len(results)):
+            result_list = results[i]
+            t_list = transition_data_sets[i]
+            for j in range(len(result_list)):
+                parsed_tree = result_list[j]
+                t = t_list[j]
+                t['natex']._compiler._parsed_tree = parsed_tree
+
 
     def check(self, debugging=False):
         all_good = True
