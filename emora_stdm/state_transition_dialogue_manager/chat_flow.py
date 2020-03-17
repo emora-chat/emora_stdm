@@ -12,7 +12,7 @@ class ChatFlow(DialogueFlow):
         self.add_state('ur_error', 'ur_error_statement', user_multi_hop=True)
         self.add_user_transition('ur_error', 'ur_error_question', natexes.question)
         self.add_state('ur_error_statement')
-        self.add_system_transition('ur_error_statement', 'sr', '{"Yeah." "Uhhuh." "For sure." "Yep."}')
+        self.add_system_transition('ur_error_statement', 'sr', '{"Yeah." "For sure." "Yep."}')
         self.add_system_transition('ur_error_question', 'sr',
             '{"I\'m not sure about that." "That\'s a tough one." "I\'m not sure actually." "Huh, I don\'t know."}')
         self.add_state('dinit', system_multi_hop=True)
