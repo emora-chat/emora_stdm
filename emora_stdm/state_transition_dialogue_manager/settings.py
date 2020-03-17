@@ -9,7 +9,11 @@ class Settings(dict):
             self[k] = v
 
     def __getattr__(self, item):
-        return dict.__getitem__(self, item)
+        # to fix __getstate__ KeyError: https://bytes.com/topic/python/answers/626288-pickling-class-__getattr__
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            raise AttributeError
 
     def __setattr__(self, key, value):
         dict.__setitem__(self, key, value)

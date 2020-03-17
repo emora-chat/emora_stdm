@@ -43,4 +43,6 @@ if __name__ == '__main__':
     cdf.add_user_transition('topic', ('two', 6), '$item={alaska, bark, down}')
     cdf.add_user_transition(('one', 'A'), ('SYSTEM', 'topic_err'), 'back')
 
-    cdf.run(debugging=True)
+    cdf.precache_transitions()
+
+    cdf.run(debugging=False)

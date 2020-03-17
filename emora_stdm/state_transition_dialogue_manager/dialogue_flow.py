@@ -1,11 +1,9 @@
 
 from enum import Enum, auto
-
 from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
-from structpy.graph.labeled_digraph import MapMultidigraph
-from structpy.graph import Database
+from emora_stdm.state_transition_dialogue_manager.database import GraphDatabase
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn
 from emora_stdm.state_transition_dialogue_manager.utilities import AlterationTrackingDict
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
@@ -19,8 +17,14 @@ from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
 from emora_stdm.state_transition_dialogue_manager.utilities import random_max
 from time import time
+import dill
+from pathos.multiprocessing import ProcessingPool as Pool
 
-Graph = Database(MapMultidigraph)
+def precache(transition_datas):
+    for tran_datas in transition_datas:
+        tran_datas['natex'].precache()
+    parsed_trees = [x['natex']._compiler._parsed_tree for x in transition_datas]
+    return parsed_trees
 
 _autostate = '-1'
 
@@ -44,7 +48,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
-        self._graph = Graph()
+        self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._state = self._initial_state
         self._potential_transition = None
@@ -425,13 +429,34 @@ class DialogueFlow:
                 print('Error transition {} -> {}'.format(self.state(), next_state))
             return next_state
 
-    def precache_transitions(self):
+    def precache_transitions(self, process_num=1):
         """
         Make DialogueFlow fast from the start with the power of precache!
         """
-        for transition in self._graph.arcs():
-            data = self._graph.arc_data(*transition)
-            data['natex'].precache()
+        if process_num == 1:
+            for transition in self._graph.arcs():
+                data = self._graph.arc_data(*transition)
+                data['natex'].precache()
+        else:
+            transition_data_sets = []
+            for i in range(process_num):
+                transition_data_sets.append([])
+            count = 0
+            for transition in self._graph.arcs():
+                transition_data_sets[count].append(self._graph.arc_data(*transition))
+                count = (count + 1) % process_num
+
+            print("multiprocessing...")
+            p = Pool(process_num)
+            results = p.map(precache, transition_data_sets)
+            for i in range(len(results)):
+                result_list = results[i]
+                t_list = transition_data_sets[i]
+                for j in range(len(result_list)):
+                    parsed_tree = result_list[j]
+                    t = t_list[j]
+                    t['natex']._compiler._parsed_tree = parsed_tree
+
 
     def check(self, debugging=False):
         all_good = True
@@ -758,4 +783,3 @@ class DialogueFlow:
 
     def knowledge_base(self):
         return self._kb
-
