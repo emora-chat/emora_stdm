@@ -295,7 +295,7 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = r'\b' + r'\b\W*\b'.join(self.to_strings(args)) + r'\b' + ' _END_'
+            tree.children[0] = r'\b\W*\b'.join(self.to_strings(args)) + ' _END_'
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):
