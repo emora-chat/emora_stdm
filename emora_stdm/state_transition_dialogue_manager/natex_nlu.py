@@ -36,6 +36,7 @@ class NatexNLU:
             ngrams = Ngrams(natural_language)
         self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
+        self._regex = None
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
             original_vars.update({k: vars[k] for k in vars.altered()})
@@ -146,6 +147,11 @@ class NatexNLU:
             self._macros = macros
             self._debugging = debugging
             re = self.visit(self._tree).children[0]
+            self._tree = None
+            self._ngrams = None
+            self._vars = None
+            self._macros = None
+            self._assignments = set()
             if self._debugging:
                 print('  {:15} {}'.format('Final', re))
             return re
