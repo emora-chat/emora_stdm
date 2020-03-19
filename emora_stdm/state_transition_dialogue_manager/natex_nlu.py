@@ -36,6 +36,7 @@ class NatexNLU:
             ngrams = Ngrams(natural_language)
         self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
+        self._regex = None
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
             original_vars.update({k: vars[k] for k in vars.altered()})
@@ -96,7 +97,7 @@ class NatexNLU:
 
     class Compiler(Visitor):
         grammar = r"""
-        start: term
+        start: term (","? " "? term)*
         term: flexible_sequence | rigid_sequence | conjunction | disjunction | optional | negation 
               | kleene_star | kleene_plus | regex | reference | assignment | macro | literal
         flexible_sequence: "[" " "? term (","? " "? term)* "]"
@@ -113,11 +114,11 @@ class NatexNLU:
         macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
         macro_arg: macro_literal | macro
         macro_literal: /[^#), ][^#),]*/
-        literal: /[a-z_A-Z@.:]+( +[a-z_A-Z@.:]+)*/ | "\"" /[^\"]+/ "\""
+        literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "`" /[^`]+/ "`"
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
         """
-        parser = Lark(grammar)
+        parser = Lark(grammar, parser='earley')
 
         def __init__(self, natex):
             self._natex = natex
@@ -130,7 +131,11 @@ class NatexNLU:
             self._debugging = False
 
         def parse(self):
-            self._parsed_tree = self.parser.parse(self._natex)
+            try:
+                self._parsed_tree = self.parser.parse(self._natex)
+            except Exception as e:
+                print('Error parsing {}'.format(self._natex))
+                raise e
 
         def compile(self, ngrams, vars, macros, debugging=False):
             if self._parsed_tree is None:
@@ -142,6 +147,11 @@ class NatexNLU:
             self._macros = macros
             self._debugging = debugging
             re = self.visit(self._tree).children[0]
+            self._tree = None
+            self._ngrams = None
+            self._vars = None
+            self._macros = None
+            self._assignments = set()
             if self._debugging:
                 print('  {:15} {}'.format('Final', re))
             return re
@@ -291,7 +301,8 @@ class NatexNLU:
         def start(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] = self.to_strings(args)[0] + ' _END_'
+            tree.children[0] = r'\b\W*\b'.join(self.to_strings(args)) + ' _END_'
+
 
         def _current_compilation(self, tree):
             class DisplayTransformer(Transformer):

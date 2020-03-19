@@ -88,10 +88,26 @@ Natex expressions can be formed using the below constructs, which
 are arbitrarily nestable and concatenable.
 
 ### Literal
+
+Literals can be formed in three ways:
+
 ```
-'hello there'
+hello there
 ```
-directly match a literal substring
+sequences of alphabetical characters and whitespace are interpreted as literals.
+The above matches "hello there".
+
+```
+"Hello there!"
+```
+quotes can also be used to escape from natex syntax, allowing any characters
+inside the quotes to be interpreted as a literal. The above term matches 
+'Hello there!' exactly.
+
+```
+`she said "hi" 3 times!`
+```
+If you want to use quotes as part of the literal, wrap literal in `` instead.
 
 ### Disjunction
 ```
@@ -220,9 +236,11 @@ response string instead of match a user utterance.
 ```python
 from emora_stdm import NatexNLG
 
-natex = NatexNLG('[!{this, here} is a {example, test}]')
+natex = NatexNLG('[!{this, here} is a {example, test}, `, testing! 1, 2, 3...`]')
 print(natex.generate())
 ```
+
+The above example might print "this is a test, testing! 1, 2, 3..."
 
 Options (disjunctions) in a NatexNLG will result in one of the set of options to be selected
 to generate the response. 

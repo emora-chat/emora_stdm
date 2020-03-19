@@ -75,3 +75,12 @@ def test_simple_macro():
 def test_empty_string_nlg():
     natex = NatexNLG('')
     assert natex.generate() == ''
+
+
+################################ Bugs ##########################################
+
+# test for markup in nlg literal
+
+def test_nlg_markup():
+    natex = NatexNLG('`She said, "hi there!" 10. <tag>`')
+    assert natex.generate() == 'She said, "hi there!" 10. <tag>'

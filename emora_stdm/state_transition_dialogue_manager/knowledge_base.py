@@ -1,17 +1,15 @@
 
-from structpy.graph.labeled_digraph import MapMultidigraph
-from structpy.graph import Database
+from emora_stdm.state_transition_dialogue_manager.database import GraphDatabase as Graph
 from structpy.graph.traversal import preset as traversal
 import json
 from collections import defaultdict
 import regex
 
-Graph = Database(MapMultidigraph)
-
 _type = 'type'
 _attr = 'attr'
 _expr = 'expr'
 
+_expr_regex = r'[a-z A-Z0-9,]+'
 
 class KnowledgeBase(Graph):
 
@@ -48,21 +46,21 @@ class KnowledgeBase(Graph):
 
     def add_type(self, subtype, type):
         self.add(subtype, type, _type)
-        if regex.fullmatch(r'[a-z A-Z]+', type):
+        if regex.fullmatch(_expr_regex, type):
             self.add(type, type, _expr)
-        if regex.fullmatch(r'[a-z A-Z]+', subtype):
+        if regex.fullmatch(_expr_regex, subtype):
             self.add(subtype, subtype, _expr)
 
     def add_relation(self, subject, relation, object):
         self.add(subject, object, relation)
-        if regex.fullmatch(r'[a-z A-Z]+', subject):
+        if regex.fullmatch(_expr_regex, subject):
             self.add(subject, subject, _expr)
-        if regex.fullmatch(r'[a-z A-Z]+', object):
+        if regex.fullmatch(_expr_regex, object):
             self.add(object, object, _expr)
 
     def add_expression(self, node, expression):
         self.add(node, expression, _expr)
-        if regex.fullmatch(r'[a-z A-Z]+', node):
+        if regex.fullmatch(_expr_regex, node):
             self.add(node, node, _expr)
 
     def add_attr(self, type, attribute):

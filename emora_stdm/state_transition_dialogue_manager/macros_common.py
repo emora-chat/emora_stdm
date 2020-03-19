@@ -9,13 +9,16 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from spacy.pipeline import EntityRecognizer
+import traceback
 import spacy
+import sys
 try:
     nlp = spacy.load("en_core_web_sm")
-except IOError:
-    print('Error loading Spacy')
-    print('Please run the following command:')
-    print('python -m spacy download en_core_web_sm')
+except Exception as e:
+    traceback.print_exc()
+    print('Error loading Spacy', file=sys.stderr)
+    print('Please run the following command:', file=sys.stderr)
+    print('python -m spacy download en_core_web_sm', file=sys.stderr)
 try:
     nltk.data.find('wordnet')
 except:
@@ -416,3 +419,15 @@ class Lemma(Macro):
                     lemma_map[lemma].add(gram)
             matches = lemma_map.keys() & args
             return set().union(*[lemma_map[match] for match in matches])
+
+class Score(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        score = None
+        for arg in args:
+            if '=' in arg:
+                var, val = _assignment_to_var_val(arg)
+                if var not in vars or vars[var] != val:
+                    return
+            else:
+                score = float(arg)
+        vars['__score__'] = score

@@ -43,14 +43,15 @@ def test_single_user_transition():
     assert df.user_transition('oh hey there', df.state()) == States.C
 
 def test_system_transition():
-    df = DialogueFlow(States.A)
-    df.add_system_transition(States.A, States.B, 'hello', score=2.0)
-    df.add_system_transition(States.A, States.C, 'hey')
-    assert df.system_transition(df.state()) == ('hello', States.B)
-    df = DialogueFlow(States.A)
-    df.add_system_transition(States.A, States.B, 'hello')
-    df.add_system_transition(States.A, States.C, 'hey', score=2.0)
-    assert df.system_transition(df.state()) == ('hey', States.C)
+    for _ in range(20):
+        df = DialogueFlow(States.A)
+        df.add_system_transition(States.A, States.B, 'hello', score=2.0)
+        df.add_system_transition(States.A, States.C, 'hey')
+        assert df.system_transition(df.state()) == ('hello', States.B)
+        df = DialogueFlow(States.A)
+        df.add_system_transition(States.A, States.B, 'hello')
+        df.add_system_transition(States.A, States.C, 'hey', score=2.0)
+        assert df.system_transition(df.state()) == ('hey', States.C)
 
 def test_user_transition():
     df = DialogueFlow(States.B)
