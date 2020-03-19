@@ -3,6 +3,14 @@ from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueF
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from time import time
+import dill
+from pathos.multiprocessing import ProcessingPool as Pool
+
+def precache(transition_datas):
+    for tran_datas in transition_datas:
+        tran_datas['natex'].precache()
+    parsed_trees = [x['natex']._compiler._parsed_tree for x in transition_datas]
+    return parsed_trees
 
 class CompositeDialogueFlow:
 
@@ -90,11 +98,34 @@ class CompositeDialogueFlow:
 
     def precache_transitions(self, process_num=1):
         start = time()
-        for name,df in self._components.items():
-            start2 = time()
-            print(name)
-            df.precache_transitions(process_num)
-            print("Elapsed: ", time() - start2)
+
+        transition_data_sets = []
+        for i in range(process_num):
+            transition_data_sets.append([])
+        count = 0
+
+        if process_num == 1:
+            for name,df in self._components.items():
+                for transition in df._graph.arcs():
+                    data = df._graph.arc_data(*transition)
+                    data['natex'].precache()
+        else:
+            for name,df in self._components.items():
+                for transition in df._graph.arcs():
+                    transition_data_sets[count].append(df._graph.arc_data(*transition))
+                    count = (count + 1) % process_num
+
+            print("multiprocessing...")
+            p = Pool(process_num)
+            results = p.map(precache, transition_data_sets)
+            for i in range(len(results)):
+                result_list = results[i]
+                t_list = transition_data_sets[i]
+                for j in range(len(result_list)):
+                    parsed_tree = result_list[j]
+                    t = t_list[j]
+                    t['natex']._compiler._parsed_tree = parsed_tree
+
         print("Elapsed: ", time() - start)
 
     def add_state(self, state, error_successor=None):

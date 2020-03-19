@@ -145,6 +145,11 @@ class NatexNLG:
             self._debugging = debugging
             self._failed = False
             generated = self.visit(self._tree).children[0]
+            self._tree = None
+            self._ngrams = None
+            self._vars = None
+            self._macros = None
+            self._assignments = {}
             if self._debugging:
                 print('  {:15} {}'.format('Final', generated))
             return generated
