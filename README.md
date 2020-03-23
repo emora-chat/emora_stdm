@@ -88,11 +88,26 @@ Natex expressions can be formed using the below constructs, which
 are arbitrarily nestable and concatenable.
 
 ### Literal
+
+Literals can be formed in three ways:
+
 ```
-`she said "hi" 3 times`
+hello there
 ```
-directly match a literal substring. Can also be used to escape from natex syntax,
-inserting symbols, numbers, and punctuation into Natex generations.
+sequences of alphabetical characters and whitespace are interpreted as literals.
+The above matches "hello there".
+
+```
+"Hello there!"
+```
+quotes can also be used to escape from natex syntax, allowing any characters
+inside the quotes to be interpreted as a literal. The above term matches 
+'Hello there!' exactly.
+
+```
+`she said "hi" 3 times!`
+```
+If you want to use quotes as part of the literal, wrap literal in `` instead.
 
 ### Disjunction
 ```
