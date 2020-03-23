@@ -224,11 +224,11 @@ class NatexNLG:
                 try:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
-                    if self._debugging: print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
+                    print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
                     tree.children[0] = '_MACRO_EXCEPTION_'
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:
-                if self._debugging: print('ERROR: Macro {} not found'.format(symbol))
+                print('ERROR: Macro {} not found'.format(symbol))
                 tree.children[0] = '_MACRO_NOT_FOUND_'
 
         def macro_arg(self, tree):
