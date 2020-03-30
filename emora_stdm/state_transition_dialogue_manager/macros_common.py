@@ -262,7 +262,7 @@ class CheckVarsConjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
             var, val = _assignment_to_var_val(arg)
-            if var not in vars or vars[var] != val:
+            if (var not in vars and val != 'None') or (vars[var] != val):
                 return False
         return True
 
@@ -271,7 +271,7 @@ class CheckVarsDisjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
             var, val = _assignment_to_var_val(arg)
-            if var in vars and vars[var] == val:
+            if (val == 'None' and var not in vars) or (var in vars and vars[var] == val):
                 return True
         return False
 
@@ -431,3 +431,10 @@ class Score(Macro):
             else:
                 score = float(arg)
         vars['__score__'] = score
+
+class TokLimit(Macro):
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if ngrams.text().split() <= int(args[0]):
+            return True
+        else:
+            return False
