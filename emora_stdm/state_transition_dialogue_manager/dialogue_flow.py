@@ -100,7 +100,8 @@ class DialogueFlow:
             'NER': NamedEntity(),
             'POS': PartOfSpeech(),
             'LEM': Lemma(),
-            'SCORE': Score()
+            'SCORE': Score(),
+            'TOKLIMIT': TokLimit()
         }
         if macros:
             self._macros.update(macros)
