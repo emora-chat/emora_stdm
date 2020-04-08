@@ -6,6 +6,7 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet, HashableDict, ConfigurationDict
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager.natex_common import agree, disagree
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from spacy.pipeline import EntityRecognizer
@@ -431,3 +432,16 @@ class Score(Macro):
             else:
                 score = float(arg)
         vars['__score__'] = score
+
+
+class Agree(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.natex = NatexNLU(agree)
+        self.natex.precache()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.compile(ngrams, vars, None)
