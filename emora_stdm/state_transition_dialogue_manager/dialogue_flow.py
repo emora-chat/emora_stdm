@@ -101,7 +101,11 @@ class DialogueFlow:
             'POS': PartOfSpeech(),
             'LEM': Lemma(),
             'SCORE': Score(),
-            'TOKLIMIT': TokLimit()
+            'TOKLIMIT': TokLimit(),
+            'AGREE': Agree(),
+            'DISAGREE': Disagree(),
+            'QUESTION': Question(),
+            'NEGATION': Negation()
         }
         if macros:
             self._macros.update(macros)

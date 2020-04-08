@@ -6,7 +6,7 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet, HashableDict, ConfigurationDict
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
-from emora_stdm.state_transition_dialogue_manager.natex_common import agree, disagree
+from emora_stdm.state_transition_dialogue_manager.natex_common import *
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from spacy.pipeline import EntityRecognizer
@@ -447,8 +447,48 @@ class Agree(Macro):
     """
     def __init__(self):
         self.natex = NatexNLU(agree)
-        self.natex.precache()
+        self.natex.compile(None, None, None)
+        self.natex._regex = self.natex.regex().replace("_END_","").strip()
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        return self.natex.compile(ngrams, vars, None)
+        return self.natex.regex()
+
+class Disagree(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.natex = NatexNLU(disagree)
+        self.natex.compile(None, None, None)
+        self.natex._regex = self.natex.regex().replace("_END_","").strip()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.regex()
+
+class Question(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.natex = NatexNLU(question)
+        self.natex.compile(None, None, None)
+        self.natex._regex = self.natex.regex().replace("_END_","").strip()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.regex()
+
+class Negation(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.natex = NatexNLU(negation)
+        self.natex.compile(None, None, None)
+        self.natex._regex = self.natex.regex().replace("_END_","").strip()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.regex()
 
