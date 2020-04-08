@@ -1,5 +1,6 @@
 
-from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
+from emora_stdm.state_transition_dialogue_manager.dialogue_flow \
+    import DialogueFlow, module_source_target, module_state
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from time import time
@@ -24,7 +25,8 @@ class CompositeDialogueFlow:
         self._controller = DialogueFlow(initial_state, initial_speaker, macros, kb)
         self._controller_name = 'SYSTEM'
         # namespace : dialogue flow mapping
-        self._components = {'SYSTEM': self._controller}
+        self._components = {}
+        self.add_component(self._controller, 'SYSTEM')
         self._system_error_state = system_error_state
         self._user_error_state = user_error_state
 
@@ -91,6 +93,7 @@ class CompositeDialogueFlow:
             visited.add(next_state)
 
     def set_control(self, namespace, state):
+        state = module_state(state)
         speaker = self._controller.speaker()
         self.set_controller(namespace)
         self._controller.set_speaker(speaker)
@@ -129,6 +132,7 @@ class CompositeDialogueFlow:
         print("Elapsed: ", time() - start)
 
     def add_state(self, state, error_successor=None):
+        state = module_state(state)
         if isinstance(state, tuple):
             ns, state = state
         else:
@@ -136,6 +140,7 @@ class CompositeDialogueFlow:
         self._components[ns].add_state(state, error_successor)
 
     def add_user_transition(self, source, target, natex_nlu, **settings):
+        source, target = module_source_target(source, target)
         if isinstance(source, tuple):
             ns, source = source
         else:
@@ -143,6 +148,7 @@ class CompositeDialogueFlow:
         self._components[ns].add_user_transition(source, target, natex_nlu, **settings)
 
     def add_system_transition(self, source, target, natex_nlg, **settings):
+        source, target = module_source_target(source, target)
         if isinstance(source, tuple):
             ns, source = source
         else:
@@ -151,11 +157,13 @@ class CompositeDialogueFlow:
 
     def add_component(self, component, namespace):
         self._components[namespace] = component
+        component.set_is_module()
 
     def component(self, namespace):
         return self._components[namespace]
 
     def set_state(self, state):
+        state = module_state(state)
         self._controller.set_state(state)
 
     def set_controller(self, controller_name):

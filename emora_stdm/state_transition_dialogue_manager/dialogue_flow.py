@@ -21,6 +21,18 @@ from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
 
+def module_source_target(source, target):
+    if isinstance(source, str) and ':' in source:
+        source = tuple(source.split(':'))
+    if isinstance(target, str) and ':' in target:
+        target = tuple(target.split(':'))
+    return source, target
+
+def module_state(state):
+    if isinstance(state, str) and ':' in state:
+        state = tuple(state.split(':'))
+    return state
+
 def precache(transition_datas):
     for tran_datas in transition_datas:
         tran_datas['natex'].precache()
@@ -63,6 +75,7 @@ class DialogueFlow:
         self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
         self._prepends = {}
+        self._is_module = False
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -226,6 +239,13 @@ class DialogueFlow:
         # set up transitions
         expanded_transitions = []
         for natex, target in transitions:
+            natex_with_leading_digits_stripped = ''
+            i = 0
+            c = natex[i] if natex else ''
+            while c and c.isnumeric():
+                natex_with_leading_digits_stripped += c
+                i += 1
+                c = natex[i] if i < len(natex) else ''
             if natex == 'error':
                 if isinstance(target, dict):
                     if 'state' not in target:
@@ -283,6 +303,7 @@ class DialogueFlow:
         :param debugging:
         :return: a <state, response> tuple representing the successor state and response
         """
+        state = module_state(state)
         ti = time()
         if state is None:
             state = self._state
@@ -296,8 +317,13 @@ class DialogueFlow:
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         for transition in transitions:
             self._potential_transition = transition
+            if not self._is_module and isinstance(transition[1], tuple):
+                continue
             t1 = time()
             natex = self.transition_natex(*transition)
+            if '->' in transition[1]:
+                transition = (transition[1].split('->')[0], transition[1].split('->')[1], Speaker.SYSTEM)
+                natex = natex + self.transition_natex(*transition)
             settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
             try:
@@ -364,6 +390,7 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        state = module_state(state)
         self._error_transitioned = False
         ti = time()
         if state is None:
@@ -375,6 +402,8 @@ class DialogueFlow:
         self._gate_buffer.clear()
         for transition in self.transitions(state, Speaker.USER):
             self._potential_transition = transition
+            if not self._is_module and isinstance(transition[1], tuple):
+                continue
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
@@ -486,6 +515,7 @@ class DialogueFlow:
 
     def add_user_transition(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple],
                             natex_nlu: Union[str, NatexNLU, List[str]], **settings):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         if self.has_transition(source, target, Speaker.USER):
@@ -510,6 +540,7 @@ class DialogueFlow:
 
     def add_system_transition(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple],
                               natex_nlg: Union[str, NatexNLG, List[str]], **settings):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         if self.has_transition(source, target, Speaker.SYSTEM):
@@ -530,6 +561,7 @@ class DialogueFlow:
             self.set_transition_natex(source, target, Speaker.SYSTEM, prepend + natex)
 
     def add_state(self, state: Union[Enum, str, tuple], error_successor: Union[Union[Enum, str, tuple], None] =None, **settings):
+        state = module_state(state)
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
@@ -547,6 +579,7 @@ class DialogueFlow:
     # MID LEVEL
 
     def take_transition(self, target):
+        target = module_state(target)
         if self.speaker() is Speaker.SYSTEM:
             transition = (self.state(), target, self.speaker())
             self.state_settings(self.state()).memory.add(transition)
@@ -561,31 +594,37 @@ class DialogueFlow:
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
     def transition_natex(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         return self._graph.arc_data(source, target, speaker)['natex']
 
     def set_transition_natex(self, source, target, speaker, natex):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         self._graph.arc_data(source, target, speaker)['natex'] = natex
 
     def transition_settings(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         return self._graph.arc_data(source, target, speaker)['settings']
 
     def set_transition_settings(self, source, target, speaker, settings):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         self._graph.arc_data(source, target, speaker)['settings'] = settings
 
     def update_transition_settings(self, source, target, speaker, **settings):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         self.transition_settings(source, target, speaker).update(**settings)
 
     def transition_global_nlu(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple]):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         if self.has_transition(source, target, Speaker.USER) \
@@ -594,16 +633,19 @@ class DialogueFlow:
         return False
 
     def set_transition_global(self, source, target, is_global):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         self._graph.arc_data(source, target, Speaker.USER)['global'] = is_global
         self.update_transition_settings(source, target, Speaker.USER, score=0.5)
 
     def state_settings(self, state):
+        state = module_state(state)
         state = State(state)
         return self._graph.data(state)['settings']
 
     def _update_global_states(self, state):
+        state = module_state(state)
         state = State(state)
         global_nlu = self.state_settings(state).global_nlu
         if global_nlu:
@@ -621,6 +663,7 @@ class DialogueFlow:
                             self.remove_transition(*transition)
 
     def update_state_settings(self, state, **settings):
+        state = module_state(state)
         state = State(state)
         if 'settings' not in self._graph.data(state):
             self._graph.data(state)['settings'] = Settings()
@@ -630,6 +673,7 @@ class DialogueFlow:
         self._update_global_states(state)
 
     def remove_transition(self, source, target, speaker):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         MapMultidigraph.remove_arc(self.graph(), source, target, speaker)
@@ -641,14 +685,17 @@ class DialogueFlow:
         return self._state
 
     def set_state(self, state: Union[Enum, str, tuple]):
+        state = module_state(state)
         state = State(state)
         self._state = state
 
     def has_state(self, state):
+        state = module_state(state)
         state = State(state)
         return self._graph.has_node(state)
 
     def error_successor(self, state):
+        state = module_state(state)
         state = State(state)
         data = self._graph.data(state)
         if 'error' in data:
@@ -657,6 +704,7 @@ class DialogueFlow:
             return None
 
     def set_error_successor(self, state, error_successor):
+        state, error_successor = module_source_target(state, error_successor)
         state = State(state)
         error_successor = State(error_successor)
         self._graph.data(state)['error'] = error_successor
@@ -684,6 +732,7 @@ class DialogueFlow:
         :param speaker: optionally, filter returned transitions by speaker
         :return: a generator over (source, target, speaker) 3-tuples
         """
+        source_state = module_state(source_state)
         source_state = State(source_state)
         if speaker is None:
             yield from self._graph.arcs_out(source_state)
@@ -693,11 +742,13 @@ class DialogueFlow:
             return
 
     def has_transition(self, source, target, speaker):
+        source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
         return self._graph.has_arc(source, target, speaker)
 
     def incoming_transitions(self, target_state):
+        target_state = module_state(target_state)
         target_state = State(target_state)
         yield from self._graph.arcs_in(target_state)
 
@@ -749,6 +800,7 @@ class DialogueFlow:
         return self._var_dependencies
 
     def set_state_prepend(self, state, prepend):
+        state = module_state(state)
         self._prepends[state] = prepend
         if self.has_state(state):
             for transition in self._graph.arcs_in(state):
@@ -785,3 +837,6 @@ class DialogueFlow:
 
     def knowledge_base(self):
         return self._kb
+
+    def set_is_module(self):
+        self._is_module = True

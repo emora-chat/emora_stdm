@@ -263,4 +263,48 @@ def test_information_state_based_dialogue():
     assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
 
 
+def test_transitions_to_transitions():
+    df = DialogueFlow('root', initial_speaker=Speaker.SYSTEM)
+    transitions = {
+        'state': 'root',
 
+        '"Hello World!"': {
+            'state': 'state_2',
+
+            'error': {
+                '"Hi,"': 'root->state_2'
+            }
+        }
+    }
+    df.load_transitions(transitions, speaker=Speaker.SYSTEM)
+    assert df.system_turn() == 'Hello World!'
+    df.user_turn('blah')
+    assert df.system_turn() == 'Hi, Hello World!'
+
+def test_dialogue_flow_modular_transition():
+    # test to ensure dialogue flow module with transition to other
+    # component does not crash when tested indpendently
+    df = DialogueFlow('root', initial_speaker=Speaker.SYSTEM)
+    transitions = {
+        'state': 'root',
+
+        '"Hello World!"': {
+            'state': 'state_2',
+
+            'error': {
+                '"How are you?"': {
+                    'state': 'mystate',
+                    'error': 'root'
+                },
+                '"External thing"':{
+                    'state': 'external_component:external_state',
+                    'score': 2.0
+                }
+            }
+        }
+    }
+    df.load_transitions(transitions, speaker=Speaker.SYSTEM)
+    assert df.system_turn() == 'Hello World!'
+    df.user_turn('blah')
+    assert df.system_turn() == 'How are you?'
+    assert df.state() == 'mystate'
