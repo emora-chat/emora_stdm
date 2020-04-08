@@ -11,12 +11,12 @@ disagree = '{' + ', '.join([
 
 question = '{[!/([^ ]+)?/ {who, what, when, where, why, how} /.*/], ' \
            '[!{is, does, can, could, should, ' \
-           '"isn\'t", "shouldn\'t", "couldn\'t", "can\'t", "ain\'t", "don\'t", do,' \
-           'did, was, were, will, "wasn\'t", "weren\'t", "didn\'t", has, had, have} /.*/]}'
+           '"isnt", "shouldnt", "couldnt", "cant", "aint", "dont", do,' \
+           'did, was, were, will, "wasnt", "werent", "didnt", has, had, have} /.*/]}'
 
-negation = '{not, "don\'t" "can\'t" "won\'t" "shouldn\'t" "cannot" "didn\'t" "doesn\'t"' \
-           ' "isn\'t" "couldn\'t" "haven\'t" "aren\'t" "never" "impossible" "unlikely" ' \
-           '"no way" "none" "nothing"}'
+negation = '{not, "dont", "cant", "wont", "shouldnt", "cannot", "didnt", "doesnt",' \
+           ' "isnt", "couldnt", "havent", "arent", "never", "impossible", "unlikely", ' \
+           '"no way", "none", "nothing"}'
 
 if __name__ == '__main__':
     from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU

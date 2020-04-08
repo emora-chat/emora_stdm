@@ -51,7 +51,11 @@ macros = {
     'GATE': Gate(df),
     'CLR': Clear(),
     'NER': NamedEntity(),
-    'LEM': Lemma()
+    'LEM': Lemma(),
+    'AGREE': Agree(),
+    'DISAGREE': Disagree(),
+    'QUESTION': Question(),
+    'NEGATION': Negation()
 }
 
 def test_ONT():
@@ -220,6 +224,94 @@ def test_LEM():
     match = natex.match('good lemmas are better', debugging=False)
     assert match
     match = natex.match('good lemmas are wonderful', debugging=False)
+    assert not match
+
+def test_AGREE():
+    natex = NatexNLU('#AGREE', macros=macros)
+    match = natex.match('yes', debugging=False)
+    assert match
+    match = natex.match('of course', debugging=False)
+    assert match
+    match = natex.match('i dont know', debugging=False)
+    assert not match
+    match = natex.match('no', debugging=False)
+    assert not match
+    match = natex.match('definitely', debugging=False)
+    assert match
+    match = natex.match('definitely not', debugging=False)
+    assert not match
+
+    natex = NatexNLU('{#AGREE, [i,am,#NOT(not)]}', macros=macros)
+    match = natex.match('yes', debugging=False)
+    assert match
+    match = natex.match('of course', debugging=False)
+    assert match
+    match = natex.match('no', debugging=False)
+    assert not match
+    match = natex.match('definitely', debugging=False)
+    assert match
+    match = natex.match('definitely not', debugging=False)
+    assert not match
+    match = natex.match('i am', debugging=False)
+    assert match
+    match = natex.match('i am not', debugging=False)
+    assert not match
+
+def test_DISAGREE():
+    natex = NatexNLU('#DISAGREE', macros=macros)
+    match = natex.match('yes', debugging=False)
+    assert not match
+    match = natex.match('of course', debugging=False)
+    assert not match
+    match = natex.match('i dont think so', debugging=False)
+    assert match
+    match = natex.match('i think so', debugging=False)
+    assert not match
+    match = natex.match('no', debugging=False)
+    assert match
+    match = natex.match('definitely', debugging=False)
+    assert not match
+    match = natex.match('definitely not', debugging=False)
+    assert match
+
+    natex = NatexNLU('{#DISAGREE, [i,am,not]}', macros=macros)
+    match = natex.match('yes', debugging=False)
+    assert not match
+    match = natex.match('of course', debugging=False)
+    assert not match
+    match = natex.match('no', debugging=False)
+    assert match
+    match = natex.match('definitely', debugging=False)
+    assert not match
+    match = natex.match('definitely not', debugging=False)
+    assert match
+    match = natex.match('i am', debugging=False)
+    assert not match
+    match = natex.match('i am not', debugging=False)
+    assert match
+
+def test_QUESTION():
+    natex = NatexNLU('#QUESTION', macros=macros)
+    match = natex.match('who are you', debugging=False)
+    assert match
+    match = natex.match('what did you do today', debugging=False)
+    assert match
+    match = natex.match('i dont know', debugging=False)
+    assert not match
+    match = natex.match('i saw what he was talking about', debugging=False)
+    assert not match
+
+def test_NEGATION():
+    natex = NatexNLU('[{i,you,it} #NEGATION {go,see}]', macros=macros)
+    match = natex.match('you cannot see', debugging=False)
+    assert match
+    match = natex.match('i didnt go', debugging=False)
+    assert match
+    match = natex.match('i never go', debugging=False)
+    assert match
+    match = natex.match('it is', debugging=False)
+    assert not match
+    match = natex.match('i go', debugging=False)
     assert not match
 
 
