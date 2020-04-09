@@ -631,14 +631,16 @@ class DialogueFlow:
         state = State(state)
         return self._graph.data(state)['settings']
 
-    def add_global_nlu(self, state, nlu):
+    def add_global_nlu(self, state, nlu, score=0.01):
         state = module_state(state)
         state = State(state)
+        if not self.has_state(state):
+            self.add_state(state)
         if isinstance(state, tuple):
             state = ':'.join(state)
         if isinstance(nlu, list) or isinstance(nlu, set):
             nlu = '{' + ', '.join(nlu) + '}'
-        self._rules.add('{} (0.01)'.format(nlu), '#TRANSITION({})'.format(state))
+        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({})'.format(state))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
