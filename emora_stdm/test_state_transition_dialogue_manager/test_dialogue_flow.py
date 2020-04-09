@@ -85,26 +85,6 @@ def test_check():
     df.add_system_transition(States.C, States.D, 'ok then $X alright')
     assert not df.check()
 
-def test_global_transitions():
-    df = DialogueFlow(States.A)
-    df.add_state(States.A, global_nlu='{hi, hey, hello}')
-    df.add_state(States.B, error_successor=States.C)
-    df.add_state(States.D, error_successor=States.D)
-    df.add_system_transition(States.A, States.B, 'hello')
-    df.add_user_transition(States.B, States.C, '[how, you]')
-    df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
-    df.add_system_transition(States.C, States.D, 'ok')
-    assert df.transition_natex(States.D, States.A, Speaker.USER).expression() == '{hi, hey, hello}'
-    df = DialogueFlow(States.A)
-    df.add_state(States.B, error_successor=States.C)
-    df.add_state(States.D, error_successor=States.D)
-    df.add_system_transition(States.A, States.B, 'hello')
-    df.add_user_transition(States.B, States.C, '[how, you]')
-    df.add_user_transition(States.B, States.A, '[{bye, goodbye, see you, see ya, later}]')
-    df.add_system_transition(States.C, States.D, 'ok')
-    df.update_state_settings(States.A, global_nlu='{hi, hey, hello}')
-    assert df.transition_natex(States.D, States.A, Speaker.USER).expression() == '{hi, hey, hello}'
-
 def test_user_multi_hop():
     df = DialogueFlow(States.A, initial_speaker=Speaker.USER)
     df.add_state(States.B, error_successor=States.B, user_multi_hop=True)

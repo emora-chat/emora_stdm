@@ -123,7 +123,6 @@ class DialogueFlow:
         }
         if macros:
             self._macros.update(macros)
-        self._global_states = set()
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
@@ -528,10 +527,7 @@ class DialogueFlow:
         source = State(source)
         target = State(target)
         if self.has_transition(source, target, Speaker.USER):
-            if self.transition_global_nlu(source, target):
-                self.remove_transition(source, target, Speaker.USER)
-            else:
-                raise ValueError('user transition {} -> {} already exists'.format(source, target))
+            raise ValueError('user transition {} -> {} already exists'.format(source, target))
         natex_nlu = NatexNLU(natex_nlu, macros=self._macros)
         if not self.has_state(source):
             self.add_state(source)
@@ -574,17 +570,15 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, global_nlu=None, memory=10)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, memory=10)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
         if error_successor is not None:
             error_successor = State(error_successor)
             self.set_error_successor(state, error_successor)
-        for global_target in self._global_states:
-            if not self.has_transition(state, global_target, Speaker.USER):
-                self.add_user_transition(state, global_target, self.state_settings(global_target).global_nlu)
-                self.set_transition_global(state, global_target, is_global=True)
+
+
     # MID LEVEL
 
     def take_transition(self, target):
@@ -632,44 +626,17 @@ class DialogueFlow:
         target = State(target)
         self.transition_settings(source, target, speaker).update(**settings)
 
-    def transition_global_nlu(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple]):
-        source, target = module_source_target(source, target)
-        source = State(source)
-        target = State(target)
-        if self.has_transition(source, target, Speaker.USER) \
-        and 'global' in self._graph.arc_data(source, target, Speaker.USER):
-            return self._graph.arc_data(source, target, Speaker.USER)['global']
-        return False
-
-    def set_transition_global(self, source, target, is_global):
-        source, target = module_source_target(source, target)
-        source = State(source)
-        target = State(target)
-        self._graph.arc_data(source, target, Speaker.USER)['global'] = is_global
-        self.update_transition_settings(source, target, Speaker.USER, score=0.5)
-
     def state_settings(self, state):
         state = module_state(state)
         state = State(state)
         return self._graph.data(state)['settings']
 
-    def _update_global_states(self, state):
+    def add_global_nlu(self, state, nlu):
         state = module_state(state)
         state = State(state)
-        global_nlu = self.state_settings(state).global_nlu
-        if global_nlu:
-            self._global_states.add(state)
-            for source in self.states():
-                if source is not state and not self.has_transition(source, state, Speaker.USER):
-                    self.add_user_transition(source, state, global_nlu)
-                    self.set_transition_global(source, state, is_global=True)
-        else:
-            if state in self._global_states:
-                self._global_states.remove(state)
-                for source in self.states():
-                    for transition in list(self.transitions(source)):
-                        if self.transition_global_nlu(*transition):
-                            self.remove_transition(*transition)
+        if isinstance(state, tuple):
+            state = ':'.join(state)
+        self._rules.add('{} (0.01)'.format(nlu), '#TRANSITION({})'.format(state))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
@@ -678,8 +645,9 @@ class DialogueFlow:
             self._graph.data(state)['settings'] = Settings()
         if 'memory' in settings:
             settings['memory'] = Memory(settings['memory'])
+        if 'global_nlu' in settings:
+            self.add_global_nlu(state, settings['global_nlu'])
         self.state_settings(state).update(**settings)
-        self._update_global_states(state)
 
     def remove_transition(self, source, target, speaker):
         source, target = module_source_target(source, target)
@@ -842,6 +810,9 @@ class DialogueFlow:
         if result is not None:
             response, score = result
             self._response = response, self._vars, self.state(), score
+            self.set_speaker(Speaker.SYSTEM)
+        elif self.vars()['__transitioned__'] == 'True':
+            self.set_speaker(Speaker.SYSTEM)
 
     def knowledge_base(self):
         return self._kb
