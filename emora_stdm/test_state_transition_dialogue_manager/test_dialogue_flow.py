@@ -60,6 +60,32 @@ def test_user_transition():
     assert df.user_transition('oh hey there', df.state()) == States.C
     assert df.user_transition('well see ya later', df.state()) == States.D
 
+def test_user_transition_list_disjunction():
+    df = DialogueFlow('root', initial_speaker=Speaker.USER)
+    nlu = [
+        'hello',
+        'hi',
+        'how are you'
+    ]
+    df.add_user_transition('root', 'x', nlu)
+    df.update_state_settings('root', error_successor='y')
+    df.user_turn('hi')
+    assert df.state() == 'x'
+
+def test_global_transition_list_disjunction():
+    df = DialogueFlow('root', initial_speaker=Speaker.USER)
+    nlu = [
+        'hi',
+        'hello'
+    ]
+    df.add_state('root', 'x')
+    df.add_system_transition('x', 'y', 'hello')
+    df.add_global_nlu('x', nlu)
+    df.user_turn('ok')
+    df.system_turn()
+    df.user_turn('hi')
+    assert df.state() == 'x'
+
 def test_check():
     df = DialogueFlow(States.A)
     df.add_state(States.B, error_successor=States.C)

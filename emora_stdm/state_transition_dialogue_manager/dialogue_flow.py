@@ -636,6 +636,8 @@ class DialogueFlow:
         state = State(state)
         if isinstance(state, tuple):
             state = ':'.join(state)
+        if isinstance(nlu, list) or isinstance(nlu, set):
+            nlu = '{' + ', '.join(nlu) + '}'
         self._rules.add('{} (0.01)'.format(nlu), '#TRANSITION({})'.format(state))
 
     def update_state_settings(self, state, **settings):
