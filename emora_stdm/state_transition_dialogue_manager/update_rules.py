@@ -27,12 +27,14 @@ class UpdateRules:
         self.rules = sorted(self.rules, key=lambda x: x.precondition_score, reverse=True)
         self.untapped = self.rules
         response = None
-        converged = False
-        while not converged:
-            converged, response = self.update_step(user_input, debugging=debugging)
+        self.vars['__converged__'] = 'False'
+        self.vars['__transitioned__'] = 'False'
+        while not self.vars['__converged__'] == 'True':
+            response = self.update_step(user_input, debugging=debugging)
         return response
 
     def update_step(self, user_input, debugging=False):
+        self.vars['__converged__'] = 'False'
         for i, rule in enumerate(self.untapped):
             try:
                 satisfaction = rule.satisfied(user_input, debugging=debugging)
@@ -41,7 +43,7 @@ class UpdateRules:
                 print('  ', rule)
                 print(e)
                 del self.untapped[i]
-                return False, None
+                return None
             if satisfaction:
                 generation = None
                 if debugging:
@@ -54,11 +56,13 @@ class UpdateRules:
                         print('  ', rule)
                         print(e)
                         del self.untapped[i]
-                        return False, None
+                        return None
                     if rule.postcondition_score is not None:
                         generation = (gen, rule.postcondition_score)
                         del self.untapped[i]
-                        return True, generation
+                        self.vars['__converged__'] = 'True'
+                        return generation
                 del self.untapped[i]
-                return False, generation
-        return True, None
+                return generation
+        self.vars['__converged__'] = 'True'
+        return None

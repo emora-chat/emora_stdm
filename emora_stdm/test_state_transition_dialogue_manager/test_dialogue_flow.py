@@ -224,7 +224,7 @@ def test_reset():
     assert df.state() == States.E
 
     df.reset()
-    assert df.state() == States.A
+    assert df.state() == 'States.A'
     assert df.speaker() == Speaker.SYSTEM
     response = df.system_turn()
     df.user_turn("")
@@ -281,6 +281,7 @@ def test_transitions_to_transitions():
     df.user_turn('blah')
     assert df.system_turn() == 'Hi, Hello World!'
 
+
 def test_dialogue_flow_modular_transition():
     # test to ensure dialogue flow module with transition to other
     # component does not crash when tested indpendently
@@ -308,3 +309,37 @@ def test_dialogue_flow_modular_transition():
     df.user_turn('blah')
     assert df.system_turn() == 'How are you?'
     assert df.state() == 'mystate'
+
+
+def test_information_state_state_set():
+    df = DialogueFlow('root', initial_speaker=Speaker.USER)
+    transitions = {
+        'state': 'root',
+        'error': {
+            'state': 'one',
+            'okay': {
+                'state': 'two',
+                'error': {
+                    'state': 'three',
+                    'sure': 'root'
+                }
+            }
+        },
+        'something': {
+            'state': 'special',
+            'that is great': 'root'
+        }
+    }
+    df.add_update_rule('[{dog, cat}]',
+            '#SET($__state__=special) #SET($__transitioned__=True) how cute')
+    df.add_update_rule('[{read, watched}]', '#TRANSITION(root) did you like it (2.0)')
+    df.load_transitions(transitions, speaker=Speaker.USER)
+    df.user_turn('hi')
+    assert df.system_turn() == 'okay'
+    df.user_turn('i have a dog')
+    assert df.state() == 'special'
+    assert df.system_turn() == 'that is great'
+    df.user_turn('i read a book')
+    assert df.state() == 'root'
+    assert df.system_turn() == ' did you like it'
+    assert df.state() == 'root'

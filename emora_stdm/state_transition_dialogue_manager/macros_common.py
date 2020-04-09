@@ -492,3 +492,12 @@ class Negation(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         return self.natex.regex()
 
+
+class Transition(Macro):
+    """
+
+    """
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__state__'] = args[0]
+        vars['__transitioned__'] = 'True'
+        vars['__converged__'] = 'True'
