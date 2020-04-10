@@ -20,7 +20,7 @@ pip install -r emora_stdm/requirements.txt
 
 ## Overview
 
-![overview image](/docs/Approach_Demo_emora_stdm.svg)
+![overview image](https://github.com/emora-chat/emora_stdm/blob/master/docs/Approach_%20Demo_%20emora_stdm.svg)
 
 ## Tutorials
 
