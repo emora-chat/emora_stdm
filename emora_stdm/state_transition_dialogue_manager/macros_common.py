@@ -488,14 +488,50 @@ class Negation(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         return self.natex.regex()
 
+class DontKnow(Macro):
+    """
+
+    """
+
+    def __init__(self):
+        dont_know = '[{' \
+                    'dont know,do not know,unsure,[not,{sure,certain}],hard to say,no idea,uncertain,[!no {opinion,opinions,idea,ideas,thought,thoughts,knowledge}],' \
+                    '[{dont,do not}, have, {opinion,opinions,idea,ideas,thought,thoughts,knowledge}],' \
+                    '[!{cant,cannot,dont} {think,remember,recall}]' \
+                    '}]'
+        self.natex = NatexNLU(dont_know)
+        self.natex.compile()
+        self.natex._regex = self.natex.regex().replace("_END_", "").strip()
+
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.regex()
+
+
+class Maybe(Macro):
+    """
+
+    """
+
+    def __init__(self):
+        maybe = '[{maybe,possibly,sort of,kind of,kinda,a little,at times,sometimes,could be,potentially,its possible}]'
+        self.natex = NatexNLU(maybe)
+        self.natex.compile()
+        self.natex._regex = self.natex.regex().replace("_END_", "").strip()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        return self.natex.regex()
 
 class Transition(Macro):
     """
 
     """
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        vars['__state__'] = args[0]
-        vars['__transitioned__'] = 'True'
+        if len(args) > 1:
+            vars['__transition_score__'] = float(args[1])
+        else:
+            vars['__transition_score__'] = 0.5
+        vars['__transition__'] = args[0]
         vars['__converged__'] = 'True'
 
 class Unexpected(Macro):
@@ -506,12 +542,12 @@ class Unexpected(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if self.question_natex.match(ngrams.text()):
             if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
-                vars['__response_prefix__'] = '"Placeholder I don\'t understand"'
+                vars['__response_prefix__'] = 'Placeholder I don\'t understand'
             else:
                 vars['_explained_stupidity_'] = 'True'
-                vars['__response_prefix__'] = '"Placeholder I don\'t know"'
+                vars['__response_prefix__'] = 'Placeholder I don\'t know'
         else:
-            vars['__response_prefix__'] = '"Yeah."'
+            vars['__response_prefix__'] = 'Yeah.'
         return True
 
 

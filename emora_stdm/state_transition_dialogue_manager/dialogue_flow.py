@@ -60,7 +60,7 @@ class DialogueFlow:
         return _autostate
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
-                 macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None):
+                 macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None, default_system_state=None):
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -72,10 +72,12 @@ class DialogueFlow:
         self._gate_requirements = defaultdict(dict)
         self._gates = defaultdict(set)
         self._gate_buffer = {}
+        self._prepends = {}
         self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
-        self._prepends = {}
         self._is_module = False
+        self._default_state = default_system_state
+        self.vars()['__stack__'] = []
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -119,6 +121,8 @@ class DialogueFlow:
             'DISAGREE': Disagree(),
             'QUESTION': Question(),
             'NEGATION': Negation(),
+            'IDK': DontKnow(),
+            'MAYBE': Maybe(),
             'TRANSITION': Transition(),
             'UNX': Unexpected()
         }
@@ -177,23 +181,22 @@ class DialogueFlow:
         """
         t1 = time()
         self.state_update(natural_language, debugging)
-        if self.vars()['__transitioned__'] == 'False':
-            visited = {self.state()}
-            while self.speaker() is Speaker.USER:
-                next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
-                if self._error_transitioned and next_state != self.state():
-                    try:
-                        nns = self.user_transition(natural_language, next_state, debugging=debugging)
-                        if nns not in visited:
-                            next_state = nns
-                    except RuntimeError:
-                        if debugging:
-                            print("Couldn't error hop")
-                self.take_transition(next_state)
-                if next_state in visited and self._speaker is Speaker.USER:
-                    self.change_speaker()
-                    break
-                visited.add(next_state)
+        visited = {self.state()}
+        while self.speaker() is Speaker.USER:
+            next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
+            if self._error_transitioned and next_state != self.state():
+                try:
+                    nns = self.user_transition(natural_language, next_state, debugging=debugging)
+                    if nns not in visited:
+                        next_state = nns
+                except RuntimeError:
+                    if debugging:
+                        print("Couldn't error hop")
+            self.take_transition(next_state)
+            if next_state in visited and self._speaker is Speaker.USER:
+                self.change_speaker()
+                break
+            visited.add(next_state)
         self.set_speaker(Speaker.SYSTEM)
         t2 = time()
         if debugging:
@@ -214,6 +217,7 @@ class DialogueFlow:
             root = self._initial_state
 
         hop = None
+        switch = False
 
         # read settings and transitions for state
         transitions = []
@@ -228,7 +232,9 @@ class DialogueFlow:
             elif key == 'prepend':
                 prepend = json_dict['prepend']
                 self.set_state_prepend(source, prepend)
-            elif key not in {'state', 'hop', 'score'}:
+            elif key == 'switch':
+                switch = json_dict['switch']
+            elif key not in {'state', 'hop', 'score', 'switch'}:
                 transitions.append((key, value))
 
         # set up state settings
@@ -242,6 +248,8 @@ class DialogueFlow:
             elif speaker == Speaker.SYSTEM:
                 speaker = Speaker.USER
                 self.state_settings(source).update(user_multi_hop=True)
+        if switch:
+            self.update_state_settings(source, switch=True)
 
         # set up transitions
         expanded_transitions = []
@@ -352,6 +360,7 @@ class DialogueFlow:
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
+            remaining = list(transition_options)
             memory = self.state_settings(state).memory
             for item in memory:
                 if len(transition_options) > 1:
@@ -365,6 +374,17 @@ class DialogueFlow:
                 else:
                     break
             response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
+            if self.is_switch(state):
+                to_add_to_stack = [x[1] for x in remaining if x != (response, transition, vars)]
+                for trans in to_add_to_stack:
+                    src, tgt, natex = trans[0], trans[1], self.transition_natex(*trans)
+                    if isinstance(src, tuple):
+                        src = ':'.join(src)
+                    if isinstance(tgt, tuple):
+                        tgt = ':'.join(tgt)
+                    if src != state:
+                        tgt = src + '->' + tgt
+                    self.vars()['__stack__'].append(tgt)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -390,9 +410,51 @@ class DialogueFlow:
             if '__response_prefix__' in self.vars() and self.vars()['__response_prefix__'] != 'None':
                 response = self.vars()['__response_prefix__'] + ' ' + response
                 self.vars()['__response_prefix__'] = 'None'
+            if self.is_switch(state):
+                switch_response, switch_next_state = self.system_transition(next_state)
+                return response + ' ' + switch_response, switch_next_state
             return response, next_state
         else:
-            raise AssertionError('dialogue flow system transition found no valid options')
+            while self.is_switch(state) and self.vars()['__stack__']:
+                target = self.vars()['__stack__'].pop()
+                if '->' in target:
+                    source, target = target.split('->')
+                    transition = source, target, Speaker.SYSTEM
+                    natex = self.transition_natex(*transition)
+                    vars = HashableDict(self._vars)
+                    try:
+                        response = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                    except Exception as e:
+                        print()
+                        print(e)
+                        print('Stack transition to {}: {} failed'.format(str(target), natex))
+                        print()
+                        response = None
+                    if response is not None:
+                        if transition in self.gate_buffer():
+                            self.gates()[transition].add(self.gate_buffer()[transition])
+                        self.update_vars(vars)
+                        next_state = transition[1]
+                        if debugging:
+                            tf = time()
+                            print('System transition in {:.5f}'.format(tf - ti))
+                            print('Transitioning {} -> {}'.format(self.state(), next_state))
+                        if self._response is not None:
+                            self._response = None
+                        if '__response_prefix__' in self.vars() and self.vars()['__response_prefix__'] != 'None':
+                            response = self.vars()['__response_prefix__'] + ' ' + response
+                            self.vars()['__response_prefix__'] = 'None'
+                        return response, next_state
+                else:
+                    return self.system_transition(target, debugging=debugging)
+            else:
+                if self._default_state is not None:
+                    self.set_state(self._default_state)
+                    if debugging:
+                        print('No valid system transitions found, going to default state...')
+                    return self.system_transition(self.state(), debugging=debugging)
+                raise AssertionError('dialogue flow system transition found no valid options')
+
 
     def user_transition(self, natural_language: str, state: Union[Enum, str, tuple], debugging=False):
         """
@@ -410,6 +472,11 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = []
+        if '__transition__' in self.vars() and self.vars()['__transition__']:
+            transition_options.append(
+                (self.vars()['__transition_score__'],
+                 ('__global__', self.vars()['__transition__'], Speaker.USER),
+                 self.vars()))
         ngrams = Ngrams(natural_language, n=10)
         self._gate_buffer.clear()
         for transition in self.transitions(state, Speaker.USER):
@@ -574,7 +641,7 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, memory=10)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, switch=False, memory=10)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
@@ -635,7 +702,7 @@ class DialogueFlow:
         state = State(state)
         return self._graph.data(state)['settings']
 
-    def add_global_nlu(self, state, nlu, score=0.01):
+    def add_global_nlu(self, state, nlu, score=0.5):
         state = module_state(state)
         state = State(state)
         if not self.has_state(state):
@@ -644,7 +711,7 @@ class DialogueFlow:
             state = ':'.join(state)
         if isinstance(nlu, list) or isinstance(nlu, set):
             nlu = '{' + ', '.join(nlu) + '}'
-        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({})'.format(state))
+        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({})'.format(state, score))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
@@ -761,7 +828,6 @@ class DialogueFlow:
                 for dependency in dependencies:
                     if dependency in self._vars:
                         self._vars[dependency] = None
-
         self._vars.update({k: variables[k] for k in variables.altered()})
 
     def potential_transition(self):
@@ -819,11 +885,12 @@ class DialogueFlow:
             response, score = result
             self._response = response, self._vars, self.state(), score
             self.set_speaker(Speaker.SYSTEM)
-        elif self.vars()['__transitioned__'] == 'True':
-            self.set_speaker(Speaker.SYSTEM)
 
     def knowledge_base(self):
         return self._kb
 
     def set_is_module(self):
         self._is_module = True
+
+    def is_switch(self, state):
+        return self.state_settings(state)['switch']

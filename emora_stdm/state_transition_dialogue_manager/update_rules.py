@@ -28,7 +28,8 @@ class UpdateRules:
         self.untapped = self.rules
         response = None
         self.vars['__converged__'] = 'False'
-        self.vars['__transitioned__'] = 'False'
+        self.vars['__transition__'] = ''
+        self.vars['__transition_score__'] = 0
         while not self.vars['__converged__'] == 'True':
             response = self.update_step(user_input, debugging=debugging)
         return response
