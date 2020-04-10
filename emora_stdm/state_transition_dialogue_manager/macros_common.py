@@ -442,12 +442,11 @@ class TokLimit(Macro):
 
 class Agree(Macro):
     """
-    get the set of expressions matching the entire descendent subtree
-    underneath a given set of ontology nodes (usually 1)
+
     """
     def __init__(self):
         self.natex = NatexNLU(agree)
-        self.natex.compile(None, None, None)
+        self.natex.compile()
         self.natex._regex = self.natex.regex().replace("_END_","").strip()
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -455,12 +454,11 @@ class Agree(Macro):
 
 class Disagree(Macro):
     """
-    get the set of expressions matching the entire descendent subtree
-    underneath a given set of ontology nodes (usually 1)
+
     """
     def __init__(self):
         self.natex = NatexNLU(disagree)
-        self.natex.compile(None, None, None)
+        self.natex.compile()
         self.natex._regex = self.natex.regex().replace("_END_","").strip()
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -468,12 +466,11 @@ class Disagree(Macro):
 
 class Question(Macro):
     """
-    get the set of expressions matching the entire descendent subtree
-    underneath a given set of ontology nodes (usually 1)
+
     """
     def __init__(self):
         self.natex = NatexNLU(question)
-        self.natex.compile(None, None, None)
+        self.natex.compile()
         self.natex._regex = self.natex.regex().replace("_END_","").strip()
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -481,12 +478,11 @@ class Question(Macro):
 
 class Negation(Macro):
     """
-    get the set of expressions matching the entire descendent subtree
-    underneath a given set of ontology nodes (usually 1)
+
     """
     def __init__(self):
         self.natex = NatexNLU(negation)
-        self.natex.compile(None, None, None)
+        self.natex.compile()
         self.natex._regex = self.natex.regex().replace("_END_","").strip()
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -501,3 +497,51 @@ class Transition(Macro):
         vars['__state__'] = args[0]
         vars['__transitioned__'] = 'True'
         vars['__converged__'] = 'True'
+
+class Unexpected(Macro):
+
+    def __init__(self):
+        self.question_natex = NatexNLU(question)
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if self.question_natex.match(ngrams.text()):
+            if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
+                vars['__response_prefix__'] = '"Placeholder I don\'t understand"'
+            else:
+                vars['_explained_stupidity_'] = 'True'
+                vars['__response_prefix__'] = '"Placeholder I don\'t know"'
+        else:
+            vars['__response_prefix__'] = '"Yeah."'
+        return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

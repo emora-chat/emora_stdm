@@ -35,8 +35,8 @@ def module_state(state):
 
 def precache(transition_datas):
     for tran_datas in transition_datas:
-        tran_datas['natex'].precache()
-    parsed_trees = [x['natex']._compiler._parsed_tree for x in transition_datas]
+        tran_datas['question_natex'].precache()
+    parsed_trees = [x['question_natex']._compiler._parsed_tree for x in transition_datas]
     return parsed_trees
 
 _autostate = '-1'
@@ -119,7 +119,8 @@ class DialogueFlow:
             'DISAGREE': Disagree(),
             'QUESTION': Question(),
             'NEGATION': Negation(),
-            'TRANSITION': Transition()
+            'TRANSITION': Transition(),
+            'UNX': Unexpected()
         }
         if macros:
             self._macros.update(macros)
@@ -386,6 +387,9 @@ class DialogueFlow:
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
             if self._response is not None:
                 self._response = None
+            if '__response_prefix__' in self.vars() and self.vars()['__response_prefix__'] != 'None':
+                response = self.vars()['__response_prefix__'] + ' ' + response
+                self.vars()['__response_prefix__'] = 'None'
             return response, next_state
         else:
             raise AssertionError('dialogue flow system transition found no valid options')
@@ -475,7 +479,7 @@ class DialogueFlow:
         if process_num == 1:
             for transition in self._graph.arcs():
                 data = self._graph.arc_data(*transition)
-                data['natex'].precache()
+                data['question_natex'].precache()
         else:
             transition_data_sets = []
             for i in range(process_num):
@@ -494,7 +498,7 @@ class DialogueFlow:
                 for j in range(len(result_list)):
                     parsed_tree = result_list[j]
                     t = t_list[j]
-                    t['natex']._compiler._parsed_tree = parsed_tree
+                    t['question_natex']._compiler._parsed_tree = parsed_tree
 
 
     def check(self, debugging=False):
@@ -600,13 +604,13 @@ class DialogueFlow:
         source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
-        return self._graph.arc_data(source, target, speaker)['natex']
+        return self._graph.arc_data(source, target, speaker)['question_natex']
 
     def set_transition_natex(self, source, target, speaker, natex):
         source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
-        self._graph.arc_data(source, target, speaker)['natex'] = natex
+        self._graph.arc_data(source, target, speaker)['question_natex'] = natex
 
     def transition_settings(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
         source, target = module_source_target(source, target)

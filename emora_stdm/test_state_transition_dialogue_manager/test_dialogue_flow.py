@@ -349,3 +349,32 @@ def test_information_state_state_set():
     assert df.state() == 'root'
     assert df.system_turn() == ' did you like it'
     assert df.state() == 'root'
+
+def test_unexpected_input_macro():
+    df = DialogueFlow('root', initial_speaker=Speaker.USER)
+    df.add_user_transition('root', 'x', '#UNX')
+    df.add_system_transition('x', 'y', '"So, whats for dinner?"')
+    df.user_turn('blah')
+    tokens = df.system_turn().split()
+    assert len(tokens) > 4 and 'So, whats for dinner?' == ' '.join(tokens[-4:])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
