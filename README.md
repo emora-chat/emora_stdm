@@ -24,4 +24,6 @@ Placeholder.
 
 ## Tutorials
 
-[Tutorial for novices, or those with little programming experience.](/docs/NoviceTutorial.md)
+* [Tutorial for novices](/docs/NoviceTutorial.md), or those with little programming experience
+* [MAIN TUTORIAL](), explaining the core functionality of Emora STDM
+* [Advanced Tutorial](), explaining advanced and experimental features of the framework
