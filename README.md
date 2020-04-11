@@ -10,12 +10,39 @@ Emora STDM also affords a high degree of controllability to experts: it is easy 
 
 ## Installation
 
-Users install using `pip install emora_stdm`
-
-Developers install using:
 ```
-git clone https://github.com/emora-chat/emora_stdm.git
-pip install -r emora_stdm/requirements.txt
+pip install emora_stdm
+python -m spacy download en_core_web_sm
+```
+
+## Hello World Example
+
+```python3
+from emora_stdm import DialogueFlow
+
+chatbot = DialogueFlow('start')
+transitions = {
+    'state': 'start',
+    '"Hello. How are you?"': {
+        '[{good, okay, fine}]': {
+            '"Good. I am doing well too"': {
+                'error': {
+                    '"See you later!"': 'end'
+                }
+            }
+        },
+        'error': {
+            '"Well I hope your day gets better!"': {
+                'error': {
+                    '"Bye!"': 'end'
+                }
+            }
+        }
+    }
+}
+chatbot.load_transitions(transitions)
+
+chatbot.run()
 ```
 
 ## Overview
