@@ -95,7 +95,8 @@ You can read more about Update Rules in the [Update Rules Tutorial]().
 * [Quick and Easy Tutorial](/docs/NoviceTutorial.md), for novices, or people who don't care about the full functionality of the framework
 * [**Natex Tutorial**](), explaining the framework's core natural language understanding and generation functionality
 * [**Dialogue Graph Tutorial**](), explaining the core dialogue management functionality of Emora STDM
-* [Update Rules Tutorial](), explaining advanced and experimental features of the framework
+* [Update Rules Tutorial](), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
+* [Advanced Tutorial](), explaining advanced and experimental features of the framework
 
 ## Specific Use Cases
 
