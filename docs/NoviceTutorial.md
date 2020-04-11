@@ -1,8 +1,10 @@
 
-# Emora STDM for Novices (or people short on time)
+# Introduction to Emora STDM
 
-This document is meant to be a quick and dirty overview of Emora STDM's most basic features.
-It should be especially helpful to people with little programming/dialogue development experience, 
+This document is meant to be an introduction to making a simple chatbot with Emora STDM.
+Other tutorials cover advanced features that handle more complex interactions.
+
+This guide should be especially helpful to people with little programming/dialogue development experience, 
 or those who want to do some rapid prototyping of a dialogue agent.
 
 <details>
