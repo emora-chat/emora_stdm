@@ -72,12 +72,11 @@ Each turn of conversation,the Dialogue Graph is updated to interpret the user in
 The Dialogue Graph is a state machine describing possible "pathways" of conversation, where each transition/edge represents either a sysem or user turn, and each state/node represents a set of options for what could be said next.
 A full turn of conversation (user input + system response) results in two Dialogue Graph State updates--one representing an interpretation of the user turn, and the second representing a decision of the system for how to respond.
 
-On the user's turn, each transition out of the current Dialogue Graph State (node) represents a unique interpretation of the user input.
+**On the user's turn**, each transition out of the current Dialogue Graph State (node) represents a unique interpretation of the user input.
 The user input is evaluated against each out transition, and when a transition matches, the Dialogue Graph State is updated to the target of the transition.
 (Note that the user input will *always* match a transition marked as `'error'`, but this transition is only accepted if no other transitions match the input).
 
-After the user turn updates the Dialogue Graph State, it is the system's turn to give a response. 
-During the system turn, each outgoing transition from the current Dialogue Graph State is a possible response. 
+**During the system turn**, each outgoing transition from the current Dialogue Graph State is a possible response. 
 The system will select one of these response options based on a priority score of each transition, or randomly if the priorities of all the options are the same.
 The selected transition will be used to produce the system response, and update the Dialogue Graph State.
 
