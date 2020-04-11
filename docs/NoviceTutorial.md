@@ -10,8 +10,37 @@ or those who want to do some rapid prototyping of a dialogue agent.
   
   Spoiler text. Note that it's important to have a space after the summary tag. You should be able to write any markdown you want inside the `<details>` tag... just make sure you close `<details>` afterward.
   
-  ```javascript
-  console.log("I'm a code block!");
+  ```python3
+  from emora_stdm import DialogueFlow
+
+  chatbot = DialogueFlow('start')
+  transitions = {
+      'state': 'start',
+      '"Hello."': {
+          '#INT(Hi! How are you?)': {
+              '"Good. How are you?"': {
+                  '[{good, great, okay}]': {
+                      '"That\'s great!" Bye!': 'end'
+                  },
+                  '{[bad, horrible, awful]}': {
+                      '"Oh no! Bye!"': 'end'
+                  },
+                  'error': {
+                      '"I do not understand! Bye!"': 'end'
+                  }
+              }
+          },
+          '#INT(Tell me the weather.)': {
+              '"It is sunny out!"': {
+                  'error': {
+                      '"Bye!"': 'end'
+                  }
+              }
+          }
+      }
+  }
+  chatbot.load_transitions(transitions)
+  chatbot.run()
   ```
   
 </details>
