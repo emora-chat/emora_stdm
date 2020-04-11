@@ -6,7 +6,9 @@ It should be especially helpful to people with little programming/dialogue devel
 or those who want to do some rapid prototyping of a dialogue agent.
 
 <details>
-  <summary>Full Example</summary>
+  <summary>Finished Example</summary>
+  
+  This tutorial builds towards the following example.
   
   ```python3
   from emora_stdm import DialogueFlow
@@ -15,7 +17,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
   transitions = {
       'state': 'start',
       '"Hello."': {
-          '#INT(Hi! How are you?)': {
+          '#INT(Hi! How are you?, How are you doing?)': {
               '"Good. How are you?"': {
                   '[{good, great, okay}]': {
                       '"That\'s great!" Bye!': 'end'
@@ -54,8 +56,8 @@ This object is your dialogue agent, and `'start'` indicates where the conversati
 
 ```python3
 transitions = {
-    'Hello!: {
-        'hi': 'end'
+    '"Hello!"': {
+        '"Hi!"': 'end'
     }
 }
 ```
@@ -64,16 +66,16 @@ It is structured similar to social media discussion threads, where responses are
 The conversation specified by this dictionary looks like this:
 ```
 A: Hello!
-B: hi
+B: Hi!
 ```
 It's too short: let's add another turn.
 
 
 ```python3
 transitions = {
-    'Hello!: {
-        'hi': {
-            'How are you?': 'end'
+    '"Hello!"': {
+        '"Hi!"': {
+            '"How are you?"': 'end'
         }
     }
 }
@@ -81,18 +83,18 @@ transitions = {
 We have added a response to the "hi" utterance, so the conversation flow looks like this now:
 ```
 A: Hello!
-B: hi
+B: Hi!
 A: How are you?
 ```
 Of course in true conversation, people can say more than one thing. Let's add some options:
 
 ```python3
 transitions = {
-    'Hello!: {
-        'hi': {
-            'How are you?': 'end'
+    '"Hello!"': {
+        '"Hi!"': {
+            '"How are you?"': 'end'
         },
-        'tell me the weather': 'end'
+        '"Tell me the weather."': 'end'
     }
 }
 ```
@@ -100,12 +102,12 @@ transitions = {
 Now there are two potential conversation pathways:
 ```
 A: Hello!
-B: hi
+B: Hi!
 A: How are you?
 ```
 ```
 A: Hello!
-B: tell me the weather
+B: Tell me the weather.
 ```
 
 However, the example is actually invalid as it stands. This update is required to make it work:
@@ -113,11 +115,11 @@ However, the example is actually invalid as it stands. This update is required t
 ```python3
 transitions = {
     'state': 'start',  # !!!!
-    'Hello!: {
-        'hi': {
-            'How are you?': 'end'
+    '"Hello!"': {
+        '"Hi!"': {
+            '"How are you?"': 'end'
         },
-        'tell me the weather': 'end'
+        '"Tell me the weather."': 'end'
     }
 }
 ```
@@ -137,13 +139,46 @@ Run a DialogueFlow object in interactive mode like this:
 chatbot.run()
 ```
 When testing, you will notice the conversation is not interesting.
-The bot says "Hello!", then crashes if you say anything other than 'hi' or 'tell me the weather' back.
+The bot says "Hello!", then crashes if you say anything other than "Hi!" or "Tell me the weather." back.
 Let's fix that by adding some Natural Language Understanding (NLU).
 
 ### Natural Language Understanding
 
+Emora STDM supports many approaches to NLU, but let's start off with a simple approach: intent classification.
 
+```python3
+'#INT(Hi! How are you?)'
+```
+This string defines an intent that will match user input that is similar to the phrase "Hi! How are you?".
+The `#INT()` syntax is a Natex macro that invokes a pre-built intent classifer.
+The `Hi! How are you?` phrase is used by this intent classifier to evaluate user input.
 
+Let's add some intents to speaker B in our transition dictionary, and make sure we have responses to both:
+```python3
+transitions = {
+    'state': 'start',
+    '"Hello!"': {
+        '#INT(Hi! How are you?)': {
+            '"Good! Bye bye!"': 'end'
+        },
+        '#INT(Tell me about the weather.)': {
+            '"It is sunny!"': 'end'
+        }
+    }
+}
+```
+
+Now if you run the system, the bot will appropriately distinguish between you asking the bot how it's doing and asking about the weather:
+```
+S: Hello!
+U: Hey, how do you feel today?
+S: Good! Bye bye!
+```
+```
+S: Hello!
+U: Is it cloudy outside?
+S: It is sunny!
+```
 
 ## Not enough information?
 
