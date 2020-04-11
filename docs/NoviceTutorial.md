@@ -11,4 +11,6 @@ Placeholder.
 
 ## Not enough information?
 
-See if what you're trying to do is covered by one of the outlined [use cases](https://github.com/emora-chat/emora_stdm/blob/master/README.md#specific-use-cases)
+See if what you're trying to do is covered by one of the outlined [use cases](https://github.com/emora-chat/emora_stdm/blob/master/README.md#specific-use-cases).
+
+Or, learn more from the other [tutorials](https://github.com/emora-chat/emora_stdm/blob/master/README.md#tutorials).
