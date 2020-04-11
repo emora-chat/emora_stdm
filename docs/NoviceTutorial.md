@@ -50,8 +50,44 @@ Import DialogueFlow class and create a DialogueFlow object.
 This object is your dialogue agent, and `'start'` indicates where the conversation begins.
 
 ```python3
-
+transitions = {
+    'Hello!: {
+        'hi': 'end'
+    }
+}
 ```
+This nested dictionary will represent the content of your dialogue agent.
+It is structured similar to social media discussion threads, where responses are nested inside the utterance they respond to.
+The example shows speaker A saying "Hello!" and speaker B responding "Hi!", then the conversation ends.
+However, the example is actually invalid as it stands: we will fix it in the following step.
+
+```python3
+transitions = {
+    'state': 'start',  # !!!
+    'Hello!: {
+        'hi': 'end'
+    }
+}
+```
+The top-level dictionary needs a `'state'` entry with a value corresponding to the initial state of the DialogueFlow object. 
+This allows DialogueFlow to know where in the conversation you want this content to happen.
+
+```python3
+chatbot.load_transitions(transitions)
+```
+Okay! Now we just need to load the transition dictionary we made into the DialogueFlow object...
+
+### Running the Chatbot
+
+```python3
+chatbot.run()
+```
+... and run the chatbot! 
+This allows you to interact with the chatbot.
+But, you will notice the conversation is not interesting.
+The bot says "Hello!", then crashes if you say anything other than 'hi' back.
+Let's fix that.
+
 
 ## Not enough information?
 
