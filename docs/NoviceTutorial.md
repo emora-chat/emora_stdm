@@ -5,8 +5,8 @@ This document is meant to be a quick and dirty overview of Emora STDM's most bas
 It should be especially helpful to people with little programming/dialogue development experience, 
 or those who want to do some rapid prototyping of a dialogue agent.
 
-This is the example for the tutorial, which we will break down to see what each part of the syntax does:
-
+<details>
+    <summary>Full Example</summary>
 ```python3
 from emora_stdm import DialogueFlow
 
@@ -39,6 +39,7 @@ transitions = {
 chatbot.load_transitions(transitions)
 chatbot.run()
 ```
+</details>
 
 ### Creating a Dialogue Agent
 
