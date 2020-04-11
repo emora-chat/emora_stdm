@@ -63,7 +63,7 @@ U: Great!
 S: See you later!
 ```
 
-## Description
+# Description
 
 ![overview image](https://github.com/emora-chat/emora_stdm/blob/master/docs/Approach_%20Demo_%20emora_stdm.svg)
 
@@ -90,7 +90,7 @@ Before updating the Dialogue Graph, Update Rules are iteratively applied by eval
 The iteration continues until no more rules preconditions pass, at which point the Dialogue Graph update is performed.
 You can read more about Update Rules in the [Update Rules Tutorial]().
 
-## Tutorials
+# Tutorials
 
 * [Quick and Easy Tutorial](/docs/NoviceTutorial.md), for novices, or people who don't care about the full functionality of the framework
 * [**Natex Tutorial**](), explaining the framework's core natural language understanding and generation functionality
