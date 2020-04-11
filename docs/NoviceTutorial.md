@@ -8,3 +8,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
 ## Subsection
 
 Placeholder.
+
+## Not enough information?
+
+See if what you're trying to do is covered by one of the outlined [use cases](https://github.com/emora-chat/emora_stdm/blob/master/README.md#specific-use-cases)
