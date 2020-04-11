@@ -90,6 +90,6 @@ You can read more about Update Rules in the [Advanced Tutorial]().
 ## Tutorials
 
 * [Tutorial for novices](/docs/NoviceTutorial.md), or those with little programming experience
-* [Natex Tutorial (IMPORTANT!)](), explaining the framework's core natural language understanding and generation functionality
-* [MAIN TUTORIAL](), explaining the core dialogue management functionality of Emora STDM
+* [NATEX TUTORIAL](), explaining the framework's core natural language understanding and generation functionality
+* [DIALOGUE GRAPH TUTORIAL](), explaining the core dialogue management functionality of Emora STDM
 * [Advanced Tutorial](), explaining advanced and experimental features of the framework
