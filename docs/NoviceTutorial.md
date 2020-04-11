@@ -8,6 +8,8 @@ or those who want to do some rapid prototyping of a dialogue agent.
 <details>
     <summary>Full Example</summary>
     
+    Text.
+    
     ```python3
     from emora_stdm import DialogueFlow
 
@@ -40,6 +42,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
     chatbot.load_transitions(transitions)
     chatbot.run()
     ```
+    
 </details>
 
 ### Creating a Dialogue Agent
