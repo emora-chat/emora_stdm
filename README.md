@@ -12,7 +12,7 @@ Emora STDM also affords a high degree of controllability to experts: it is easy 
 
 ```
 pip install emora_stdm
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_md
 ```
 
 Once installed, see if you can run the Hello World example below, and check out the [tutorials](https://github.com/emora-chat/emora_stdm/blob/master/README.md#tutorials).
