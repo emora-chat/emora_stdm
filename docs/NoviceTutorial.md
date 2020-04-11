@@ -105,24 +105,27 @@ A: Hello!
 B: tell me the weather
 ```
 
-However, the example is actually invalid as it stands: we will fix it in the following step.
+However, the example is actually invalid as it stands. This update is required to make it work:
 
 ```python3
 transitions = {
-    'state': 'start',  # !!!
+    'state': 'start',  # !!!!
     'Hello!: {
-        'hi': 'end'
+        'hi': {
+            'How are you?': 'end'
+        },
+        'tell me the weather': 'end'
     }
 }
 ```
 The top-level dictionary needs a `'state'` entry with a value corresponding to the initial state of the DialogueFlow object. 
 This allows DialogueFlow to know where to put the content you specified in the dictionary.
 
+Okay! We just need to load the transition dictionary we made into the DialogueFlow object.
+Now we can run our chatbot to test it.
 ```python3
 chatbot.load_transitions(transitions)
 ```
-Okay! We just need to load the transition dictionary we made into the DialogueFlow object.
-Now we can run our chatbot to test it.
 
 ### Running the Chatbot
 
