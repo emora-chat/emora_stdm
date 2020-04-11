@@ -15,7 +15,7 @@ pip install emora_stdm
 python -m spacy download en_core_web_sm
 ```
 
-Once installed, see if you can run the Hello World example below, and check out the tutorials.
+Once installed, see if you can run the Hello World example below, and check out the [tutorials](https://github.com/emora-chat/emora_stdm/blob/master/README.md#tutorials).
 
 For novice developers or those who don't care about the details, see the [Quick and Easy Tutorial](/docs/NoviceTutorial.md).
 
