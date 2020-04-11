@@ -1,5 +1,5 @@
 
-# Emora STDM for Novices or People with No Time
+# Emora STDM for Novices (or people short on time)
 
 This is a placeholder.
 
