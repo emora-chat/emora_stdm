@@ -7,6 +7,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
 
 <details>
     <summary>Full Example</summary>
+    
     ```python3
     from emora_stdm import DialogueFlow
 
