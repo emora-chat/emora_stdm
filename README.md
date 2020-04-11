@@ -68,10 +68,29 @@ Dialogue management in Emora STDM is performed in two ways:
 1) updating the state machine defined by the *Dialogue Graph* and 
 2) applying information state *Update Rules*, which are structured as if...then... conditionals. 
 
-Each turn, a state machine is updated to reflect system
+Each turn of conversation,the Dialogue Graph is updated to interpret the user input and provide an appropriate response.
+The Dialogue Graph is a state machine describing possible "pathways" of conversation, where each transition/edge represents either a sysem or user turn, and each state/node represents a set of options for what could be said next.
+A full turn of conversation (user input + system response) results in two Dialogue Graph State updates--one representing an interpretation of the user turn, and the second representing a decision of the system for how to respond.
+
+On the user's turn, each transition out of the current Dialogue Graph State (node) represents a unique interpretation of the user input.
+The user input is evaluated against each out transition, and when a transition matches, the Dialogue Graph State is updated to the target of the transition.
+(Note that the user input will *always* match a transition marked as `'error'`, but this transition is only accepted if no other transitions match the input).
+
+After the user turn updates the Dialogue Graph State, it is the system's turn to give a response. 
+During the system turn, each outgoing transition from the current Dialogue Graph State is a possible response. 
+The system will select one of these response options based on a priority score of each transition, or randomly if the priorities of all the options are the same.
+The selected transition will be used to produce the system response, and update the Dialogue Graph State.
+
+
+Most simple dialogue agents will not have any update rules.
+However, Update Rules can very useful to maninpulate state variables and perform complex interactions.
+Before updating the Dialogue Graph, Update Rules are iteratively applied by evaluating each of their precondition Natexes on the user input, and applying the postcondition if the precondition succeeds.
+The iteration continues until no more rules preconditions pass, at which point the Dialogue Graph update is performed.
+You can read more about Update Rules in the [Advanced Tutorial]().
 
 ## Tutorials
 
 * [Tutorial for novices](/docs/NoviceTutorial.md), or those with little programming experience
-* [MAIN TUTORIAL](), explaining the core functionality of Emora STDM
+* [Natex Tutorial (IMPORTANT!)](), explaining the framework's core natural language understanding and generation functionality
+* [MAIN TUTORIAL](), explaining the core dialogue management functionality of Emora STDM
 * [Advanced Tutorial](), explaining advanced and experimental features of the framework
