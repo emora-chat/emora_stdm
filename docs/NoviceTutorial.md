@@ -6,9 +6,7 @@ It should be especially helpful to people with little programming/dialogue devel
 or those who want to do some rapid prototyping of a dialogue agent.
 
 <details>
-  <summary>Spoiler warning</summary>
-  
-  Spoiler text. Note that it's important to have a space after the summary tag. You should be able to write any markdown you want inside the `<details>` tag... just make sure you close `<details>` afterward.
+  <summary>Full Example</summary>
   
   ```python3
   from emora_stdm import DialogueFlow
