@@ -184,6 +184,8 @@ class CompositeDialogueFlow:
 
     def set_controller(self, controller_name):
         old_controller_vars = self._controller.vars()
+        if self._controller_name != controller_name:
+            del old_controller_vars["__state__"]
         self._controller = self.component(controller_name)
         self._controller_name = controller_name
         new_controller_vars = self._controller.vars()
