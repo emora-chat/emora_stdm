@@ -64,6 +64,12 @@ S: See you later!
 
 ![overview image](https://github.com/emora-chat/emora_stdm/blob/master/docs/Approach_%20Demo_%20emora_stdm.svg)
 
+Dialogue management in Emora STDM is performed in two ways: 
+1) updating the state machine defined by the *Dialogue Graph* and 
+2) applying information state *Update Rules*, which are structured as if...then... conditionals. 
+
+Each turn, a state machine is updated to reflect system
+
 ## Tutorials
 
 * [Tutorial for novices](/docs/NoviceTutorial.md), or those with little programming experience
