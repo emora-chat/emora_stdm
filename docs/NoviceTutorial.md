@@ -58,7 +58,53 @@ transitions = {
 ```
 This nested dictionary will represent the content of your dialogue agent.
 It is structured similar to social media discussion threads, where responses are nested inside the utterance they respond to.
-The example shows speaker A saying "Hello!" and speaker B responding "Hi!", then the conversation ends.
+The conversation specified by this dictionary looks like this:
+```
+A: Hello!
+B: hi
+```
+It's too short: let's add another turn.
+
+
+```python3
+transitions = {
+    'Hello!: {
+        'hi': {
+            'How are you?': 'end'
+        }
+    }
+}
+```
+We have added a response to the "hi" utterance, so the conversation flow looks like this now:
+```
+A: Hello!
+B: hi
+A: How are you?
+```
+Of course in true conversation, people can say more than one thing. Let's add some options:
+
+```python3
+transitions = {
+    'Hello!: {
+        'hi': {
+            'How are you?': 'end'
+        },
+        'tell me the weather': 'end'
+    }
+}
+```
+
+Now there are two potential conversation pathways:
+```
+A: Hello!
+B: hi
+A: How are you?
+```
+```
+A: Hello!
+B: tell me the weather
+```
+
 However, the example is actually invalid as it stands: we will fix it in the following step.
 
 ```python3
@@ -70,12 +116,13 @@ transitions = {
 }
 ```
 The top-level dictionary needs a `'state'` entry with a value corresponding to the initial state of the DialogueFlow object. 
-This allows DialogueFlow to know where in the conversation you want this content to happen.
+This allows DialogueFlow to know where to put the content you specified in the dictionary.
 
 ```python3
 chatbot.load_transitions(transitions)
 ```
-Okay! Now we just need to load the transition dictionary we made into the DialogueFlow object...
+Okay! We just need to load the transition dictionary we made into the DialogueFlow object.
+Now we can run our chatbot to test it.
 
 ### Running the Chatbot
 
