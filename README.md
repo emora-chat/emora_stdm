@@ -15,11 +15,14 @@ pip install emora_stdm
 python -m spacy download en_core_web_sm
 ```
 
+Once installed, see if you can run the Hello World example below, and check out the tutorials.
+
+For novice developers or those who don't care about the details, see the [Quick and Easy Tutorial](/docs/NoviceTutorial.md).
+
 ## Hello World Example
 
 Below is an example of a simple chatbot created with Emora STDM.
-The easiest way to add content to a chatbot is to use this nested dictionary syntax.
-See the tutorials sections for more details.
+The [easiest way to add content]() to a chatbot is to use this nested dictionary syntax.
 
 ```python3
 from emora_stdm import DialogueFlow
@@ -60,7 +63,7 @@ U: Great!
 S: See you later!
 ```
 
-## Overview
+## Description
 
 ![overview image](https://github.com/emora-chat/emora_stdm/blob/master/docs/Approach_%20Demo_%20emora_stdm.svg)
 
