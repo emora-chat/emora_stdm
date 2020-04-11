@@ -122,21 +122,24 @@ The top-level dictionary needs a `'state'` entry with a value corresponding to t
 This allows DialogueFlow to know where to put the content you specified in the dictionary.
 
 Okay! We just need to load the transition dictionary we made into the DialogueFlow object.
-Now we can run our chatbot to test it.
 ```python3
 chatbot.load_transitions(transitions)
 ```
+Now we can run our chatbot to test it.
 
 ### Running the Chatbot
 
+Run a DialogueFlow object in interactive mode like this:
 ```python3
 chatbot.run()
 ```
-... and run the chatbot! 
-This allows you to interact with the chatbot.
-But, you will notice the conversation is not interesting.
-The bot says "Hello!", then crashes if you say anything other than 'hi' back.
-Let's fix that.
+When testing, you will notice the conversation is not interesting.
+The bot says "Hello!", then crashes if you say anything other than 'hi' or 'tell me the weather' back.
+Let's fix that by adding some Natural Language Understanding (NLU).
+
+### Natural Language Understanding
+
+
 
 
 ## Not enough information?
