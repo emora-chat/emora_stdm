@@ -7,38 +7,38 @@ or those who want to do some rapid prototyping of a dialogue agent.
 
 <details>
     <summary>Full Example</summary>
-```python3
-from emora_stdm import DialogueFlow
+    ```python3
+    from emora_stdm import DialogueFlow
 
-chatbot = DialogueFlow('start')
-transitions = {
-    'state': 'start',
-    '"Hello."': {
-        '#INT(Hi! How are you?)': {
-            '"Good. How are you?"': {
-                '[{good, great, okay}]': {
-                    '"That\'s great!" Bye!': 'end'
-                },
-                '{[bad, horrible, awful]}': {
-                    '"Oh no! Bye!"': 'end'
-                },
-                'error': {
-                    '"I do not understand! Bye!"': 'end'
+    chatbot = DialogueFlow('start')
+    transitions = {
+        'state': 'start',
+        '"Hello."': {
+            '#INT(Hi! How are you?)': {
+                '"Good. How are you?"': {
+                    '[{good, great, okay}]': {
+                        '"That\'s great!" Bye!': 'end'
+                    },
+                    '{[bad, horrible, awful]}': {
+                        '"Oh no! Bye!"': 'end'
+                    },
+                    'error': {
+                        '"I do not understand! Bye!"': 'end'
+                    }
                 }
-            }
-        },
-        '#INT(Tell me the weather.)': {
-            '"It is sunny out!"': {
-                'error': {
-                    '"Bye!"': 'end'
+            },
+            '#INT(Tell me the weather.)': {
+                '"It is sunny out!"': {
+                    'error': {
+                        '"Bye!"': 'end'
+                    }
                 }
             }
         }
     }
-}
-chatbot.load_transitions(transitions)
-chatbot.run()
-```
+    chatbot.load_transitions(transitions)
+    chatbot.run()
+    ```
 </details>
 
 ### Creating a Dialogue Agent
