@@ -49,7 +49,7 @@ chatbot.load_transitions(transitions)
 chatbot.run()
 ```
 Running the above code will allow you to interact with this chatbot.
-It asks how you are doing, and will respond differently depending on whether you included one of the keywords "good", "fine", or "okay" in your answer. Below is a sample conversation produced by running the above code 
+It asks how you are doing, and will respond differently depending on whether or not you included one of the keywords {"good", "fine", "okay"} in your answer. Below is a sample conversation produced by running the above code 
 (S for system, U for user utterance):
 
 ```
