@@ -17,6 +17,10 @@ python -m spacy download en_core_web_sm
 
 ## Hello World Example
 
+Below is an example of a simple chatbot created with Emora STDM.
+The easiest way to add content to a chatbot is to use this nested dictionary syntax.
+See the tutorials sections for more details.
+
 ```python3
 from emora_stdm import DialogueFlow
 
@@ -25,7 +29,7 @@ transitions = {
     'state': 'start',
     '"Hello. How are you?"': {
         '[{good, okay, fine}]': {
-            '"Good. I am doing well too"': {
+            '"Good. I am doing well too."': {
                 'error': {
                     '"See you later!"': 'end'
                 }
@@ -43,6 +47,17 @@ transitions = {
 chatbot.load_transitions(transitions)
 
 chatbot.run()
+```
+Running the above code will allow you to interact with this chatbot.
+It asks how you are doing, and will respond differently depending on whether you included one of the keywords "good", "fine", or "okay" in your answer. Below is a sample conversation produced by running the above code 
+(S for system, U for user utterance):
+
+```
+S: Hello. How are you?
+U: I'm good. How are you?
+S: Good. I am doing well too.
+U: Great!
+S: See you later!
 ```
 
 ## Overview
