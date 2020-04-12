@@ -715,7 +715,7 @@ class DialogueFlow:
             state = ':'.join(state)
         if isinstance(nlu, list) or isinstance(nlu, set):
             nlu = '{' + ', '.join(nlu) + '}'
-        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({})'.format(state, score))
+        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)

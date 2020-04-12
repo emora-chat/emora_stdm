@@ -24,8 +24,7 @@ class UpdateRules:
         self.rules.append(UpdateRule(precondition, postcondition, vars=self.vars, macros=self.macros))
 
     def update(self, user_input, debugging=False):
-        self.rules = sorted(self.rules, key=lambda x: x.precondition_score, reverse=True)
-        self.untapped = self.rules
+        self.untapped = sorted(self.rules, key=lambda x: x.precondition_score, reverse=True)
         response = None
         self.vars['__converged__'] = 'False'
         self.vars['__transition__'] = ''
