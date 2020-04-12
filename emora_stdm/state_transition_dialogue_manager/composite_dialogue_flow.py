@@ -125,9 +125,7 @@ class CompositeDialogueFlow:
 
         if process_num == 1:
             for name,df in self._components.items():
-                for transition in df._graph.arcs():
-                    data = df._graph.arc_data(*transition)
-                    data['natex'].precache()
+                df.precache_transitions(process_num)
         else:
             for name,df in self._components.items():
                 for transition in df._graph.arcs():
