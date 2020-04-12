@@ -779,6 +779,7 @@ class DialogueFlow:
 
     def set_vars(self, vars):
         self._vars = vars
+        self.update_rules().set_vars(vars)
 
     def transitions(self, source_state, speaker=None):
         """
