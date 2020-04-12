@@ -547,25 +547,29 @@ class DialogueFlow:
             for transition in self._graph.arcs():
                 data = self._graph.arc_data(*transition)
                 data['natex'].precache()
+            for rule in self.update_rules().rules:
+                rule.precondition.precache()
+                rule.postcondition.precache()
         else:
-            transition_data_sets = []
-            for i in range(process_num):
-                transition_data_sets.append([])
-            count = 0
-            for transition in self._graph.arcs():
-                transition_data_sets[count].append(self._graph.arc_data(*transition))
-                count = (count + 1) % process_num
-
-            print("multiprocessing...")
-            p = Pool(process_num)
-            results = p.map(precache, transition_data_sets)
-            for i in range(len(results)):
-                result_list = results[i]
-                t_list = transition_data_sets[i]
-                for j in range(len(result_list)):
-                    parsed_tree = result_list[j]
-                    t = t_list[j]
-                    t['natex']._compiler._parsed_tree = parsed_tree
+            # transition_data_sets = []
+            # for i in range(process_num):
+            #     transition_data_sets.append([])
+            # count = 0
+            # for transition in self._graph.arcs():
+            #     transition_data_sets[count].append(self._graph.arc_data(*transition))
+            #     count = (count + 1) % process_num
+            #
+            # print("multiprocessing...")
+            # p = Pool(process_num)
+            # results = p.map(precache, transition_data_sets)
+            # for i in range(len(results)):
+            #     result_list = results[i]
+            #     t_list = transition_data_sets[i]
+            #     for j in range(len(result_list)):
+            #         parsed_tree = result_list[j]
+            #         t = t_list[j]
+            #         t['natex']._compiler._parsed_tree = parsed_tree
+            raise NotImplementedError()
 
 
     def check(self, debugging=False):
@@ -894,3 +898,6 @@ class DialogueFlow:
 
     def is_switch(self, state):
         return self.state_settings(state)['switch']
+
+    def update_rules(self):
+        return self._rules
