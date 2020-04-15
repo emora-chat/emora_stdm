@@ -6,6 +6,7 @@ class Ngrams(set):
         if '_END_' == text[-5:]:
             text = text[:-5]
         self._text = text
+        self._string = ''.join([c.lower() for c in text if c.isalpha() or c == ' '])
         tokens = text.split()
         if n is None:
             n = len(tokens)
@@ -21,6 +22,9 @@ class Ngrams(set):
 
     def text(self):
         return self._text
+
+    def string(self):
+        return self._string
 
     def _all_n_grams(self, tokens, n):
         for l in range(n, 0, -1):

@@ -14,12 +14,12 @@ import traceback
 import spacy
 import sys
 try:
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_md")
 except Exception as e:
     traceback.print_exc()
     print('Error loading Spacy', file=sys.stderr)
     print('Please run the following command:', file=sys.stderr)
-    print('python -m spacy download en_core_web_sm', file=sys.stderr)
+    print('python -m spacy download en_core_web_md', file=sys.stderr)
 try:
     nltk.data.find('wordnet')
 except:
@@ -549,6 +549,31 @@ class Unexpected(Macro):
         else:
             vars['__response_prefix__'] = 'Yeah.'
         return True
+
+class Intent(Macro):
+
+    def _similarity(self, user_utterance, dev_utterance):
+        return user_utterance.similarity(dev_utterance)
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for i, arg in enumerate(args):
+            if isinstance(arg, str) and arg.isnumeric():
+                threshold = float(arg)
+                del args[i]
+                break
+        else:
+            threshold = 0.0
+        user = nlp(ngrams.text())
+        dev = [nlp(arg) for arg in args]
+        similarity = max([self._similarity(user, x) for x in dev])
+        vars['__score__'] = similarity
+        if similarity < threshold:
+            return False
+        else:
+            return True
+
+
+
 
 
 

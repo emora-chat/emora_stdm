@@ -60,7 +60,8 @@ class DialogueFlow:
         return _autostate
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
-                 macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None, default_system_state=None):
+                 macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
+                 default_system_state=None, end_state='end'):
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -77,6 +78,7 @@ class DialogueFlow:
         self._error_transitioned = False
         self._is_module = False
         self._default_state = default_system_state
+        self._end_state = end_state
         self.vars()['__stack__'] = []
         if kb is None:
             self._kb = KnowledgeBase()
@@ -124,7 +126,8 @@ class DialogueFlow:
             'IDK': DontKnow(),
             'MAYBE': Maybe(),
             'TRANSITION': Transition(),
-            'UNX': Unexpected()
+            'UNX': Unexpected(),
+            'INT': Intent()
         }
         if macros:
             self._macros.update(macros)
@@ -138,7 +141,7 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
-        while True:
+        while self.state() != self.end_state():
             if self.speaker() == Speaker.SYSTEM:
                 system_response = self.system_turn(debugging=debugging)
                 if debugging:
@@ -464,6 +467,7 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
         state = module_state(state)
         self._error_transitioned = False
         ti = time()
@@ -828,7 +832,7 @@ class DialogueFlow:
                 for dependency in dependencies:
                     if dependency in self._vars:
                         self._vars[dependency] = None
-        self._vars.update({k: variables[k] for k in variables.altered()})
+        self._vars.update({k: variables[k] for k in variables.altered() if k != '__score__'})
 
     def potential_transition(self):
         return self._potential_transition
@@ -894,3 +898,6 @@ class DialogueFlow:
 
     def is_switch(self, state):
         return self.state_settings(state)['switch']
+
+    def end_state(self):
+        return self._end_state
