@@ -17,7 +17,7 @@ class Macro(ABC):
         :param args: a list of arguments passed to the macro from the Natex
         :returns: string, set, boolean, or arbitrary object
                   returning a string will replace the macro call with that string
-                  in the question_natex
+                  in the natex
                   returning a set of strings replaces macro with a disjunction
                   returning a boolean will replace the macro with wildcards (True)
                   or an unmatchable character sequence (False)

@@ -35,8 +35,8 @@ def module_state(state):
 
 def precache(transition_datas):
     for tran_datas in transition_datas:
-        tran_datas['question_natex'].precache()
-    parsed_trees = [x['question_natex']._compiler._parsed_tree for x in transition_datas]
+        tran_datas['natex'].precache()
+    parsed_trees = [x['natex']._compiler._parsed_tree for x in transition_datas]
     return parsed_trees
 
 _autostate = '-1'
@@ -550,26 +550,30 @@ class DialogueFlow:
         if process_num == 1:
             for transition in self._graph.arcs():
                 data = self._graph.arc_data(*transition)
-                data['question_natex'].precache()
+                data['natex'].precache()
+            for rule in self.update_rules().rules:
+                rule.precondition.precache()
+                rule.postcondition.precache()
         else:
-            transition_data_sets = []
-            for i in range(process_num):
-                transition_data_sets.append([])
-            count = 0
-            for transition in self._graph.arcs():
-                transition_data_sets[count].append(self._graph.arc_data(*transition))
-                count = (count + 1) % process_num
-
-            print("multiprocessing...")
-            p = Pool(process_num)
-            results = p.map(precache, transition_data_sets)
-            for i in range(len(results)):
-                result_list = results[i]
-                t_list = transition_data_sets[i]
-                for j in range(len(result_list)):
-                    parsed_tree = result_list[j]
-                    t = t_list[j]
-                    t['question_natex']._compiler._parsed_tree = parsed_tree
+            # transition_data_sets = []
+            # for i in range(process_num):
+            #     transition_data_sets.append([])
+            # count = 0
+            # for transition in self._graph.arcs():
+            #     transition_data_sets[count].append(self._graph.arc_data(*transition))
+            #     count = (count + 1) % process_num
+            #
+            # print("multiprocessing...")
+            # p = Pool(process_num)
+            # results = p.map(precache, transition_data_sets)
+            # for i in range(len(results)):
+            #     result_list = results[i]
+            #     t_list = transition_data_sets[i]
+            #     for j in range(len(result_list)):
+            #         parsed_tree = result_list[j]
+            #         t = t_list[j]
+            #         t['natex']._compiler._parsed_tree = parsed_tree
+            raise NotImplementedError()
 
 
     def check(self, debugging=False):
@@ -675,13 +679,13 @@ class DialogueFlow:
         source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
-        return self._graph.arc_data(source, target, speaker)['question_natex']
+        return self._graph.arc_data(source, target, speaker)['natex']
 
     def set_transition_natex(self, source, target, speaker, natex):
         source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
-        self._graph.arc_data(source, target, speaker)['question_natex'] = natex
+        self._graph.arc_data(source, target, speaker)['natex'] = natex
 
     def transition_settings(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):
         source, target = module_source_target(source, target)
@@ -715,7 +719,7 @@ class DialogueFlow:
             state = ':'.join(state)
         if isinstance(nlu, list) or isinstance(nlu, set):
             nlu = '{' + ', '.join(nlu) + '}'
-        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({})'.format(state, score))
+        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
@@ -779,6 +783,7 @@ class DialogueFlow:
 
     def set_vars(self, vars):
         self._vars = vars
+        self.update_rules().set_vars(vars)
 
     def transitions(self, source_state, speaker=None):
         """
@@ -901,3 +906,6 @@ class DialogueFlow:
 
     def end_state(self):
         return self._end_state
+
+    def update_rules(self):
+        return self._rules

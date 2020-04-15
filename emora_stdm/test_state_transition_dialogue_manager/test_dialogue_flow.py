@@ -255,6 +255,7 @@ def test_information_state_based_dialogue():
     df.add_system_transition('one', 'root', 'i am a stupid state machine')
     df.add_update_rule('[$x={ice cream, candy}]')
     df.add_update_rule('#ANY($x=candy)', '$y=blah')
+    df.add_update_rule('#ANY($x=ice cream)', '$y=None')
     df.add_update_rule('#ANY($y=blah)', 'i am a smart info state manager (2.0)')
 
     df.user_turn('candy')

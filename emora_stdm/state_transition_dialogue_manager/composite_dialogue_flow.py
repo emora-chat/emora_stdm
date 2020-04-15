@@ -125,25 +125,24 @@ class CompositeDialogueFlow:
 
         if process_num == 1:
             for name,df in self._components.items():
-                for transition in df._graph.arcs():
-                    data = df._graph.arc_data(*transition)
-                    data['natex'].precache()
+                df.precache_transitions(process_num)
         else:
-            for name,df in self._components.items():
-                for transition in df._graph.arcs():
-                    transition_data_sets[count].append(df._graph.arc_data(*transition))
-                    count = (count + 1) % process_num
-
-            print("multiprocessing...")
-            p = Pool(process_num)
-            results = p.map(precache, transition_data_sets)
-            for i in range(len(results)):
-                result_list = results[i]
-                t_list = transition_data_sets[i]
-                for j in range(len(result_list)):
-                    parsed_tree = result_list[j]
-                    t = t_list[j]
-                    t['natex']._compiler._parsed_tree = parsed_tree
+            # for name,df in self._components.items():
+            #     for transition in df._graph.arcs():
+            #         transition_data_sets[count].append(df._graph.arc_data(*transition))
+            #         count = (count + 1) % process_num
+            #
+            # print("multiprocessing...")
+            # p = Pool(process_num)
+            # results = p.map(precache, transition_data_sets)
+            # for i in range(len(results)):
+            #     result_list = results[i]
+            #     t_list = transition_data_sets[i]
+            #     for j in range(len(result_list)):
+            #         parsed_tree = result_list[j]
+            #         t = t_list[j]
+            #         t['natex']._compiler._parsed_tree = parsed_tree
+            raise NotImplementedError()
 
         print("Elapsed: ", time() - start)
 
@@ -184,6 +183,8 @@ class CompositeDialogueFlow:
 
     def set_controller(self, controller_name):
         old_controller_vars = self._controller.vars()
+        if self._controller_name != controller_name:
+            del old_controller_vars["__state__"]
         self._controller = self.component(controller_name)
         self._controller_name = controller_name
         new_controller_vars = self._controller.vars()
