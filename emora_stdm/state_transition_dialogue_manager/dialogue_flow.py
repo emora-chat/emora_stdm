@@ -67,7 +67,6 @@ class DialogueFlow:
         self._potential_transition = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
-        self._response = None
         self._vars = HashableDict()
         self._transitions = []
         self.set_state(self._initial_state)
@@ -329,19 +328,16 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = {}
-        if self._response is not None:
-            response, vars, dest, score = self._response
-            transition_options[(response, (self.state(), dest, self._speaker), vars)] = score
         self._gate_buffer.clear()
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         transition_items = []
         for transition in transitions:
-            source, target, speaker = transition
             natex = self.transition_natex(*transition)
             score = self.transition_settings(*transition).score
             transition_items.append((natex, transition, score))
         for natex, transition, score in self._transitions:
             transition_items.append((natex, transition, score))
+        self._transitions.clear()
         for natex, transition, score in transition_items:
             source, target, speaker = transition
             self._potential_transition = transition
@@ -369,7 +365,6 @@ class DialogueFlow:
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
         if transition_options:
-            # remaining = list(transition_options)
             memory = self.state_settings(state).memory
             for item in memory:
                 if len(transition_options) > 1:
@@ -383,17 +378,6 @@ class DialogueFlow:
                 else:
                     break
             response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
-            # if self.is_switch(state):
-            #     to_add_to_stack = [x[1] for x in remaining if x != (response, transition, vars)]
-            #     for trans in to_add_to_stack:
-            #         src, tgt, natex = trans[0], trans[1], self.transition_natex(*trans)
-            #         if isinstance(src, tuple):
-            #             src = ':'.join(src)
-            #         if isinstance(tgt, tuple):
-            #             tgt = ':'.join(tgt)
-            #         if src != state:
-            #             tgt = src + '->' + tgt
-            #         self.vars()['__stack__'].append(tgt)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -414,49 +398,11 @@ class DialogueFlow:
                 tf = time()
                 print('System transition in {:.5f}'.format(tf-ti))
                 print('Transitioning {} -> {}'.format(self.state(), next_state))
-            if self._response is not None:
-                self._response = None
             if '__response_prefix__' in self.vars() and self.vars()['__response_prefix__'] != 'None':
                 response = self.vars()['__response_prefix__'] + ' ' + response
                 self.vars()['__response_prefix__'] = 'None'
-            # if self.is_switch(state):
-            #     switch_response, switch_next_state = self.system_transition(next_state)
-            #     return response + ' ' + switch_response, switch_next_state
             return response, next_state
         else:
-            # while self.is_switch(state) and self.vars()['__stack__']:
-            #     target = self.vars()['__stack__'].pop()
-            #     if '->' in target:
-            #         source, target = target.split('->')
-            #         transition = source, target, Speaker.SYSTEM
-            #         natex = self.transition_natex(*transition)
-            #         vars = HashableDict(self._vars)
-            #         try:
-            #             response = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-            #         except Exception as e:
-            #             print()
-            #             print(e)
-            #             print('Stack transition to {}: {} failed'.format(str(target), natex))
-            #             print()
-            #             response = None
-            #         if response is not None:
-            #             if transition in self.gate_buffer():
-            #                 self.gates()[transition].add(self.gate_buffer()[transition])
-            #             self.update_vars(vars)
-            #             next_state = transition[1]
-            #             if debugging:
-            #                 tf = time()
-            #                 print('System transition in {:.5f}'.format(tf - ti))
-            #                 print('Transitioning {} -> {}'.format(self.state(), next_state))
-            #             if self._response is not None:
-            #                 self._response = None
-            #             if '__response_prefix__' in self.vars() and self.vars()['__response_prefix__'] != 'None':
-            #                 response = self.vars()['__response_prefix__'] + ' ' + response
-            #                 self.vars()['__response_prefix__'] = 'None'
-            #             return response, next_state
-            #     else:
-            #         return self.system_transition(target, debugging=debugging)
-            # else:
             if self._default_state is not None:
                 self.set_state(self._default_state)
                 if debugging:
@@ -898,7 +844,8 @@ class DialogueFlow:
         result = self._rules.update(user_input, debugging)
         if result is not None:
             response, score = result
-            self._response = response, self._vars, self.state(), score
+            self._transitions.append(
+                (NatexNLG('`{}`'.format(response)), (self.state(), self.state(), Speaker.SYSTEM), score))
             self.set_speaker(Speaker.SYSTEM)
 
     def knowledge_base(self):
