@@ -335,9 +335,9 @@ class DialogueFlow:
             natex = self.transition_natex(*transition)
             score = self.transition_settings(*transition).score
             transition_items.append((natex, transition, score))
-        for natex, transition, score in self._transitions:
+        while self._transitions:
+            natex, transition, score = self._transitions.pop()
             transition_items.append((natex, transition, score))
-        self._transitions.clear()
         for natex, transition, score in transition_items:
             source, target, speaker = transition
             self._potential_transition = transition
@@ -364,6 +364,10 @@ class DialogueFlow:
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
+            while self._transitions:
+                natex, transition, score = self._transitions.pop()
+                transition_items.append((natex, transition, score))
+        self._transitions.clear()
         if transition_options:
             memory = self.state_settings(state).memory
             for item in memory:

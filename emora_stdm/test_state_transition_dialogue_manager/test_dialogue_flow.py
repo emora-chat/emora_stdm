@@ -346,6 +346,7 @@ def test_information_state_state_set():
     assert df.system_turn() == 'that is great'
     assert df.state() == 'root'
 
+
 def test_unexpected_input_macro():
     df = DialogueFlow('root', initial_speaker=Speaker.USER)
     df.add_user_transition('root', 'x', '#UNX')
@@ -353,72 +354,6 @@ def test_unexpected_input_macro():
     df.user_turn('blah')
     tokens = df.system_turn().split()
     assert len(tokens) > 4 and 'So, whats for dinner?' == ' '.join(tokens[-4:])
-
-# def test_transition_stack():
-#     df = DialogueFlow('root')
-#     transitions = {
-#         'state': 'root',
-#         'hello':{
-#             'error':{
-#                 'how are you':{
-#                     'error':{
-#                         'state': 'special',
-#                         'switch': True,
-#                         'so':{
-#                             'state': 'x',
-#                             'score': 3.0
-#                         },
-#                         'well': {
-#                             'state': 'y',
-#                             'score': 2.0
-#                         },
-#                         'hmm': 'a->b'
-#                     }
-#                 }
-#             },
-#             'other':{
-#                 'state': 'x',
-#                 'family is good':{
-#                     'error':{
-#                         'switch': True
-#                     }
-#                 }
-#             },
-#             'next':{
-#                 'state': 'y',
-#                 'what do you think':{
-#                     'error':{
-#                         'switch': True
-#                     }
-#                 }
-#             },
-#             'strange':{
-#                 'state': 'a',
-#                 'pets are nice': {
-#                     'state': 'b',
-#                     'error':
-#                     {
-#                         'switch': True
-#                     }
-#                 }
-#             }
-#         }
-#     }
-#     df.load_transitions(transitions)
-#     assert df.system_turn() == 'hello'
-#     df.user_turn('hi')
-#     assert df.system_turn() == 'how are you'
-#     df.user_turn('fine')
-#     response = df.system_turn()
-#     if response == 'so family is good':
-#         df.user_turn('yeah')
-#         response = df.system_turn()
-#         if response == 'pets are nice':
-#             df.user_turn('blah')
-#             assert df.system_turn() == 'what do you think'
-#         elif response == 'what do you think':
-#             df.user_turn('blah')
-#             assert df.system_turn() == 'pets are nice'
 
 
 def test_global_transition_priority():
@@ -441,7 +376,6 @@ def test_global_transition_priority():
     df.system_turn()
     df.user_turn('oh wow')
     assert df.system_turn() == 'alright'
-
 
 
 
