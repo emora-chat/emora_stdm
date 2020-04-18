@@ -886,3 +886,11 @@ class DialogueFlow:
 
     def update_rules(self):
         return self._rules
+
+    def goals(self):
+        goals = {}
+        for id,returnstate,returnphrase,doom in self.vars()['__stack__']:
+            goals[id] = {'return_state':returnstate,
+                         'return_phrase':returnphrase,
+                         'doom_counter':doom}
+        return goals

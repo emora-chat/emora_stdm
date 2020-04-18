@@ -1,6 +1,8 @@
 
 import pytest
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
+from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager.macros_common import GoalPursuit,GoalExit
 
 def test_stack():
     df = DialogueFlow('root')
@@ -26,7 +28,7 @@ def test_stack():
                     },
                     'error': {
                         'state': 'feel_better',
-                        '"I actually feel a little bit better after talking with you. Thanks for listening. "'
+                        '"I actually feel a little bit better after talking with you. Thanks for listening. "':{}
                     }
                 },
                 'default': 'feel_better'
@@ -40,6 +42,7 @@ def test_stack():
     gma = {
         '#GOAL(why_grandma_hospital) '
         '[{[why,hospital],wrong,happened}]': {
+            'state':'why_grandma_hospital',
             '"She is just so frail. I can hardly believe it. '
             'She fell off of a stool in the kitchen and broke her hip."': {
                 '[dont worry]':{
@@ -52,6 +55,7 @@ def test_stack():
         },
         '#GOAL(grandma_hospital_before) '
         '[{has,was},{she,grandma},hospital,{before,earlier,previously}]': {
+            'state': 'grandma_hospital_before',
             '"No, this is the first time, thank goodness."': {
                 'error':{
                     '#GRET': 'return'
@@ -61,19 +65,26 @@ def test_stack():
     }
 
     df.load_transitions(transitions)
-    r = df.system_turn()
-    assert df.vars()['__goal__'] == 'grandma_hospital'
+    df.load_transitions(gma)
+    df.add_global_nlu('why_grandma_hospital',
+                      '#GOAL(why_grandma_hospital) [{[why,hospital],wrong,happened}]',
+                      score=0.7)
+    df.add_global_nlu('grandma_hospital_before',
+                      '#GOAL(grandma_hospital_before) [{has,was},{she,grandma},hospital,{before,earlier,previously}]',
+                      score=0.7)
 
-    df.user_turn("what happened")
+    r = df.system_turn(debugging=True)
+    assert df.vars()['__goal__'] == 'grandma_hospital'
+    assert len(df.vars()['__stack__']) == 0
+
+    df.user_turn("what happened", debugging=True)
     assert df.vars()['__goal__'] == 'why_grandma_hospital'
-    assert len(df.vars()['__stack__']) == 2
-    assert df.vars()['__stack__'][1][0] == 'why_grandma_hospital'
+    assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
     assert "fell off of a stool" in df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
-    assert len(df.vars()['__stack__']) == 1
-    assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
+    assert len(df.vars()['__stack__']) == 0
 
     df.user_turn("oh no")
     assert "What should I do" in df.system_turn()
@@ -84,12 +95,10 @@ def test_stack():
     assert "she lives by herself" in df.system_turn()
     df.user_turn("has your grandma been in the hospital before this")
     assert df.vars()['__goal__'] == 'grandma_hospital_before'
-    assert len(df.vars()['__stack__']) == 2
-    assert df.vars()['__stack__'][1][0] == 'grandma_hospital_before'
+    assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
     assert "this is the first time" in df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
-    assert len(df.vars()['__stack__']) == 1
-    assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
+    assert len(df.vars()['__stack__']) == 0
     assert df.state() == 'feel_better'
