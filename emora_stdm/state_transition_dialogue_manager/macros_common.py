@@ -693,13 +693,19 @@ class GoalResume(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         goal = None
         if len(args) > 0 and args[0] != 'None':
-            pass
+            goal = args[0]
+        if goal is None and vars['__goal__'] != 'None':
+            return False
         return_phrase = ''
         if len(args) == 2:
             return_phrase = args[1]
-        for i in range(len(vars['__stack__']) - 1, -1, -1):
-            id, state, phrase, doom = vars['__stack__'][i]
-
+        while vars['__stack__']:
+            id, state, phrase, doom = vars['__stack__'].pop()
+            if doom != 'None' and doom <= 0:
+                continue
+            if goal is not None and goal != id:
+                continue
+            
 
 
 class GoalReturn(Macro):
