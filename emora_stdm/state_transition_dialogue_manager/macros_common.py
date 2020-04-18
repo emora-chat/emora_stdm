@@ -684,7 +684,8 @@ class GoalReturn(Macro):
     point can be taken with GoalResume(resumed_goal) called in order to
     return to the goal without any awkward return phrase.
 
-    An optional second argument can be used for a desired return phrase.
+    An optional second argument can be used to return to a specific state.
+    An optional third argument can be used for a desired return phrase.
     """
 
     def __init__(self, dialogue_flow):
@@ -694,21 +695,20 @@ class GoalReturn(Macro):
         goal = None
         if len(args) > 0 and args[0] != 'None':
             goal = args[0]
-        if goal is None and vars['__goal__'] != 'None':
-            return False
+        vars['__goal__'] = 'None'
         while vars['__stack__']:
             id, state, phrase, doom = vars['__stack__'].pop()
             if doom != 'None' and doom <= 0:
                 continue
             if goal is not None and goal != id:
                 continue
+            if len(args) > 1 and args[1] != 'None' and args[1] != '':
+                state = args[1]
+            if len(args) > 2:
+                phrase = args[2]
             vars['__target__'] = state
             vars['__goal__'] = id
-            if len(args) == 2:
-                return_phrase = args[1]
-            else:
-                return_phrase = phrase
-            return return_phrase
+            return phrase
 
 
 
