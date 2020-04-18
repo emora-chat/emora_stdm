@@ -93,6 +93,7 @@ class DialogueFlow:
             self._kb = kb
         onte = ONTE(self._kb)
         kbe = KBE(self._kb)
+        goal_exit_macro = GoalExit(self)
         self._macros = {
             'WN': WN(),
             'ONT': onte, 'ONTE': onte,
@@ -127,7 +128,11 @@ class DialogueFlow:
             'MAYBE': Maybe(),
             'TRANSITION': Transition(),
             'UNX': Unexpected(),
-            'INT': Intent()
+            'INT': Intent(),
+            'GEXT': goal_exit_macro,
+            'GOAL': GoalPursuit(goal_exit_macro),
+            'GCOM': GoalCompletion(self),
+            'GRET': GoalReturn(self)
         }
         if macros:
             self._macros.update(macros)
