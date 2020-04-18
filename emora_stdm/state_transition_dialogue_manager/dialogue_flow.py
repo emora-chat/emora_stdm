@@ -79,6 +79,7 @@ class DialogueFlow:
         self._is_module = False
         self._default_state = default_system_state
         self._end_state = end_state
+        self._goals = {}
         self.vars()['__stack__'] = []
         if kb is None:
             self._kb = KnowledgeBase()
@@ -888,9 +889,16 @@ class DialogueFlow:
         return self._rules
 
     def goals(self):
-        goals = {}
-        for id,returnstate,returnphrase,doom in self.vars()['__stack__']:
-            goals[id] = {'return_state':returnstate,
-                         'return_phrase':returnphrase,
-                         'doom_counter':doom}
-        return goals
+        return self._goals
+
+    def set_goals(self, goals_dict):
+        self._goals = goals_dict
+
+    def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
+        goal = {
+            'id': id_string,
+            'return_state': return_state,
+            'return_phrase': return_phrase,
+            'doom_counter': doom_counter
+        }
+        self._goals[id_string] = goal
