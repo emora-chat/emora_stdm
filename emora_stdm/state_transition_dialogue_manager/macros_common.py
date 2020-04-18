@@ -575,6 +575,13 @@ class Intent(Macro):
             return True
 
 
+class Default(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__score__'] = 0
+        return ''
+
+
 class GoalPursuit(Macro):
     """
     Begin pursuing a goal.

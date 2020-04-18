@@ -61,7 +61,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
-                 default_system_state=None, end_state='end'):
+                 default_system_state=None, end_state='end', all_multi_hop=True):
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -80,6 +80,7 @@ class DialogueFlow:
         self._default_state = default_system_state
         self._end_state = end_state
         self._goals = {}
+        self._all_multi_hop = all_multi_hop
         self.vars()['__stack__'] = []
         if kb is None:
             self._kb = KnowledgeBase()
@@ -138,6 +139,7 @@ class DialogueFlow:
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
+
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
 
@@ -593,6 +595,8 @@ class DialogueFlow:
         self.set_transition_natex(source, target, Speaker.USER, natex_nlu)
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
+        if self._all_multi_hop:
+            self.update_state_settings(source, user_multi_hop=True)
         self.set_transition_settings(source, target, Speaker.USER, transition_settings)
         if target in self._prepends:
             prepend = self._prepends[target]
@@ -616,6 +620,8 @@ class DialogueFlow:
         transition_settings = Settings(score=1.0)
         transition_settings.update(**settings)
         self.set_transition_settings(source, target, Speaker.SYSTEM, transition_settings)
+        if self._all_multi_hop:
+            self.update_state_settings(source, system_multi_hop=True)
         if target in self._prepends:
             prepend = self._prepends[target]
             natex = self.transition_natex(source, target, Speaker.SYSTEM)
