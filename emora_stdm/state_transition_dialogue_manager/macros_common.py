@@ -551,6 +551,7 @@ class Unexpected(Macro):
             vars['__response_prefix__'] = 'Yeah.'
         return True
 
+
 class Intent(Macro):
 
     def _similarity(self, user_utterance, dev_utterance):
@@ -572,6 +573,166 @@ class Intent(Macro):
             return False
         else:
             return True
+
+
+class GoalPursuit(Macro):
+    """
+    Begin pursuing a goal.
+
+    This sets the current goal to the specified goal, and any outstanding current goal
+    will be saved by being pushed onto the goal stack.
+
+    Goals pushed onto the stack are of the form:
+    [goal id str, return state str, return phrase str, doom counter int]
+    """
+
+    def __init__(self, goal_exit_macro):
+        self.goal_exit_macro = goal_exit_macro
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if '__stack__' not in vars:
+            vars['__stack__'] = []
+        if '__goal__' not in vars:
+            vars['__goal__'] = 'None'
+        if '__goal_return_state__' not in vars:
+            vars['__goal_return_state__'] = 'None'
+        goal = args[0]
+        self.goal_exit_macro.run(ngrams, vars, args)
+        vars['__goal__'] = goal
+
+
+class GoalCompletion(Macro):
+    """
+    Complete either the current goal, or a specified goal that
+    is either the current goal or the first matching on the stack.
+    """
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        goal = None
+        if len(args) == 1:
+            goal = args[0]
+        if goal is None or goal == vars['__goal__']:
+            vars['__goal__'] = 'None'
+        else:
+            stack = vars['__stack__']
+            for i in range(len(stack) - 1, -1, -1):
+                if stack[i][0] == goal:
+                    del stack[i]
+                    break
+
+class GoalExit(Macro):
+    """
+    Exit a goal, pushing the current goal onto the stack.
+    """
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+        self.default_return_phrase = ''
+        self.default_doom_counter = None
+
+    def goal_return_state(self, goal, vars):
+        if '__goal_return_state__' in vars and vars['__goal_return_state__'] != 'None':
+            grs = vars['__goal_return_state__']
+            vars['__goal_return_state__'] = 'None'
+            return grs
+        elif goal in self.dialogue_flow.goals() and self.dialogue_flow.goals()[goal]['return_state']:
+            return self.dialogue_flow.goals()[goal]['return_state']
+        else:
+            return vars['__state__']
+
+    def goal_return_phrase(self, goal, vars):
+        if '__goal_return_phrase__' in vars and vars['__goal_return_phrase__'] != 'None':
+            grp = vars['__goal_return_phrase__']
+            vars['__goal_return_phrase__'] = 'None'
+            return grp
+        elif goal in self.dialogue_flow.goals() and self.dialogue_flow.goals()[goal]['return_phrase']:
+            return self.dialogue_flow.goals()[goal]['return_phrase']
+        else:
+            return ''
+
+    def goal_doom_counter(self, goal, vars):
+        if '__goal_doom_counter__' in vars and vars['__goal_doom_counter__'] != 'None':
+            gdc = vars['__goal_doom_counter__']
+            vars['__goal_doom_counter__'] = 'None'
+            return gdc
+        elif goal in self.dialogue_flow.goals() and self.dialogue_flow.goals()[goal]['doom_counter']:
+            return self.dialogue_flow.goals()[goal]['doom_counter']
+        else:
+            return 'None'
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if vars['__goal__'] != 'None':
+            push_goal_id = vars['__goal__']
+            push_goal_state = self.goal_return_state(push_goal_id, vars)
+            push_goal_return_phrase = self.goal_return_phrase(push_goal_id, vars)
+            push_goal_doom_counter = self.goal_doom_counter(push_goal_id, vars)
+            push_goal = [push_goal_id, push_goal_state, push_goal_return_phrase, push_goal_doom_counter]
+            vars['__stack__'].append(push_goal)
+        vars['__goal__'] = 'None'
+
+
+class GoalResume(Macro):
+    """
+    Resume the specified goal, or the first goal on the stack.
+
+    Used for situations where control is taken from a goal flow, but
+    the sub-convo actually ends up serving one of the goals in the stack.
+    In this case, a transition to the appropriate goal flow point can
+    be taken with GoalResume(resumed_goal) called in order to return
+    to the goal without any awkward return phrase.
+
+    An optional second argument can be used for a desired return phrase.
+    """
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        goal = None
+        if len(args) > 0 and args[0] != 'None':
+            pass
+        return_phrase = ''
+        if len(args) == 2:
+            return_phrase = args[1]
+        for i in range(len(vars['__stack__']) - 1, -1, -1):
+            id, state, phrase, doom = vars['__stack__'][i]
+
+
+
+class GoalReturn(Macro):
+    """
+    Return to some previous goal.
+
+    Typically, no args are given and the first valid goal on the stack
+    is moved to be the new current goal. The current goal, if present,
+    is considered completed.
+
+    A goal id can be specified, in which case any more immediate goals
+    are dropped to return to the first valid goal on the stack that
+    matches the specified goal id.
+    """
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        goal = None
+        if len(args) == 1:
+            goal = args[0]
+        vars['__goal__'] = 'None'
+        while vars['__stack__']:
+            id, state, phrase, doom = vars['__stack__'].pop()
+            if doom != 'None' and doom <= 0:
+                continue
+            if goal is not None and goal != id:
+                continue
+
+
+
+
 
 
 
