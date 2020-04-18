@@ -674,15 +674,15 @@ class GoalExit(Macro):
         vars['__goal__'] = 'None'
 
 
-class GoalResume(Macro):
+class GoalReturn(Macro):
     """
-    Resume the specified goal, or the first goal on the stack.
+    Return to the specified goal, or the first goal on the stack.
 
-    Used for situations where control is taken from a goal flow, but
-    the sub-convo actually ends up serving one of the goals in the stack.
-    In this case, a transition to the appropriate goal flow point can
-    be taken with GoalResume(resumed_goal) called in order to return
-    to the goal without any awkward return phrase.
+    Specifying a goal is used for situations where control is taken from a
+    goal flow, but the sub-convo actually ends up serving one of the goals
+    in the stack. In this case, a transition to the appropriate goal flow
+    point can be taken with GoalResume(resumed_goal) called in order to
+    return to the goal without any awkward return phrase.
 
     An optional second argument can be used for a desired return phrase.
     """
@@ -693,42 +693,23 @@ class GoalResume(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         goal = None
         if len(args) > 0 and args[0] != 'None':
-            pass
-        return_phrase = ''
-        if len(args) == 2:
-            return_phrase = args[1]
-        for i in range(len(vars['__stack__']) - 1, -1, -1):
-            id, state, phrase, doom = vars['__stack__'][i]
-
-
-
-class GoalReturn(Macro):
-    """
-    Return to some previous goal.
-
-    Typically, no args are given and the first valid goal on the stack
-    is moved to be the new current goal. The current goal, if present,
-    is considered completed.
-
-    A goal id can be specified, in which case any more immediate goals
-    are dropped to return to the first valid goal on the stack that
-    matches the specified goal id.
-    """
-
-    def __init__(self, dialogue_flow):
-        self.dialogue_flow = dialogue_flow
-
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        goal = None
-        if len(args) == 1:
             goal = args[0]
-        vars['__goal__'] = 'None'
+        if goal is None and vars['__goal__'] != 'None':
+            return False
         while vars['__stack__']:
             id, state, phrase, doom = vars['__stack__'].pop()
             if doom != 'None' and doom <= 0:
                 continue
             if goal is not None and goal != id:
                 continue
+            vars['__target__'] = state
+            vars['__goal__'] = id
+            if len(args) == 2:
+                return_phrase = args[1]
+            else:
+                return_phrase = phrase
+            return return_phrase
+
 
 
 

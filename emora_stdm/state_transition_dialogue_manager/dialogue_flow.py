@@ -93,6 +93,7 @@ class DialogueFlow:
             self._kb = kb
         onte = ONTE(self._kb)
         kbe = KBE(self._kb)
+        goal_exit_macro = GoalExit(self)
         self._macros = {
             'WN': WN(),
             'ONT': onte, 'ONTE': onte,
@@ -127,7 +128,11 @@ class DialogueFlow:
             'MAYBE': Maybe(),
             'TRANSITION': Transition(),
             'UNX': Unexpected(),
-            'INT': Intent()
+            'INT': Intent(),
+            'GEXT': goal_exit_macro,
+            'GOAL': GoalPursuit(goal_exit_macro),
+            'GCOM': GoalCompletion(self),
+            'GRET': GoalReturn(self)
         }
         if macros:
             self._macros.update(macros)
@@ -339,14 +344,7 @@ class DialogueFlow:
             natex, transition, score = self._transitions.pop()
             transition_items.append((natex, transition, score))
         for natex, transition, score in transition_items:
-            source, target, speaker = transition
-            self._potential_transition = transition
-            if not self._is_module and isinstance(target, tuple):
-                continue
             t1 = time()
-            if '->' in transition[1]:
-                transition = (target.split('->')[0], target.split('->')[1], speaker)
-                natex = natex + self.transition_natex(*transition)
             vars = HashableDict(self._vars)
             try:
                 generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
@@ -356,6 +354,28 @@ class DialogueFlow:
                 print('Transition {}: {} failed'.format(str(transition), natex))
                 print()
                 generation = None
+            source, target, speaker = transition
+            if '__source__' in vars:
+                source = State(module_state(vars['__source__']))
+                del vars['__source__']
+            if '__target__' in vars:
+                target = State(module_state(vars['__target__']))
+                del vars['__target__']
+            transition = source, target, speaker
+            self._potential_transition = transition
+            if not self._is_module and isinstance(target, tuple):
+                continue
+            if '->' in transition[1]:
+                transition = (target.split('->')[0], target.split('->')[1], speaker)
+                try:
+                    appended_generation = self.transition_natex(*transition).generate(vars=vars, macros=self._macros, debugging=debugging)
+                    generation = generation + ' ' + appended_generation
+                except Exception as e:
+                    print()
+                    print(e)
+                    print('Transition {}: {} failed'.format(str(transition), natex))
+                    print()
+                    generation = None
             if generation is not None:
                 if '__score__' in vars:
                     score = vars['__score__']
