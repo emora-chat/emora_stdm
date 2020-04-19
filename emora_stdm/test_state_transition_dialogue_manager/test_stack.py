@@ -13,6 +13,8 @@ def test_stack():
         '`I cannot concentrate on a lot of things right now. '
         'My grandma is in the hospital. `'
         '$__goal_return_phrase__=`What should I do?`':{
+            'state': 'gma_hospital',
+
             '[{[{dont,shouldnt,not},worry],calm,relax,distract,[mind,off]}]':{
                 'state': 'dont_worry',
 
@@ -20,6 +22,8 @@ def test_stack():
                 '"Okay, I will try my best not to worry. It\'s hard because she lives by '
                 'herself and won\'t let anyone help her very much, so I feel like this '
                 'will just happen again."':{
+                    'state': 'happen_again',
+
                     '[{sorry,sucks,hard}]':{
                         '"yeah, thanks."': {}
                     },
@@ -31,7 +35,7 @@ def test_stack():
                         '"I actually feel a little bit better after talking with you. Thanks for listening. "':{}
                     }
                 },
-                'default': 'feel_better'
+                '#DEFAULT': 'feel_better'
             },
             '#IDK':{
                 '"yeah, i dont know either. Its so tough."': {}
@@ -73,31 +77,36 @@ def test_stack():
                       '#GOAL(grandma_hospital_before) [{has,was},{she,grandma},hospital,{before,earlier,previously}]',
                       score=0.7)
 
-    r = df.system_turn(debugging=True)
+    r = df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
 
-    df.user_turn("what happened", debugging=True)
+    df.user_turn("what happened")
+    assert df.vars()['__goal_return_state__'] == 'None'
     assert df.vars()['__goal__'] == 'why_grandma_hospital'
     assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
-    assert "fell off of a stool" in df.system_turn(debugging=True)
-    df.user_turn("oh no",debugging=True)
-    assert "What should I do" in df.system_turn(debugging=True)
+    assert "fell off of a stool" in df.system_turn()
+    df.user_turn("oh no")
+
+    assert "What should I do" in df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
 
-    df.user_turn("dont worry",debugging=True)
+    df.user_turn("dont worry")
+    assert "she lives by herself" in df.system_turn()
     assert df.vars()['__goal_return_state__'] == "dont_worry"
 
-    assert "she lives by herself" in df.system_turn(debugging=True)
-    df.user_turn("has your grandma been in the hospital before this",debugging=True)
+    df.user_turn("has your grandma been in the hospital before this")
     assert df.vars()['__goal__'] == 'grandma_hospital_before'
     assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
-    assert "this is the first time" in df.system_turn(debugging=True)
+    assert "this is the first time" in df.system_turn()
+
+    df.user_turn("ok that is good")
+    assert "feel a little bit better" in df.system_turn(debugging=True)
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
     assert df.state() == 'feel_better'

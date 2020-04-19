@@ -134,7 +134,8 @@ class DialogueFlow:
             'GEXT': goal_exit_macro,
             'GOAL': GoalPursuit(goal_exit_macro),
             'GCOM': GoalCompletion(self),
-            'GRET': GoalReturn(self)
+            'GRET': GoalReturn(self),
+            'DEFAULT': Default()
         }
         if macros:
             self._macros.update(macros)
@@ -349,6 +350,7 @@ class DialogueFlow:
         for natex, transition, score in transition_items:
             t1 = time()
             vars = HashableDict(self._vars)
+            self._potential_transition = transition # MOVED, todo
             try:
                 generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
             except Exception as e:
@@ -365,7 +367,7 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            self._potential_transition = transition
+            # self._potential_transition = transition
             if not self._is_module and isinstance(target, tuple):
                 continue
             if '->' in transition[1]:
