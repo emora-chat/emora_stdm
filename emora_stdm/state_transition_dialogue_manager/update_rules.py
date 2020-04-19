@@ -1,6 +1,7 @@
 
 from emora_stdm.state_transition_dialogue_manager.update_rule import UpdateRule
 from collections import defaultdict
+from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 
 
 class UpdateRules:
@@ -37,7 +38,8 @@ class UpdateRules:
         self.vars['__converged__'] = 'False'
         for i, rule in enumerate(self.untapped):
             try:
-                satisfaction = rule.satisfied(user_input, debugging=debugging)
+                vars = HashableDict(self.vars)
+                satisfaction = rule.satisfied(user_input, vars, debugging=debugging)
             except RuntimeError as e:
                 print('Failed information state update condition check:')
                 print('  ', rule)
@@ -48,21 +50,24 @@ class UpdateRules:
                 generation = None
                 if debugging:
                     print('Rule triggered: ', rule.precondition, '==>', rule.postcondition)
-                if rule.postcondition is not None:
+                if rule.postcondition_score is None:
                     try:
-                        gen = rule.apply(debugging=debugging)
+                        rule.apply(vars, debugging=debugging)
                     except RuntimeError as e:
                         print('Failed information state update application')
                         print('  ', rule)
                         print(e)
                         del self.untapped[i]
                         return None
-                    if rule.postcondition_score is not None:
-                        generation = (gen, rule.postcondition_score)
-                        del self.untapped[i]
-                        self.vars['__converged__'] = 'True'
-                        return generation
-                del self.untapped[i]
-                return generation
+                    self.vars.update({k: vars[k] for k in vars.altered() if k != '__score__' and k in vars})
+                    del self.untapped[i]
+                    return generation
+                else:
+                    self.vars.update({k: vars[k] for k in vars.altered() if k != '__score__' and k in vars})
+                    response_natex = rule.postcondition
+                    generation = (response_natex, rule.postcondition_score)
+                    del self.untapped[i]
+                    self.vars['__converged__'] = 'True'
+                    return generation
         self.vars['__converged__'] = 'True'
         return None

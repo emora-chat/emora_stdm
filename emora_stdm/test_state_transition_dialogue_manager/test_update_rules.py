@@ -23,7 +23,7 @@ def test_update_rules():
     rules.add('#IF(z=something) (2.0)', '#SET(a=blah) wow (1.0)')
     rules.add('#IF(a=blah)', '#SET(b=blah)')
     result, score = rules.update('i have a cat', debugging=False)
-    assert result.strip() == 'wow'
+    assert result.generate(vars=vars, macros={'IF': IF, 'SET': SET}).strip() == 'wow'
     assert vars['z'] == 'something'
     assert vars['x'] == 'cat'
     assert 'b' not in vars

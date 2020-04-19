@@ -876,7 +876,7 @@ class DialogueFlow:
         if result is not None:
             response, score = result
             self._transitions.append(
-                (NatexNLG('`{}`'.format(response)), (self.state(), self.state(), Speaker.SYSTEM), score))
+                (response, (self.state(), self.state(), Speaker.SYSTEM), score))
             self.set_speaker(Speaker.SYSTEM)
 
     def knowledge_base(self):

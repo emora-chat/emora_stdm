@@ -258,7 +258,7 @@ def test_information_state_based_dialogue():
     df.add_update_rule('#ANY($x=ice cream)', '$y=None')
     df.add_update_rule('#ANY($y=blah)', 'i am a smart info state manager (2.0)')
 
-    df.user_turn('candy')
+    df.user_turn('candy', debugging=True)
     assert df.system_turn().strip() == 'i am a smart info state manager'
     df.user_turn('ice cream', debugging=True)
     assert df.system_turn(debugging=True).strip() == 'i am a stupid state machine'
