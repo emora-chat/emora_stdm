@@ -31,7 +31,7 @@ class NatexNLU:
         if vars is None:
             vars = HashableDict()
         original_vars = vars
-        vars = deepcopy(vars)
+        vars = HashableDict(vars)
         if ngrams is None:
             ngrams = Ngrams(natural_language)
         self.compile(ngrams, vars, macros, debugging)
