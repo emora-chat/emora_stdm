@@ -80,8 +80,10 @@ def test_stack():
     r = df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
+    assert df.state() == 'gma_hospital'
 
     df.user_turn("what happened")
+    assert df.state() == "why_grandma_hospital"
     assert df.vars()['__goal_return_state__'] == 'None'
     assert df.vars()['__goal__'] == 'why_grandma_hospital'
     assert len(df.vars()['__stack__']) == 1
@@ -91,14 +93,17 @@ def test_stack():
     df.user_turn("oh no")
 
     assert "What should I do" in df.system_turn()
+    assert df.state() == 'gma_hospital'
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
 
     df.user_turn("dont worry")
+    assert df.state() == 'dont_worry'
     assert "she lives by herself" in df.system_turn()
     assert df.vars()['__goal_return_state__'] == "dont_worry"
 
     df.user_turn("has your grandma been in the hospital before this")
+    assert df.state() == 'grandma_hospital_before'
     assert df.vars()['__goal__'] == 'grandma_hospital_before'
     assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
