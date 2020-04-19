@@ -820,7 +820,7 @@ class DialogueFlow:
                 for dependency in dependencies:
                     if dependency in self._vars:
                         self._vars[dependency] = None
-        self._vars.update({k: variables[k] for k in variables.altered() if k != '__score__'})
+        self._vars.update({k: variables[k] for k in variables.altered() if k != '__score__' and k in variables})
 
     def potential_transition(self):
         return self._potential_transition

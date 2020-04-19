@@ -65,7 +65,7 @@ def test_stack():
     }
 
     df.load_transitions(transitions)
-    df.load_transitions(gma)
+    df.load_transitions(gma, speaker=DialogueFlow.Speaker.USER)
     df.add_global_nlu('why_grandma_hospital',
                       '#GOAL(why_grandma_hospital) [{[why,hospital],wrong,happened}]',
                       score=0.7)
@@ -82,23 +82,22 @@ def test_stack():
     assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
-    assert "fell off of a stool" in df.system_turn()
+    assert "fell off of a stool" in df.system_turn(debugging=True)
+    df.user_turn("oh no",debugging=True)
+    assert "What should I do" in df.system_turn(debugging=True)
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
 
-    df.user_turn("oh no")
-    assert "What should I do" in df.system_turn()
-
-    df.user_turn("dont worry")
+    df.user_turn("dont worry",debugging=True)
     assert df.vars()['__goal_return_state__'] == "dont_worry"
 
-    assert "she lives by herself" in df.system_turn()
-    df.user_turn("has your grandma been in the hospital before this")
+    assert "she lives by herself" in df.system_turn(debugging=True)
+    df.user_turn("has your grandma been in the hospital before this",debugging=True)
     assert df.vars()['__goal__'] == 'grandma_hospital_before'
     assert len(df.vars()['__stack__']) == 1
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
-    assert "this is the first time" in df.system_turn()
+    assert "this is the first time" in df.system_turn(debugging=True)
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
     assert df.state() == 'feel_better'
