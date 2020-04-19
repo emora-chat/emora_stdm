@@ -39,7 +39,7 @@ class NatexNLU:
         self._regex = None
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
-            original_vars.update({k: vars[k] for k in vars.altered()})
+            original_vars.update({k: vars[k] for k in vars})
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):

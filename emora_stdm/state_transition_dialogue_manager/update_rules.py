@@ -60,11 +60,11 @@ class UpdateRules:
                         print(e)
                         del self.untapped[i]
                         return None
-                    self.vars.update({k: vars[k] for k in vars.altered() if k != '__score__' and k in vars})
+                    self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
                     del self.untapped[i]
                     return generation
                 else:
-                    self.vars.update({k: vars[k] for k in vars.altered() if k != '__score__' and k in vars})
+                    self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
                     response_natex = rule.postcondition
                     generation = (response_natex, rule.postcondition_score)
                     del self.untapped[i]

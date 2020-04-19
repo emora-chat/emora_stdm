@@ -816,13 +816,13 @@ class DialogueFlow:
     def update_vars(self, variables: HashableDict):
         if not isinstance(variables, HashableDict):
             variables = HashableDict(variables)
-        for k in variables.altered():
+        for k in variables:
             if k in self._var_dependencies:
                 dependencies = self._var_dependencies[k]
                 for dependency in dependencies:
                     if dependency in self._vars:
                         self._vars[dependency] = None
-        self._vars.update({k: variables[k] for k in variables.altered() if k != '__score__' and k in variables})
+        self._vars.update({k: variables[k] for k in variables if k != '__score__' and k in variables})
 
     def potential_transition(self):
         return self._potential_transition

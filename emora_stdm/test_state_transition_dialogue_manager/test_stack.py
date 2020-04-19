@@ -111,7 +111,6 @@ def test_stack():
     assert "this is the first time" in df.system_turn()
 
     df.user_turn("ok that is good")
-    assert "feel a little bit better" in df.system_turn(debugging=True)
+    assert "feel a little bit better" in df.system_turn()
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
-    assert df.state() == 'feel_better'
