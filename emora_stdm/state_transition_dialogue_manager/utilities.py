@@ -1,4 +1,4 @@
-
+from copy import deepcopy
 import random
 
 
@@ -34,6 +34,8 @@ class HashableDict(ConfigurationDict):
     def __init__(self, other=None):
         if other is None:
             other = {}
+        else:
+            other = deepcopy(other)
         ConfigurationDict.__init__(self, other)
         self._altered = set()
 

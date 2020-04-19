@@ -2,6 +2,7 @@
 from emora_stdm.state_transition_dialogue_manager.update_rule import UpdateRule
 from collections import defaultdict
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
+from copy import deepcopy
 
 
 class UpdateRules:
