@@ -466,7 +466,25 @@ class VirtualTransitions(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for state in args:
-            pass
+            if ':' in state:
+                controller, state = state.split(':')
+                extraction_df = self.dialogue_flow.composite_dialogue_flow().component(controller)
+                for source, target, speaker in extraction_df.transitions(state):
+                    natex = extraction_df.transition_natex(source, target, speaker)
+                    score = extraction_df.transition_settings(source, target, speaker).score
+                    if not isinstance(source, tuple):
+                        source = (controller, source)
+                    if not isinstance(target, tuple):
+                        target = (controller, target)
+                    self.dialogue_flow.dynamic_transitions().append(
+                        (natex, (source, target, speaker), score))
+            else:
+                for source, target, speaker in self.dialogue_flow.transitions(state):
+                    natex = self.dialogue_flow.transition_natex(source, target, speaker)
+                    score = self.dialogue_flow.transition_settings(source, target, speaker).score
+                    self.dialogue_flow.dynamic_transitions().append(
+                        (natex, (source, target, speaker), score))
+        return False
 
 
 class Intent(Macro):

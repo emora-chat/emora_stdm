@@ -113,6 +113,10 @@ class CompositeDialogueFlow:
         speaker = self._controller.speaker()
         self.set_controller(namespace)
         self._controller.set_speaker(speaker)
+        if speaker == DialogueFlow.Speaker.USER and not self._controller.state_settings(state).user_multi_hop:
+            self._controller.change_speaker()
+        elif speaker == DialogueFlow.Speaker.SYSTEM and not self._controller.state_settings(state).system_multi_hop:
+            self._controller.change_speaker()
         self._controller.set_state(state)
 
     def precache_transitions(self, process_num=1):
@@ -179,6 +183,10 @@ class CompositeDialogueFlow:
 
     def set_state(self, state):
         state = module_state(state)
+        if isinstance(state, tuple):
+            if self.component(state[0]) != self.controller():
+                self.set_controller(state[0])
+                state = state[1]
         self._controller.set_state(state)
 
     def set_controller(self, controller_name):

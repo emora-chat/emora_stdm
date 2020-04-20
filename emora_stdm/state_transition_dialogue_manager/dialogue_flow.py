@@ -137,7 +137,8 @@ class DialogueFlow:
             'GOAL': GoalPursuit(goal_exit_macro),
             'GCOM': GoalCompletion(self),
             'GRET': GoalReturn(self),
-            'DEFAULT': Default()
+            'DEFAULT': Default(),
+            'VT': VirtualTransitions(self)
         }
         if macros:
             self._macros.update(macros)
@@ -671,12 +672,13 @@ class DialogueFlow:
             transition = (self.state(), target, self.speaker())
             self.state_settings(self.state()).memory.add(transition)
         self.set_state(target)
-        if self.speaker() is Speaker.SYSTEM:
-            if not self.state_settings(self.state()).system_multi_hop:
-                self.set_speaker(Speaker.USER)
-        else:
-            if not self.state_settings(self.state()).user_multi_hop:
-                self.set_speaker(Speaker.SYSTEM)
+        if not isinstance(target, tuple):
+            if self.speaker() is Speaker.SYSTEM:
+                if not self.state_settings(self.state()).system_multi_hop:
+                    self.set_speaker(Speaker.USER)
+            else:
+                if not self.state_settings(self.state()).user_multi_hop:
+                    self.set_speaker(Speaker.SYSTEM)
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 

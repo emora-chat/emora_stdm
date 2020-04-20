@@ -5,6 +5,7 @@ from emora_stdm import NatexNLU, NatexNLG
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
+from emora_stdm.state_transition_dialogue_manager.composite_dialogue_flow import CompositeDialogueFlow
 from time import time
 
 
@@ -313,6 +314,81 @@ def test_NEGATION():
     assert not match
     match = natex.match('i go', debugging=False)
     assert not match
+
+def test_virtual_transitions():
+    df = DialogueFlow('root')
+    transitions = {
+        'state': 'root',
+        'hello': {
+            'state': 'test',
+            'a': {
+                'something typical': 'nope'
+            },
+            '#VT(other)': 'blah'
+        },
+        'not taken':{
+            'state': 'other',
+            'score': 0,
+            'x': {
+                'you win':{
+                    'state': 'success'
+                }
+            },
+            'y': {
+                'you win': {
+                    'state': 'success'
+                }
+            }
+        }
+    }
+    df.load_transitions(transitions)
+    df.system_turn()
+    assert df.state() == 'test'
+    df.user_turn('x', debugging=True)
+    assert df.system_turn() == 'you win'
+    assert df.state() == 'success'
+
+def test_virtual_transitions_cross_module():
+    df = DialogueFlow('root')
+    transitions = {
+        'state': 'root',
+        'hello': {
+            'state': 'test',
+            'a': {
+                'something typical'
+            },
+            '#VT(two:other)': 'blah'
+        }
+    }
+    df.load_transitions(transitions)
+    df2 = DialogueFlow('r2')
+    transitions2 = {
+        'not taken': {
+            'state': 'other',
+            'score': 0,
+            'x': {
+                'you win': {
+                    'state': 'success'
+                }
+            },
+            'y': {
+                'you win': {
+                    'state': 'success'
+                }
+            }
+        }
+    }
+    df2.load_transitions(transitions2)
+    cdf = CompositeDialogueFlow('one:root', 'e', 'e')
+    cdf.add_component(df, 'one')
+    cdf.add_component(df2, 'two')
+    cdf.set_state('one:root')
+
+    cdf.system_turn()
+    assert cdf.state() == ('one', 'test')
+    cdf.user_turn('x', debugging=True)
+    assert cdf.system_turn() == 'you win'
+    assert cdf.state() == ('two', 'success')
 
 
 
