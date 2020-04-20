@@ -172,7 +172,7 @@ class CompositeDialogueFlow:
 
     def add_component(self, component, namespace):
         self._components[namespace] = component
-        component.set_is_module()
+        component.set_is_module(self)
 
     def component(self, namespace):
         return self._components[namespace]

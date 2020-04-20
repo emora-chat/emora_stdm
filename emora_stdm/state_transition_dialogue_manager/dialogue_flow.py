@@ -76,11 +76,11 @@ class DialogueFlow:
         self._prepends = {}
         self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
-        self._is_module = False
         self._default_state = default_system_state
         self._end_state = end_state
         self._goals = {}
         self._all_multi_hop = all_multi_hop
+        self._composite_dialogue_flow = None
         self.vars()['__stack__'] = []
         if kb is None:
             self._kb = KnowledgeBase()
@@ -369,7 +369,7 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            if not self._is_module and isinstance(target, tuple):
+            if not self.is_module() and isinstance(target, tuple):
                 continue
             if '->' in transition[1]:
                 transition = (target.split('->')[0], target.split('->')[1], speaker)
@@ -478,7 +478,7 @@ class DialogueFlow:
         self._gate_buffer.clear()
         for natex, transition, score in transition_items:
             self._potential_transition = transition
-            if not self._is_module and isinstance(transition[1], tuple):
+            if not self.is_module() and isinstance(transition[1], tuple):
                 continue
             t1 = time()
             if debugging:
@@ -904,8 +904,8 @@ class DialogueFlow:
     def knowledge_base(self):
         return self._kb
 
-    def set_is_module(self):
-        self._is_module = True
+    def set_is_module(self, composite_dialogue_flow):
+        self._composite_dialogue_flow = composite_dialogue_flow
 
     def is_switch(self, state):
         return self.state_settings(state)['switch']
@@ -924,6 +924,12 @@ class DialogueFlow:
 
     def dynamic_transitions(self):
         return self._transitions
+
+    def composite_dialogue_flow(self):
+        return self._composite_dialogue_flow
+
+    def is_module(self):
+        return self.composite_dialogue_flow() is not None
 
     def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
         goal = {
