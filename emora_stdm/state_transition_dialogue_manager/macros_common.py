@@ -452,23 +452,6 @@ class Transition(Macro):
         vars['__transition__'] = args[0]
         vars['__converged__'] = 'True'
 
-class Unexpected(Macro):
-
-    def __init__(self):
-        self.question_natex = NatexNLU(question)
-
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if self.question_natex.match(ngrams.text()):
-            if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
-                vars['__response_prefix__'] = 'I\'m not really sure at the moment.'
-            else:
-                vars['_explained_stupidity_'] = 'True'
-                vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
-                                              'There\'s still a lot I\'m trying to figure out. '
-        else:
-            vars['__response_prefix__'] = 'Yeah.'
-        return True
-
 
 class Intent(Macro):
 

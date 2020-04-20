@@ -96,6 +96,7 @@ class DialogueFlow:
         onte = ONTE(self._kb)
         kbe = KBE(self._kb)
         goal_exit_macro = GoalExit(self)
+        conjunction_macro = CheckVarsConjunction()
         self._macros = {
             'WN': WN(),
             'ONT': onte, 'ONTE': onte,
@@ -108,7 +109,8 @@ class DialogueFlow:
             'I': Intersection(),
             'DIF': Difference(),
             'SET': SetVars(),
-            'ALL': CheckVarsConjunction(),
+            'ALL': conjunction_macro,
+            'IF': conjunction_macro,
             'ANY': CheckVarsDisjunction(),
             'ISP': IsPlural(),
             'FPP': FirstPersonPronoun(self._kb),

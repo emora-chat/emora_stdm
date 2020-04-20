@@ -18,7 +18,7 @@ def CommonNatexMacro(natex_string):
 
 
 agree = '[!-{not, "don\'t", dont, "isn\'t", isnt} {{sure, i know, "I know"}' \
-        '[{yes, yeah, yea, yep, yup, think so, i know, absolutely, ' \
+        '[{yes, yeah, yea, yep, yup, think so, i know, absolutely, exactly, precisely, ' \
         'certainly, surely, definitely, probably, true, of course}]}]'
 Agree = CommonNatexMacro(agree)
 
@@ -40,7 +40,7 @@ negation = '{not, "dont", "cant", "wont", "shouldnt", "cannot", "didnt", "doesnt
            '"no way", "none", "nothing"}'
 Negation = CommonNatexMacro(negation)
 
-confirm = '{%s, [!-{%s, %s} [{okay, ok, alright, i understand, understood}]]}' % (agree, disagree, negation)
+confirm = '{%s, [!-{%s, %s} [{okay, ok, alright, i understand, understood, sounds good, perfect}]]}' % (agree, disagree, negation)
 Confirm = CommonNatexMacro(confirm)
 
 dont_know = '[{' \
@@ -52,6 +52,35 @@ DontKnow = CommonNatexMacro(dont_know)
 
 maybe = '[{maybe,possibly,sort of,kind of,kinda,a little,at times,sometimes,could be,potentially,its possible}]'
 Maybe = CommonNatexMacro(dont_know)
+
+class Unexpected(Macro):
+
+    def __init__(self):
+        self.question_natex = NatexNLU(question)
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if '__previous_unx_response__' not in vars:
+            vars['__previous_unx_response__'] = 'Gotcha.'
+        if '__previous_unx_answer__' not in vars:
+            vars['__previous_unx_answer__'] = 'None'
+        statement_response = '$__previous_unx_response__={' + ', '.join(
+            {'Yeah.', 'For sure.', 'Gotcha.', 'Right.', 'Uh-huh.'}
+            - {vars['__previous_unx_response__']}) + '}'
+        question_answer =  '$__previous_unx_answer__={' + ', '.join(
+            {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''}
+            - {vars['__previous_unx_response__']}) + '}'
+        if len(args) > 0:
+            statement_response = ', '.join(args)
+        if self.question_natex.match(ngrams.text()):
+            if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
+                vars['__response_prefix__'] = 'I\'m not really sure at the moment.'
+            else:
+                vars['_explained_stupidity_'] = 'True'
+                vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
+                                              'There\'s still a lot I\'m trying to figure out. '
+        else:
+            vars['__response_prefix__'] = statement_response
+        return True
 
 
 if __name__ == '__main__':
