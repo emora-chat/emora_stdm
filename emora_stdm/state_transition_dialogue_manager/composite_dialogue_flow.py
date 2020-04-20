@@ -77,7 +77,7 @@ class CompositeDialogueFlow:
         :return: None
         """
         try:
-            self._controller.state_update(natural_language, debugging=debugging)
+            self._controller.apply_update_rules(natural_language, debugging=debugging)
             next_state = self._controller.state()
         except Exception as e:
             print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
@@ -96,7 +96,7 @@ class CompositeDialogueFlow:
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
                 if self._controller.speaker() is DialogueFlow.Speaker.USER:
-                    self._controller.state_update(natural_language, debugging=debugging)
+                    self._controller.apply_update_rules(natural_language, debugging=debugging)
             if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.USER:
                 self._controller.change_speaker()
                 break
@@ -105,7 +105,7 @@ class CompositeDialogueFlow:
         if isinstance(next_state, tuple):
             self.set_control(*next_state)
             if self._controller.speaker() is DialogueFlow.Speaker.USER:
-                self._controller.state_update(natural_language, debugging=debugging)
+                self._controller.apply_update_rules(natural_language, debugging=debugging)
 
 
     def set_control(self, namespace, state):

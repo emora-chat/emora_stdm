@@ -29,8 +29,6 @@ class UpdateRules:
         self.untapped = sorted(self.rules, key=lambda x: x.precondition_score, reverse=True)
         response = None
         self.vars['__converged__'] = 'False'
-        self.vars['__transition__'] = ''
-        self.vars['__transition_score__'] = 0
         while not self.vars['__converged__'] == 'True':
             response = self.update_step(user_input, debugging=debugging)
         return response
@@ -48,7 +46,6 @@ class UpdateRules:
                 del self.untapped[i]
                 return None
             if satisfaction:
-                generation = None
                 if debugging:
                     print('Rule triggered: ', rule.precondition, '==>', rule.postcondition)
                 if rule.postcondition_score is None:
@@ -62,7 +59,7 @@ class UpdateRules:
                         return None
                     self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
                     del self.untapped[i]
-                    return generation
+                    return None
                 else:
                     self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
                     response_natex = rule.postcondition

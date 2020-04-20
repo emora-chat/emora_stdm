@@ -444,13 +444,29 @@ class Transition(Macro):
     """
 
     """
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if len(args) > 1:
-            vars['__transition_score__'] = float(args[1])
+            score = float(args[1])
         else:
-            vars['__transition_score__'] = 0.5
-        vars['__transition__'] = args[0]
+            score = 0.5
+        target = args[0]
         vars['__converged__'] = 'True'
+        self.dialogue_flow.dynamic_transitions().append(
+            (NatexNLU('/.*/'),
+             (self.dialogue_flow.state(), target, self.dialogue_flow.speaker()),
+             score))
+
+class VirtualTransitions(Macro):
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for state in args:
+            pass
 
 
 class Intent(Macro):

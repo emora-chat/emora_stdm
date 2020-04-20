@@ -130,7 +130,7 @@ class DialogueFlow:
             'NEGATION': Negation(),
             'IDK': DontKnow(),
             'MAYBE': Maybe(),
-            'TRANSITION': Transition(),
+            'TRANSITION': Transition(self),
             'UNX': Unexpected(),
             'INT': Intent(),
             'GEXT': goal_exit_macro,
@@ -194,7 +194,7 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
-        self.state_update(natural_language, debugging)
+        self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
         while self.speaker() is Speaker.USER:
             next_state = self.user_transition(natural_language, self.state(), debugging=debugging)
@@ -369,7 +369,6 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            # self._potential_transition = transition
             if not self._is_module and isinstance(target, tuple):
                 continue
             if '->' in transition[1]:
@@ -383,6 +382,14 @@ class DialogueFlow:
                     print('Transition {}: {} failed'.format(str(transition), natex))
                     print()
                     generation = None
+            source, target, speaker = transition
+            if '__source__' in vars:
+                source = State(module_state(vars['__source__']))
+                del vars['__source__']
+            if '__target__' in vars:
+                target = State(module_state(vars['__target__']))
+                del vars['__target__']
+            transition = source, target, speaker
             if generation is not None:
                 if '__score__' in vars:
                     score = vars['__score__']
@@ -459,22 +466,23 @@ class DialogueFlow:
         else:
             state = State(state)
         transition_options = []
-        if '__transition__' in self.vars() and self.vars()['__transition__']:
-            transition_options.append(
-                (self.vars()['__transition_score__'],
-                 ('__global__', self.vars()['__transition__'], Speaker.USER),
-                 self.vars()))
+        transition_items = []
+        for transition in self.transitions(state, Speaker.USER):
+            natex = self.transition_natex(*transition)
+            score = self.transition_settings(*transition).score
+            transition_items.append((natex, transition, score))
+        while self._transitions:
+            natex, transition, score = self._transitions.pop()
+            transition_items.append((natex, transition, score))
         ngrams = Ngrams(natural_language, n=10)
         self._gate_buffer.clear()
-        for transition in self.transitions(state, Speaker.USER):
+        for natex, transition, score in transition_items:
             self._potential_transition = transition
             if not self._is_module and isinstance(transition[1], tuple):
                 continue
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
-            natex = self.transition_natex(*transition)
-            settings = self.transition_settings(*transition)
             vars = HashableDict(self._vars)
             try:
                 match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
@@ -484,18 +492,28 @@ class DialogueFlow:
                 print('Transition {}: {} failed'.format(str(transition), natex))
                 print()
                 match = None
+            source, target, speaker = transition
+            if '__source__' in vars:
+                source = State(module_state(vars['__source__']))
+                del vars['__source__']
+            if '__target__' in vars:
+                target = State(module_state(vars['__target__']))
+                del vars['__target__']
+            transition = source, target, speaker
             if match:
                 if debugging:
                     print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 if '__score__' in vars:
                     score = vars['__score__']
                     del vars['__score__']
-                else:
-                    score = settings.score
                 transition_options.append((score, transition, vars))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
+            while self._transitions:
+                natex, transition, score = self._transitions.pop()
+                transition_items.append((natex, transition, score))
+        self._transitions.clear()
         if transition_options:
             score, transition, vars = random_max(transition_options, key=lambda x: x[0])
             if debugging:
@@ -875,7 +893,7 @@ class DialogueFlow:
     def add_update_rule(self, precondition, postcondition=None):
         self._rules.add(precondition, postcondition)
 
-    def state_update(self, user_input, debugging=False):
+    def apply_update_rules(self, user_input, debugging=False):
         result = self._rules.update(user_input, debugging)
         if result is not None:
             response, score = result
@@ -903,6 +921,9 @@ class DialogueFlow:
 
     def set_goals(self, goals_dict):
         self._goals = goals_dict
+
+    def dynamic_transitions(self):
+        return self._transitions
 
     def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
         goal = {
