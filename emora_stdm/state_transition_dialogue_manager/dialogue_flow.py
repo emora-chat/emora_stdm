@@ -303,14 +303,14 @@ class DialogueFlow:
                         self.add_state(target)
                 if speaker == Speaker.USER:
                     if self.has_transition(source, target, Speaker.USER):
-                        intermediate = self.autostate()
+                        intermediate = '_' + self.autostate()
                         self.add_state(intermediate, target, user_multi_hop=True)
                         self.add_user_transition(source, intermediate, natex, score=score)
                     else:
                         self.add_user_transition(source, target, natex, score=score)
                 elif speaker == Speaker.SYSTEM:
                     if self.has_transition(source, target, Speaker.SYSTEM):
-                        intermediate = self.autostate()
+                        intermediate = '_' + self.autostate()
                         self.add_state(intermediate, system_multi_hop=True)
                         self.add_system_transition(intermediate, target, '')
                         self.add_system_transition(source, intermediate, natex, score=score)
@@ -740,7 +740,14 @@ class DialogueFlow:
         state = module_state(state)
         state = State(state)
         if self.speaker() == Speaker.SYSTEM:
-            self.vars()['__system_state__'] = self.vars()['__state__'] if '__state__' in self.vars() else 'None'
+            if '__state__' in self.vars():
+                st_str = self.vars()['__state__'][1] if isinstance(self.vars()['__state__'],tuple) else self.vars()['__state__']
+                if not st_str.startswith('_'):
+                    self.vars()['__system_state__'] = self.vars()['__state__']
+                if '__system_state__' not in self.vars():
+                    self.vars()['__system_state__'] = 'None'
+            else:
+                self.vars()['__system_state__'] = 'None'
         self._vars['__state__'] = state
 
     def has_state(self, state):

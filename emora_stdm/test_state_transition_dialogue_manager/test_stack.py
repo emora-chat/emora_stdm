@@ -8,17 +8,19 @@ def test_stack():
     df = DialogueFlow('root')
     transitions = {
         'state': 'root',
+        '`What should I do?`':'gma_hospital',
 
-        '#GOAL(grandma_hospital) '
+        '#GOAL(grandma_hospital) #GATE'
         '`I cannot concentrate on a lot of things right now. '
-        'My grandma is in the hospital. `'
-        '$__goal_return_phrase__=`What should I do?`':{
+        'My grandma is in the hospital. '
+        'What should I do?`':{
             'state': 'gma_hospital',
+            'score': 2.0,
 
             '[{[{dont,shouldnt,not},worry],calm,relax,distract,[mind,off]}]':{
                 'state': 'dont_worry',
 
-                '#SET($__goal_return_state__=dont_worry) #GATE '
+                '#GATE '
                 '"Okay, I will try my best not to worry. It\'s hard because she lives by '
                 'herself and won\'t let anyone help her very much, so I feel like this '
                 'will just happen again."':{
@@ -100,7 +102,6 @@ def test_stack():
     df.user_turn("dont worry")
     assert df.state() == 'dont_worry'
     assert "she lives by herself" in df.system_turn()
-    assert df.vars()['__goal_return_state__'] == "dont_worry"
 
     df.user_turn("has your grandma been in the hospital before this")
     assert df.state() == 'grandma_hospital_before'
