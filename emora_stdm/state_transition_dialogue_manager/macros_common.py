@@ -653,6 +653,12 @@ class GoalReturn(Macro):
             return phrase
 
 
+class SetGoalReturnPoint(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__goal_return_state__'] = args[0]
+
+
 
 
 

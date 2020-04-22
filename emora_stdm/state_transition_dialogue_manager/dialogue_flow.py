@@ -141,7 +141,8 @@ class DialogueFlow:
             'GCOM': GoalCompletion(self),
             'GRET': GoalReturn(self),
             'DEFAULT': Default(),
-            'VT': VirtualTransitions(self)
+            'VT': VirtualTransitions(self),
+            'GSRET': SetGoalReturnPoint()
         }
         if macros:
             self._macros.update(macros)
@@ -174,6 +175,7 @@ class DialogueFlow:
         :return: the natural language system response
         """
         t1 = time()
+        self.vars()['__goal_return_state__'] = 'None'
         visited = {self.state()}
         responses = []
         while self.speaker() is Speaker.SYSTEM:
@@ -222,7 +224,7 @@ class DialogueFlow:
             print('User turn in {:.5f}'.format(t2 - t1))
 
 
-    def load_transitions(self, json_dict, speaker=None, root=None):
+    def load_transitions(self, json_dict, speaker=None):
         """
         wheeeeeeee!
         """
@@ -232,8 +234,6 @@ class DialogueFlow:
             source = json_dict['state']
         else:
             source = DialogueFlow.autostate()
-        if root is None:
-            root = self._initial_state
 
         hop = None
         switch = False
@@ -259,7 +259,6 @@ class DialogueFlow:
         # set up state settings
         if not self.has_state(source):
             self.add_state(source)
-            self.set_error_successor(source, root)
         if hop:
             if speaker == Speaker.USER:
                 speaker = Speaker.SYSTEM
@@ -288,7 +287,6 @@ class DialogueFlow:
                     target = target['state']
                     if not self.has_state(target):
                         self.add_state(target)
-                        self.set_error_successor(target, root)
                 self.set_error_successor(source, target)
 
             else:
@@ -302,7 +300,6 @@ class DialogueFlow:
                     target = target['state']
                     if not self.has_state(target):
                         self.add_state(target)
-                        self.set_error_successor(target, root)
                 if speaker == Speaker.USER:
                     if self.has_transition(source, target, Speaker.USER):
                         intermediate = self.autostate()
