@@ -36,7 +36,7 @@ class CompositeDialogueFlow:
         :return: None
         """
         while True:
-            if self._controller.speaker() == DialogueFlow.Speaker.SYSTEM:
+            if self.controller().speaker() == DialogueFlow.Speaker.SYSTEM:
                 print("S:", self.system_turn(debugging=debugging))
             else:
                 user_input = input("U: ")
@@ -50,20 +50,20 @@ class CompositeDialogueFlow:
         """
         visited = {self._controller.state()}
         responses = []
-        while self._controller.speaker() is DialogueFlow.Speaker.SYSTEM:
+        while self.controller().speaker() is DialogueFlow.Speaker.SYSTEM:
             try:
-                response, next_state = self._controller.system_transition(self._controller.state(), debugging=debugging)
-                self._controller.take_transition(next_state)
+                response, next_state = self.controller().system_transition(self.controller().state(), debugging=debugging)
+                self.controller().take_transition(next_state)
             except Exception as e:
-                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller(), self.controller().state()))
                 print(e)
                 response, next_state = '', self._system_error_state
                 visited = visited - {next_state}
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
             responses.append(response)
-            if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.SYSTEM:
-                self._controller.change_speaker()
+            if next_state in visited and self.controller()._speaker is DialogueFlow.Speaker.SYSTEM:
+                self.controller().change_speaker()
                 break
             visited.add(next_state)
         return  ' '.join(responses)
@@ -77,47 +77,49 @@ class CompositeDialogueFlow:
         :return: None
         """
         try:
-            self._controller.apply_update_rules(natural_language, debugging=debugging)
-            next_state = self._controller.state()
+            self.controller().apply_update_rules(natural_language, debugging=debugging)
+            next_state = self.controller().state()
         except Exception as e:
-            print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+            print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
             print(e)
             next_state = self._user_error_state
-        visited = {self._controller.state()}
-        while self._controller.speaker() is DialogueFlow.Speaker.USER:
+        visited = {self.controller().state()}
+        while self.controller().speaker() is DialogueFlow.Speaker.USER:
             try:
-                next_state = self._controller.user_transition(natural_language, self._controller.state(), debugging=debugging)
-                self._controller.take_transition(next_state)
+                next_state = self.controller().user_transition(natural_language, self.controller().state(), debugging=debugging)
+                self.controller().take_transition(next_state)
             except Exception as e:
-                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self._controller.state()))
+                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
                 print(e)
                 next_state = self._user_error_state
             next_state = module_state(next_state)
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
-                if self._controller.speaker() is DialogueFlow.Speaker.USER:
-                    self._controller.apply_update_rules(natural_language, debugging=debugging)
-            if next_state in visited and self._controller._speaker is DialogueFlow.Speaker.USER:
-                self._controller.change_speaker()
+                if self.controller().speaker() is DialogueFlow.Speaker.USER:
+                    self.controller().apply_update_rules(natural_language, debugging=debugging)
+            if next_state in visited and self.controller()._speaker is DialogueFlow.Speaker.USER:
+                self.controller().change_speaker()
                 break
             visited.add(next_state)
         next_state = module_state(next_state)
         if isinstance(next_state, tuple):
             self.set_control(*next_state)
-            if self._controller.speaker() is DialogueFlow.Speaker.USER:
-                self._controller.apply_update_rules(natural_language, debugging=debugging)
+            if self.controller().speaker() is DialogueFlow.Speaker.USER:
+                self.controller().apply_update_rules(natural_language, debugging=debugging)
 
 
     def set_control(self, namespace, state):
         state = module_state(state)
-        speaker = self._controller.speaker()
+        speaker = self.controller().speaker()
+        old_state = self.controller().state()
+        self.component(namespace).set_state(old_state)
         self.set_controller(namespace)
-        self._controller.set_speaker(speaker)
-        if speaker == DialogueFlow.Speaker.USER and not self._controller.state_settings(state).user_multi_hop:
-            self._controller.change_speaker()
-        elif speaker == DialogueFlow.Speaker.SYSTEM and not self._controller.state_settings(state).system_multi_hop:
-            self._controller.change_speaker()
-        self._controller.set_state(state)
+        self.controller().set_speaker(speaker)
+        if speaker == DialogueFlow.Speaker.USER and not self.controller().state_settings(state).user_multi_hop:
+            self.controller().change_speaker()
+        elif speaker == DialogueFlow.Speaker.SYSTEM and not self.controller().state_settings(state).system_multi_hop:
+            self.controller().change_speaker()
+        self.controller().set_state(state)
 
     def precache_transitions(self, process_num=1):
         start = time()
@@ -185,14 +187,15 @@ class CompositeDialogueFlow:
         state = module_state(state)
         if isinstance(state, tuple):
             if self.component(state[0]) != self.controller():
+                self.component(state[0]).set_state(self.controller().state())  # so __system_state__ is set properly
                 self.set_controller(state[0])
                 state = state[1]
-        self._controller.set_state(state)
+        self.controller().set_state(state)
 
     def set_controller(self, controller_name):
         old_controller_vars = self._controller.vars()
         if self._controller_name != controller_name:
-            del old_controller_vars["__state__"]
+            del old_controller_vars['__state__']
         self._controller = self.component(controller_name)
         self._controller_name = controller_name
         new_controller_vars = self._controller.vars()

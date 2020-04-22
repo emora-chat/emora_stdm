@@ -69,6 +69,7 @@ class DialogueFlow:
         self._speaker = self._initial_speaker
         self._vars = HashableDict()
         self._transitions = []
+        self.vars()['__state__'] = self._initial_state
         self.set_state(self._initial_state)
         self._gate_requirements = defaultdict(dict)
         self._gates = defaultdict(set)
@@ -758,7 +759,7 @@ class DialogueFlow:
         state = module_state(state)
         state = State(state)
         if self.speaker() == Speaker.SYSTEM:
-            self.vars()['__system_state__'] = state
+            self.vars()['__system_state__'] = self.vars()['__state__'] if '__state__' in self.vars() else 'None'
         self._vars['__state__'] = state
 
     def has_state(self, state):
@@ -832,8 +833,12 @@ class DialogueFlow:
             self.set_speaker(Speaker.USER)
 
     def reset(self):
+        self._transitions.clear()
         self._speaker = self._initial_speaker
         self._vars = HashableDict()
+        self.vars()['__state__'] = self._initial_state
+        self.vars()['__stack__'] = []
+        self.vars()['__system_state__'] = 'None' if self._initial_speaker == Speaker.USER else self._initial_state
         self.set_state(self._initial_state)
         self._rules.set_vars(self._vars)
         self._gates = defaultdict(set)
