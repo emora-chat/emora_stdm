@@ -120,6 +120,7 @@ class DialogueFlow:
             'PSP': PossessivePronoun(self._kb),
             'EQ': Equal(),
             'GATE': Gate(self),
+            'UNSET': Unset(),
             'CLR': Clear(),
             'NER': NamedEntity(),
             'POS': PartOfSpeech(),

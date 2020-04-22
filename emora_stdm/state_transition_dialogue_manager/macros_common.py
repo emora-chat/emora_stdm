@@ -373,6 +373,15 @@ class Gate(Macro):
             return False
 
 
+class Unset(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for var in args:
+            if var in vars and vars[var] is not None and vars[var] != 'None':
+                return False
+        return True
+
+
 class Clear(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
