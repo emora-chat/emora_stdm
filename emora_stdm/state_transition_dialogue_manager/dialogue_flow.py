@@ -61,7 +61,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
-                 default_system_state=None, end_state='end', all_multi_hop=True):
+                 default_system_state=None, end_state='end', all_multi_hop=True, wordnet=False):
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -82,6 +82,7 @@ class DialogueFlow:
         self._all_multi_hop = all_multi_hop
         self._composite_dialogue_flow = None
         self.vars()['__stack__'] = []
+        self.vars()['__system_state__'] = 'None' if initial_speaker == Speaker.USER else self._initial_state
         if kb is None:
             self._kb = KnowledgeBase()
         elif isinstance(kb, str):
@@ -98,7 +99,7 @@ class DialogueFlow:
         goal_exit_macro = GoalExit(self)
         conjunction_macro = CheckVarsConjunction()
         self._macros = {
-            'WN': WN(),
+            'WN': WN(wordnet),
             'ONT': onte, 'ONTE': onte,
             'KBQ': kbe, 'KBE': kbe,
             'ONTN': ONTN(self._kb),
@@ -130,6 +131,7 @@ class DialogueFlow:
             'NEGATION': Negation(),
             'IDK': DontKnow(),
             'MAYBE': Maybe(),
+            'CONFIRM': Confirm(),
             'TRANSITION': Transition(self),
             'UNX': Unexpected(),
             'INT': Intent(),
@@ -754,6 +756,8 @@ class DialogueFlow:
     def set_state(self, state: Union[Enum, str, tuple]):
         state = module_state(state)
         state = State(state)
+        if self.speaker() == Speaker.SYSTEM:
+            self.vars()['__system_state__'] = state
         self._vars['__state__'] = state
 
     def has_state(self, state):
@@ -932,6 +936,23 @@ class DialogueFlow:
 
     def is_module(self):
         return self.composite_dialogue_flow() is not None
+
+    def load_global_nlu(self, transitions):
+        for nlu, followup in transitions.items():
+            score = 0.5
+            if isinstance(followup, str):
+                state = followup
+            else:
+                if 'state' not in followup:
+                    state = DialogueFlow.autostate()
+                    followup['state'] = state
+                else:
+                    state = followup['state']
+                if 'score' in followup:
+                    score = followup['score']
+            nlu = nlu + ' #GEXT'
+            self.add_global_nlu(state, nlu, score)
+        self.load_transitions(transitions, Speaker.USER)
 
     def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
         goal = {

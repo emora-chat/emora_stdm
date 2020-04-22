@@ -28,9 +28,9 @@ try:
     nltk.find('averaged_perceptron_tagger')
 except:
     nltk.download('averaged_perceptron_tagger')
-from nltk.corpus import wordnet
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
+from nltk.corpus import wordnet
 import regex
 
 
@@ -513,7 +513,7 @@ class Intent(Macro):
 class Default(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        vars['__score__'] = 0
+        vars['__score__'] = 0.001
         return ''
 
 

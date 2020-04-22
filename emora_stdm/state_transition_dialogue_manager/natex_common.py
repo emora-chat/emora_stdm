@@ -3,6 +3,7 @@ from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+import random
 
 def CommonNatexMacro(natex_string):
     class _CommonNatex(Macro):
@@ -59,26 +60,29 @@ class Unexpected(Macro):
         self.question_natex = NatexNLU(question)
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__score__'] = 0.0
         if '__previous_unx_response__' not in vars:
             vars['__previous_unx_response__'] = 'Gotcha.'
         if '__previous_unx_answer__' not in vars:
             vars['__previous_unx_answer__'] = 'None'
-        statement_response = '$__previous_unx_response__={' + ', '.join(
-            {'Yeah.', 'For sure.', 'Gotcha.', 'Right.', 'Uh-huh.'}
-            - {vars['__previous_unx_response__']}) + '}'
-        question_answer =  '$__previous_unx_answer__={' + ', '.join(
-            {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''}
-            - {vars['__previous_unx_response__']}) + '}'
-        if len(args) > 0:
-            statement_response = ', '.join(args)
+
         if self.question_natex.match(ngrams.text()):
             if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
-                vars['__response_prefix__'] = 'I\'m not really sure at the moment.'
+                options = {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''} - {
+                    vars['__previous_unx_response__']}
+                question_response = random.choice(list(options))
+                vars['__previous_unx_answer__'] = question_response
+                vars['__response_prefix__'] = question_response
             else:
                 vars['_explained_stupidity_'] = 'True'
                 vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
                                               'There\'s still a lot I\'m trying to figure out. '
         else:
+            options = {'Yeah.', 'For sure.', 'Gotcha.', 'Right.', 'Uh-huh.'} - {vars['__previous_unx_response__']}
+            statement_response = random.choice(list(options))
+            if len(args) > 0:
+                statement_response = ', '.join(args)
+            vars['__previous_unx_response__'] = statement_response
             vars['__response_prefix__'] = statement_response
         return True
 
