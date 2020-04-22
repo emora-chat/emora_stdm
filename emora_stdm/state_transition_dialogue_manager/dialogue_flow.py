@@ -408,18 +408,6 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            memory = self.state_settings(state).memory
-            for item in memory:
-                if len(transition_options) > 1:
-                    key = None
-                    for k in transition_options:
-                        if k[1] == item:
-                            key = k
-                            break
-                    if key:
-                        del transition_options[key]
-                else:
-                    break
             response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
             if debugging:
                 updates = {}
@@ -659,7 +647,7 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, switch=False, memory=10)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, switch=False)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
@@ -672,9 +660,6 @@ class DialogueFlow:
 
     def take_transition(self, target):
         target = module_state(target)
-        if self.speaker() is Speaker.SYSTEM:
-            transition = (self.state(), target, self.speaker())
-            self.state_settings(self.state()).memory.add(transition)
         self.set_state(target)
         if not isinstance(target, tuple):
             if self.speaker() is Speaker.SYSTEM:
@@ -737,8 +722,6 @@ class DialogueFlow:
         state = State(state)
         if 'settings' not in self._graph.data(state):
             self._graph.data(state)['settings'] = Settings()
-        if 'memory' in settings:
-            settings['memory'] = Memory(settings['memory'])
         if 'global_nlu' in settings:
             self.add_global_nlu(state, settings['global_nlu'])
         self.state_settings(state).update(**settings)
@@ -842,8 +825,6 @@ class DialogueFlow:
         self.set_state(self._initial_state)
         self._rules.set_vars(self._vars)
         self._gates = defaultdict(set)
-        for state in self.graph().nodes():
-            self.state_settings(state).memory.clear()
 
     def update_vars(self, variables: HashableDict):
         if not isinstance(variables, HashableDict):
