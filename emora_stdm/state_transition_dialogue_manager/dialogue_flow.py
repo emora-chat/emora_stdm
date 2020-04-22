@@ -197,6 +197,7 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
+        self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
         while self.speaker() is Speaker.USER:

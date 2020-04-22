@@ -583,7 +583,7 @@ class GoalExit(Macro):
         elif goal in self.dialogue_flow.goals() and self.dialogue_flow.goals()[goal]['return_state']:
             return self.dialogue_flow.goals()[goal]['return_state']
         else:
-            return vars['__state__']
+            return vars['__system_state__']
 
     def goal_return_phrase(self, goal, vars):
         if '__goal_return_phrase__' in vars and vars['__goal_return_phrase__'] != 'None':
