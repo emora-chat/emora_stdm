@@ -338,7 +338,7 @@ class DialogueFlow:
             state = self.state()
         else:
             state = State(state)
-        transition_options = {}
+        transition_options = []
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         transition_items = []
         for transition in transitions:
@@ -407,17 +407,17 @@ class DialogueFlow:
                     score = vars['__score__']
                     del vars['__score__']
                 gate_closed = False
+                gate_var_config = None
+                gate_target_id = None
                 if '__gate__' in vars:
-                    var_config = vars['__gate__']
-                    target_id = (self.namespace(), target) if (not isinstance(target, tuple) and self.is_module()) else target
-                    for vc in self.gates()[target_id]:
-                        if var_config == vc:
+                    gate_var_config = vars['__gate__']
+                    gate_target_id = (self.namespace(), target) if (not isinstance(target, tuple) and self.is_module()) else target
+                    for vc in self.gates()[gate_target_id]:
+                        if gate_var_config == vc:
                             gate_closed = True
-                    if not gate_closed:
-                        self.gates()[target_id].append(var_config)
                     del vars['__gate__']
                 if not gate_closed:
-                    transition_options[(generation, transition, vars)] = score
+                    transition_options.append((score, generation, transition, vars, gate_var_config, gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -426,7 +426,9 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
+            score, response, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            if gate_var_config is not None:
+                self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -515,20 +517,18 @@ class DialogueFlow:
                     score = vars['__score__']
                     del vars['__score__']
                 gate_closed = False
+                gate_var_config = None
+                gate_target_id = None
                 if '__gate__' in vars:
-                    var_config = vars['__gate__']
-                    target_id = (self.namespace(), target) if (
+                    gate_var_config = vars['__gate__']
+                    gate_target_id = (self.namespace(), target) if (
                                 not isinstance(target, tuple) and self.is_module()) else target
-                    if isinstance(target_id, tuple):
-                        target_id = ':'.join(target_id)
-                    for vc in self.gates()[target_id]:
-                        if var_config == vc:
+                    for vc in self.gates()[gate_target_id]:
+                        if gate_var_config == vc:
                             gate_closed = True
-                    if not gate_closed:
-                        self.gates()[target_id].append(var_config)
                     del vars['__gate__']
                 if not gate_closed:
-                    transition_options.append((score, transition, vars))
+                    transition_options.append((score, transition, vars, gate_var_config, gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -537,7 +537,9 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            score, transition, vars = random_max(transition_options, key=lambda x: x[0])
+            score, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            if gate_var_config is not None:
+                self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
