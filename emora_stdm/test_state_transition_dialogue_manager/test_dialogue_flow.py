@@ -315,6 +315,33 @@ def test_global_transition_priority():
     assert df.system_turn() == 'alright'
 
 
+def test_gate():
+    df = DialogueFlow('root')
+    transitions = {
+        'state': 'root',
+
+        '#GATE hello': {
+            'state': 'greet',
+            'score': 2.0,
+
+            '#GATE [{hi, hello}]': {
+                'how are ya': {'error': 'root'}
+            },
+            'error': {
+                'how are you': {'error': 'root'}
+            }
+        },
+        'hi': 'greet'
+    }
+    df.load_transitions(transitions)
+    assert df.system_turn().strip() == 'hello'
+    df.user_turn('hi')
+    assert df.system_turn().strip() == 'how are ya'
+    df.user_turn('fine')
+    assert df.system_turn().strip() == 'hi'
+    df.user_turn('oh')
+    assert df.system_turn().strip() == 'how are you'
+
 
 
 
