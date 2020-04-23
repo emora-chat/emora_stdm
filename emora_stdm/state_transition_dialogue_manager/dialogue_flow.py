@@ -181,11 +181,10 @@ class DialogueFlow:
         responses = []
         while self.speaker() is Speaker.SYSTEM:
             response, next_state = self.system_transition(self.state(), debugging=debugging)
-            self.take_transition(next_state)
+            self.set_state(next_state)
             responses.append(response)
-            if next_state in visited and self._speaker is Speaker.SYSTEM:
-                self.change_speaker()
-                break
+            if next_state in visited or (not self.state_settings(next_state).system_multi_hop):
+                self.set_speaker(Speaker.USER)
             visited.add(next_state)
         t2 = time()
         if debugging:
@@ -214,10 +213,9 @@ class DialogueFlow:
                 except RuntimeError:
                     if debugging:
                         print("Couldn't error hop")
-            self.take_transition(next_state)
-            if next_state in visited and self._speaker is Speaker.USER:
-                self.change_speaker()
-                break
+            self.set_state(next_state)
+            if next_state in visited or (not self.state_settings(next_state).user_multi_hop):
+                self.set_speaker(Speaker.SYSTEM)
             visited.add(next_state)
         self.set_speaker(Speaker.SYSTEM)
         t2 = time()
@@ -378,6 +376,19 @@ class DialogueFlow:
                 transition = (target.split('->')[0], target.split('->')[1], speaker)
                 try:
                     appended_generation = self.transition_natex(*transition).generate(vars=vars, macros=self._macros, debugging=debugging)
+                    generation = generation + ' ' + appended_generation
+                except Exception as e:
+                    print()
+                    print(e)
+                    print('Transition {}: {} failed'.format(str(transition), natex))
+                    print()
+                    generation = None
+            elif isinstance(transition[1], tuple) and '->' in transition[1][1]:
+                namespace = transition[1][0]
+                transition = ((namespace, target[1].split('->')[0]), (namespace, target[1].split('->')[1]), speaker)
+                try:
+                    appended_generation = self.composite_dialogue_flow().transition_natex(
+                        namespace, *transition).generate(vars=vars, macros=self._macros, debugging=debugging)
                     generation = generation + ' ' + appended_generation
                 except Exception as e:
                     print()
@@ -653,19 +664,6 @@ class DialogueFlow:
             error_successor = State(error_successor)
             self.set_error_successor(state, error_successor)
 
-
-    # MID LEVEL
-
-    def take_transition(self, target):
-        target = module_state(target)
-        self.set_state(target)
-        if not isinstance(target, tuple):
-            if self.speaker() is Speaker.SYSTEM:
-                if not self.state_settings(self.state()).system_multi_hop:
-                    self.set_speaker(Speaker.USER)
-            else:
-                if not self.state_settings(self.state()).user_multi_hop:
-                    self.set_speaker(Speaker.SYSTEM)
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
