@@ -53,6 +53,7 @@ class CompositeDialogueFlow:
         while self.controller().speaker() is DialogueFlow.Speaker.SYSTEM:
             try:
                 response, next_state = self.controller().system_transition(self.controller().state(), debugging=debugging)
+                assert next_state is not None
                 self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller(), self.controller().state()))
@@ -86,6 +87,7 @@ class CompositeDialogueFlow:
         while self.controller().speaker() is DialogueFlow.Speaker.USER:
             try:
                 next_state = self.controller().user_transition(natural_language, self.controller().state(), debugging=debugging)
+                assert next_state is not None
                 self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
