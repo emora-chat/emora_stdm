@@ -178,6 +178,7 @@ class CompositeDialogueFlow:
         self._components[namespace] = component
         component.set_is_module(self)
         component.set_namespace(namespace)
+        component.set_gates(self.component('SYSTEM').gates())
 
     def component(self, namespace):
         return self._components[namespace]

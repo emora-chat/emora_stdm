@@ -922,6 +922,9 @@ class DialogueFlow:
     def set_namespace(self, namespace):
         self._namespace = namespace
 
+    def set_gates(self, gates):
+        self._gates = gates
+
     def load_global_nlu(self, transitions):
         for nlu, followup in transitions.items():
             score = 0.5
