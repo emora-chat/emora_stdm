@@ -16,7 +16,7 @@ def precache(transition_datas):
 class CompositeDialogueFlow:
 
     def __init__(self, initial_state, system_error_state, user_error_state,
-                 initial_speaker = None, macros=None, kb=None):
+                 initial_speaker = DialogueFlow.Speaker.SYSTEM, macros=None, kb=None):
         if isinstance(system_error_state, str):
             system_error_state = ('SYSTEM', system_error_state)
         if isinstance(user_error_state, str):
@@ -53,7 +53,8 @@ class CompositeDialogueFlow:
         while self.controller().speaker() is DialogueFlow.Speaker.SYSTEM:
             try:
                 response, next_state = self.controller().system_transition(self.controller().state(), debugging=debugging)
-                self.controller().take_transition(next_state)
+                assert next_state is not None
+                self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller(), self.controller().state()))
                 print(e)
@@ -62,9 +63,8 @@ class CompositeDialogueFlow:
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
             responses.append(response)
-            if next_state in visited and self.controller()._speaker is DialogueFlow.Speaker.SYSTEM:
-                self.controller().change_speaker()
-                break
+            if next_state in visited or not self.state_settings(*self.state()).system_multi_hop:
+                self.controller().set_speaker(DialogueFlow.Speaker.USER)
             visited.add(next_state)
         return  ' '.join(responses)
 
@@ -87,7 +87,8 @@ class CompositeDialogueFlow:
         while self.controller().speaker() is DialogueFlow.Speaker.USER:
             try:
                 next_state = self.controller().user_transition(natural_language, self.controller().state(), debugging=debugging)
-                self.controller().take_transition(next_state)
+                assert next_state is not None
+                self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
                 print(e)
@@ -95,11 +96,10 @@ class CompositeDialogueFlow:
             next_state = module_state(next_state)
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
-                if self.controller().speaker() is DialogueFlow.Speaker.USER:
+                if self.state_settings(*self.state()).user_multi_hop:
                     self.controller().apply_update_rules(natural_language, debugging=debugging)
-            if next_state in visited and self.controller()._speaker is DialogueFlow.Speaker.USER:
-                self.controller().change_speaker()
-                break
+            if next_state in visited or not self.state_settings(*self.state()).user_multi_hop:
+                self.controller().set_speaker(DialogueFlow.Speaker.SYSTEM)
             visited.add(next_state)
         next_state = module_state(next_state)
         if isinstance(next_state, tuple):
@@ -179,6 +179,8 @@ class CompositeDialogueFlow:
     def add_component(self, component, namespace):
         self._components[namespace] = component
         component.set_is_module(self)
+        component.set_namespace(namespace)
+        component.set_gates(self.component('SYSTEM').gates())
 
     def component(self, namespace):
         return self._components[namespace]
@@ -201,6 +203,17 @@ class CompositeDialogueFlow:
         new_controller_vars = self._controller.vars()
         new_controller_vars.update(old_controller_vars)
         self._controller.set_vars(new_controller_vars)
+
+    def transition_natex(self, namespace, source, target, speaker):
+        source, target = module_source_target(source, target)
+        if isinstance(source, tuple):
+            source = source[1]
+        if isinstance(target, tuple):
+            target = target[1]
+        return self.component(namespace).transition_natex(source, target, speaker)
+
+    def state_settings(self, namespace, state):
+        return self.component(namespace).state_settings(state)
 
     def set_vars(self, vars):
         self._controller.set_vars(vars)

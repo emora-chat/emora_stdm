@@ -71,9 +71,7 @@ class DialogueFlow:
         self._transitions = []
         self.vars()['__state__'] = self._initial_state
         self.set_state(self._initial_state)
-        self._gate_requirements = defaultdict(dict)
-        self._gates = defaultdict(set)
-        self._gate_buffer = {}
+        self._gates = defaultdict(list)
         self._prepends = {}
         self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
@@ -82,6 +80,7 @@ class DialogueFlow:
         self._goals = {}
         self._all_multi_hop = all_multi_hop
         self._composite_dialogue_flow = None
+        self._namespace = None
         self.vars()['__stack__'] = []
         self.vars()['__system_state__'] = 'None' if initial_speaker == Speaker.USER else self._initial_state
         if kb is None:
@@ -181,11 +180,10 @@ class DialogueFlow:
         responses = []
         while self.speaker() is Speaker.SYSTEM:
             response, next_state = self.system_transition(self.state(), debugging=debugging)
-            self.take_transition(next_state)
+            self.set_state(next_state)
             responses.append(response)
-            if next_state in visited and self._speaker is Speaker.SYSTEM:
-                self.change_speaker()
-                break
+            if next_state in visited or (not self.state_settings(next_state).system_multi_hop):
+                self.set_speaker(Speaker.USER)
             visited.add(next_state)
         t2 = time()
         if debugging:
@@ -214,10 +212,9 @@ class DialogueFlow:
                 except RuntimeError:
                     if debugging:
                         print("Couldn't error hop")
-            self.take_transition(next_state)
-            if next_state in visited and self._speaker is Speaker.USER:
-                self.change_speaker()
-                break
+            self.set_state(next_state)
+            if next_state in visited or (not self.state_settings(next_state).user_multi_hop):
+                self.set_speaker(Speaker.SYSTEM)
             visited.add(next_state)
         self.set_speaker(Speaker.SYSTEM)
         t2 = time()
@@ -341,8 +338,7 @@ class DialogueFlow:
             state = self.state()
         else:
             state = State(state)
-        transition_options = {}
-        self._gate_buffer.clear()
+        transition_options = []
         transitions = list(self.transitions(state, Speaker.SYSTEM))
         transition_items = []
         for transition in transitions:
@@ -385,6 +381,19 @@ class DialogueFlow:
                     print('Transition {}: {} failed'.format(str(transition), natex))
                     print()
                     generation = None
+            elif isinstance(transition[1], tuple) and '->' in transition[1][1]:
+                namespace = transition[1][0]
+                transition = ((namespace, target[1].split('->')[0]), (namespace, target[1].split('->')[1]), speaker)
+                try:
+                    appended_generation = self.composite_dialogue_flow().transition_natex(
+                        namespace, *transition).generate(vars=vars, macros=self._macros, debugging=debugging)
+                    generation = generation + ' ' + appended_generation
+                except Exception as e:
+                    print()
+                    print(e)
+                    print('Transition {}: {} failed'.format(str(transition), natex))
+                    print()
+                    generation = None
             source, target, speaker = transition
             if '__source__' in vars:
                 source = State(module_state(vars['__source__']))
@@ -397,7 +406,18 @@ class DialogueFlow:
                 if '__score__' in vars:
                     score = vars['__score__']
                     del vars['__score__']
-                transition_options[(generation, transition, vars)] = score
+                gate_closed = False
+                gate_var_config = None
+                gate_target_id = None
+                if '__gate__' in vars:
+                    gate_var_config = vars['__gate__']
+                    gate_target_id = (self.namespace(), target) if (not isinstance(target, tuple) and self.is_module()) else target
+                    for vc in self.gates()[gate_target_id]:
+                        if gate_var_config == vc:
+                            gate_closed = True
+                    del vars['__gate__']
+                if not gate_closed:
+                    transition_options.append((score, generation, transition, vars, gate_var_config, gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -406,7 +426,9 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            response, transition, vars = random_max(transition_options, key=lambda x: transition_options[x])
+            score, response, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            if gate_var_config is not None:
+                self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -419,8 +441,6 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            if transition in self.gate_buffer():
-                self.gates()[transition].add(self.gate_buffer()[transition])
             self.update_vars(vars)
             next_state = transition[1]
             if debugging:
@@ -466,7 +486,6 @@ class DialogueFlow:
             natex, transition, score = self._transitions.pop()
             transition_items.append((natex, transition, score))
         ngrams = Ngrams(natural_language, n=10)
-        self._gate_buffer.clear()
         for natex, transition, score in transition_items:
             self._potential_transition = transition
             if not self.is_module() and isinstance(transition[1], tuple):
@@ -497,7 +516,19 @@ class DialogueFlow:
                 if '__score__' in vars:
                     score = vars['__score__']
                     del vars['__score__']
-                transition_options.append((score, transition, vars))
+                gate_closed = False
+                gate_var_config = None
+                gate_target_id = None
+                if '__gate__' in vars:
+                    gate_var_config = vars['__gate__']
+                    gate_target_id = (self.namespace(), target) if (
+                                not isinstance(target, tuple) and self.is_module()) else target
+                    for vc in self.gates()[gate_target_id]:
+                        if gate_var_config == vc:
+                            gate_closed = True
+                    del vars['__gate__']
+                if not gate_closed:
+                    transition_options.append((score, transition, vars, gate_var_config, gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -506,7 +537,9 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            score, transition, vars = random_max(transition_options, key=lambda x: x[0])
+            score, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            if gate_var_config is not None:
+                self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
@@ -519,8 +552,6 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            if transition in self.gate_buffer():
-                self.gates()[transition].add(self.gate_buffer()[transition])
             self.update_vars(vars)
             next_state = transition[1]
             if debugging:
@@ -653,19 +684,6 @@ class DialogueFlow:
             error_successor = State(error_successor)
             self.set_error_successor(state, error_successor)
 
-
-    # MID LEVEL
-
-    def take_transition(self, target):
-        target = module_state(target)
-        self.set_state(target)
-        if not isinstance(target, tuple):
-            if self.speaker() is Speaker.SYSTEM:
-                if not self.state_settings(self.state()).system_multi_hop:
-                    self.set_speaker(Speaker.USER)
-            else:
-                if not self.state_settings(self.state()).user_multi_hop:
-                    self.set_speaker(Speaker.SYSTEM)
 
     # LOW LEVEL: PROPERTIES, GETTERS, SETTERS
 
@@ -848,18 +866,6 @@ class DialogueFlow:
     def gates(self):
         return self._gates
 
-    def gate_buffer(self):
-        return self._gate_buffer
-
-    def buffer_configuration(self, configuration):
-        self._gate_buffer[self._potential_transition] = configuration
-
-    def gate_requirements(self):
-        return self._gate_requirements
-
-    def set_gate_requirements(self, requirements):
-        self._gate_requirements[self._potential_transition] = requirements
-
     def var_dependencies(self):
         return self._var_dependencies
 
@@ -870,23 +876,6 @@ class DialogueFlow:
             for transition in self._graph.arcs_in(state):
                 natex = self.transition_natex(*transition)
                 self.set_transition_natex(*transition, prepend + natex)
-
-    def passes_gate(self, var_config):
-        if var_config in self._gates[self._potential_transition]:
-            return False
-        for k, v in self._gate_requirements[self._potential_transition].items():
-            if k not in var_config:
-                if v is not None:
-                    return False
-            else:
-                if v != var_config[k]:
-                    return False
-        for k, v in var_config.items():
-            if v is None:
-                if k not in self._gate_requirements[self._potential_transition] \
-                    or self._gate_requirements[self._potential_transition][k] is not None:
-                    return False
-        return True
 
     def add_update_rule(self, precondition, postcondition=None):
         self._rules.add(precondition, postcondition)
@@ -928,6 +917,15 @@ class DialogueFlow:
 
     def is_module(self):
         return self.composite_dialogue_flow() is not None
+
+    def namespace(self):
+        return self._namespace
+
+    def set_namespace(self, namespace):
+        self._namespace = namespace
+
+    def set_gates(self, gates):
+        self._gates = gates
 
     def load_global_nlu(self, transitions):
         for nlu, followup in transitions.items():

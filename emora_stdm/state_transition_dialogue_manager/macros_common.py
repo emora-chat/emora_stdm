@@ -342,35 +342,31 @@ class Equal(Macro):
                 return False
         return True
 
+
 class Gate(Macro):
     def __init__(self, dialogue_flow):
         self.dialogue_flow = dialogue_flow
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        configuration = ConfigurationDict()
-        requirements = {}
+        configuration = {}
         for arg in args:
-            if isinstance(arg, str) and ':' in arg:
+            if ':' in arg:
                 var, val = arg.split(':')
-                var = var.strip()
-                val = val.strip()
-                if val == 'None':
-                    val = None
-                requirements[var] = val
+            elif '=' in arg:
+                var, val = arg.split('=')
+                if var[0] == '$':
+                    var = var[1:]
+            else:
+                var, val = arg, None
+            if val is None:
                 if var in vars:
                     configuration[var] = vars[var]
                 else:
-                    configuration[var] = None
+                    return False
             else:
-                if arg in vars:
-                    configuration[arg] = vars[arg]
-                else:
-                    configuration[arg] = None
-        self.dialogue_flow.set_gate_requirements(requirements)
-        if self.dialogue_flow.passes_gate(configuration):
-            self.dialogue_flow.buffer_configuration(configuration)
-            return True
-        else:
-            return False
+                if var not in vars or vars[var] != val:
+                    return False
+        vars['__gate__'] = configuration
+        return True
 
 
 class Unset(Macro):

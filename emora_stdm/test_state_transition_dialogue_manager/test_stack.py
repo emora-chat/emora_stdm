@@ -92,9 +92,9 @@ def test_stack():
     assert df.vars()['__stack__'][0][0] == 'grandma_hospital'
 
     assert "fell off of a stool" in df.system_turn()
-    df.user_turn("oh no")
+    df.user_turn("oh no", debugging=True)
 
-    assert "What should I do" in df.system_turn()
+    assert "What should I do" in df.system_turn(debugging=True)
     assert df.state() == 'gma_hospital'
     assert df.vars()['__goal__'] == 'grandma_hospital'
     assert len(df.vars()['__stack__']) == 0
