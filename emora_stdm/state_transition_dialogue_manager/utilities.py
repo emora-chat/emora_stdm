@@ -1,6 +1,6 @@
 from copy import deepcopy
 import random
-
+import nltk
 
 def random_max(collection, key=None):
     max_collection = []
@@ -17,6 +17,24 @@ def random_max(collection, key=None):
             elif item == max_collection[0]:
                 max_collection.append(item)
     return random.choice(max_collection)
+
+def lemmatize_ontology(ontology):
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    lemmatizer.lemmatize('initialize')
+    lemmatized_ontology = {}
+    for k, l in ontology.items():
+        lemmatized_ontology[k] = []
+        for e in l:
+            lemmas = set()
+            for pos in 'a', 'r', 'v', 'n':
+                lemma = lemmatizer.lemmatize(e, pos=pos)
+                lemmas.add(lemma)
+            if len(lemmas) == 1:
+                if lemma not in lemmatized_ontology[k]:
+                    lemmatized_ontology[k].extend([lemma])
+            else:
+                lemmatized_ontology[k].extend([l for l in lemmas if l != e and l not in lemmatized_ontology[k]])
+    return lemmatized_ontology
 
 class ConfigurationDict(dict):
 
@@ -78,3 +96,4 @@ class AlterationTrackingDict(dict):
         return self._altered
     def clear_altered(self):
         self._altered.clear()
+
