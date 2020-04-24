@@ -142,11 +142,13 @@ class DialogueFlow:
             'GRET': GoalReturn(self),
             'DEFAULT': Default(),
             'VT': VirtualTransitions(self),
-            'GSRET': SetGoalReturnPoint()
+            'GSRET': SetGoalReturnPoint(),
+            'TARGET': Target()
         }
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
+        self.add_state('end')
 
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
@@ -235,6 +237,7 @@ class DialogueFlow:
 
         hop = None
         switch = False
+        enter = None
 
         # read settings and transitions for state
         transitions = []
@@ -251,7 +254,9 @@ class DialogueFlow:
                 self.set_state_prepend(source, prepend)
             elif key == 'switch':
                 switch = json_dict['switch']
-            elif key not in {'state', 'hop', 'score', 'switch'}:
+            elif key == 'enter':
+                enter = json_dict['enter']
+            elif key not in {'state', 'hop', 'score', 'switch', 'enter'}:
                 transitions.append((key, value))
 
         # set up state settings
@@ -266,6 +271,8 @@ class DialogueFlow:
                 self.state_settings(source).update(user_multi_hop=True)
         if switch:
             self.update_state_settings(source, switch=True)
+        if enter:
+            self.update_state_settings(source, enter=enter)
 
         # set up transitions
         expanded_transitions = []
@@ -301,16 +308,15 @@ class DialogueFlow:
                 if speaker == Speaker.USER:
                     if self.has_transition(source, target, Speaker.USER):
                         intermediate = '_' + self.autostate()
-                        self.add_state(intermediate, target, user_multi_hop=True)
-                        self.add_user_transition(source, intermediate, natex, score=score)
+                        self.add_state(intermediate, target)
+                        self.add_user_transition(source, intermediate, natex + ' #TARGET(%s)' % target, score=score)
                     else:
                         self.add_user_transition(source, target, natex, score=score)
                 elif speaker == Speaker.SYSTEM:
                     if self.has_transition(source, target, Speaker.SYSTEM):
                         intermediate = '_' + self.autostate()
-                        self.add_state(intermediate, system_multi_hop=True)
-                        self.add_system_transition(intermediate, target, '')
-                        self.add_system_transition(source, intermediate, natex, score=score)
+                        self.add_state(intermediate)
+                        self.add_system_transition(source, intermediate, natex + ' #TARGET(%s)' % target, score=score)
                     else:
                         self.add_system_transition(source, target, natex, score=score)
 
@@ -402,7 +408,21 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            if generation is not None:
+            if self.is_module() and isinstance(target, tuple):
+                enter_natex = self.composite_dialogue_flow().state_settings(*target).enter
+            else:
+                enter_natex = self.state_settings(target).enter
+            enter_natex_pass = True
+            if enter_natex is not None:
+                try:
+                    enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                except Exception as e:
+                    print()
+                    print(e)
+                    print('Enter Natex {}: {} failed'.format(str(target), enter_natex))
+                    print()
+                    enter_natex_pass = None
+            if generation is not None and enter_natex_pass is not None:
                 if '__score__' in vars:
                     score = vars['__score__']
                     del vars['__score__']
@@ -510,7 +530,21 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            if match:
+            if self.is_module() and isinstance(target, tuple):
+                enter_natex = self.composite_dialogue_flow().state_settings(*target).enter
+            else:
+                enter_natex = self.state_settings(target).enter
+            enter_natex_pass = True
+            if enter_natex is not None:
+                try:
+                    enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                except Exception as e:
+                    print()
+                    print(e)
+                    print('Enter Natex {}: {} failed'.format(str(target), enter_natex))
+                    print()
+                    enter_natex_pass = None
+            if match and enter_natex_pass is not None:
                 if debugging:
                     print('Transition {} matched "{}"'.format(transition[:2], natural_language))
                 if '__score__' in vars:
@@ -676,7 +710,7 @@ class DialogueFlow:
         state = State(state)
         if self.has_state(state):
             raise ValueError('state {} already exists'.format(state))
-        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, switch=False)
+        state_settings = Settings(user_multi_hop=False, system_multi_hop=False, switch=False, enter=None)
         state_settings.update(**settings)
         self._graph.add_node(state)
         self.update_state_settings(state, **state_settings)
@@ -740,6 +774,8 @@ class DialogueFlow:
             self._graph.data(state)['settings'] = Settings()
         if 'global_nlu' in settings:
             self.add_global_nlu(state, settings['global_nlu'])
+        if 'enter' in settings and isinstance(settings['enter'], str):
+            settings['enter'] = NatexNLG(settings['enter'], macros=self._macros)
         self.state_settings(state).update(**settings)
 
     def remove_transition(self, source, target, speaker):
@@ -929,6 +965,8 @@ class DialogueFlow:
 
     def load_global_nlu(self, transitions):
         for nlu, followup in transitions.items():
+            if nlu == 'state':
+                continue
             score = 0.5
             if isinstance(followup, str):
                 state = followup

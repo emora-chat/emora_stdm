@@ -611,6 +611,8 @@ class GoalExit(Macro):
             return 'None'
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if '__goal__' not in vars:
+            vars['__goal__'] = 'None'
         if vars['__goal__'] != 'None':
             push_goal_id = vars['__goal__']
             push_goal_state = self.goal_return_state(push_goal_id, vars)
@@ -662,6 +664,12 @@ class SetGoalReturnPoint(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         vars['__goal_return_state__'] = args[0]
+
+
+class Target(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__target__'] = args[0]
 
 
 
