@@ -362,8 +362,8 @@ class DialogueFlow:
                 generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
             except Exception as e:
                 print()
-                print(e)
                 print('Transition {}: {} failed'.format(str(transition), natex))
+                traceback.print_exc(file=sys.stdout)
                 print()
                 generation = None
             source, target, speaker = transition
@@ -383,8 +383,8 @@ class DialogueFlow:
                     generation = generation + ' ' + appended_generation
                 except Exception as e:
                     print()
-                    print(e)
                     print('Transition {}: {} failed'.format(str(transition), natex))
+                    traceback.print_exc(file=sys.stdout)
                     print()
                     generation = None
             elif isinstance(transition[1], tuple) and '->' in transition[1][1]:
@@ -396,8 +396,8 @@ class DialogueFlow:
                     generation = generation + ' ' + appended_generation
                 except Exception as e:
                     print()
-                    print(e)
                     print('Transition {}: {} failed'.format(str(transition), natex))
+                    traceback.print_exc(file=sys.stdout)
                     print()
                     generation = None
             source, target, speaker = transition
@@ -518,8 +518,8 @@ class DialogueFlow:
                 match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             except Exception as e:
                 print()
-                print(e)
                 print('Transition {}: {} failed'.format(str(transition), natex))
+                traceback.print_exc(file=sys.stdout)
                 print()
                 match = None
             source, target, speaker = transition

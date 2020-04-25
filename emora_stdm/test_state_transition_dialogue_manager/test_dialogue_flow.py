@@ -342,6 +342,33 @@ def test_gate():
     df.user_turn('oh')
     assert df.system_turn().strip() == 'how are you'
 
+def test_gate_none():
+    df = DialogueFlow('root')
+    transitions = {
+        'state': 'root',
+
+        '#GATE(var:None) hello': {
+            'state': 'greet',
+            'score': 2.0,
+
+            'hi': {
+                '#SET($var=True) how are ya': {'error': 'root'}
+            },
+            'error': {
+                'how are you': {'error': 'root'}
+            }
+        },
+        'hi': 'greet'
+    }
+    df.load_transitions(transitions)
+    assert df.system_turn().strip() == 'hello'
+    df.user_turn('hi')
+    assert df.system_turn().strip() == 'how are ya'
+    df.user_turn('fine')
+    assert df.system_turn().strip() == 'hi'
+    df.user_turn('oh')
+    assert df.system_turn().strip() == 'how are you'
+
 
 def test_enter_natex():
     df = DialogueFlow('root')
