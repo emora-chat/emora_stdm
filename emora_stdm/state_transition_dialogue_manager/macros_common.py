@@ -263,7 +263,7 @@ class CheckVarsConjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
             var, val = _assignment_to_var_val(arg)
-            if (var not in vars and val != 'None') or (vars[var] != val):
+            if (var not in vars and val != 'None') or (var in vars and vars[var] != val):
                 return False
         return True
 
@@ -361,6 +361,9 @@ class Gate(Macro):
                 if var in vars:
                     configuration[var] = vars[var]
                 else:
+                    return False
+            elif val == 'None':
+                if var in vars and vars[var] is not None and vars[var] != 'None':
                     return False
             else:
                 if var not in vars or vars[var] != val:

@@ -82,6 +82,8 @@ class Unexpected(Macro):
             statement_response = random.choice(list(options))
             if len(args) > 0:
                 statement_response = ', '.join(args)
+                if args[0] == 'None':
+                    statement_response = ''
             vars['__previous_unx_response__'] = statement_response
             vars['__response_prefix__'] = statement_response
         return True
