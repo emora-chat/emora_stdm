@@ -380,7 +380,10 @@ class DialogueFlow:
                 transition = (target.split('->')[0], target.split('->')[1], speaker)
                 try:
                     appended_generation = self.transition_natex(*transition).generate(vars=vars, macros=self._macros, debugging=debugging)
-                    generation = generation + ' ' + appended_generation
+                    if appended_generation is None:
+                        generation = None
+                    else:
+                        generation = generation + ' ' + appended_generation
                 except Exception as e:
                     print()
                     print('Transition {}: {} failed'.format(str(transition), natex))
