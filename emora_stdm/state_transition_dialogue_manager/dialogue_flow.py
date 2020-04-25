@@ -886,7 +886,7 @@ class DialogueFlow:
         self.vars()['__system_state__'] = 'None' if self._initial_speaker == Speaker.USER else self._initial_state
         self.set_state(self._initial_state)
         self._rules.set_vars(self._vars)
-        self._gates = defaultdict(set)
+        self._gates = defaultdict(list)
 
     def update_vars(self, variables: HashableDict):
         if not isinstance(variables, HashableDict):
