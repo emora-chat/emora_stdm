@@ -6,6 +6,7 @@ from emora_stdm.state_transition_dialogue_manager.knowledge_base import Knowledg
 from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
+import traceback
 
 def precache(transition_datas):
     for tran_datas in transition_datas:
@@ -57,7 +58,7 @@ class CompositeDialogueFlow:
                 self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller(), self.controller().state()))
-                print(e)
+                traceback.print_exc(file=sys.stdout)
                 response, next_state = '', self._system_error_state
                 visited = visited - {next_state}
             if isinstance(next_state, tuple):
@@ -81,7 +82,7 @@ class CompositeDialogueFlow:
             next_state = self.controller().state()
         except Exception as e:
             print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
-            print(e)
+            traceback.print_exc(file=sys.stdout)
             next_state = self._user_error_state
         visited = {self.controller().state()}
         while self.controller().speaker() is DialogueFlow.Speaker.USER:
@@ -91,7 +92,7 @@ class CompositeDialogueFlow:
                 self.controller().set_state(next_state)
             except Exception as e:
                 print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self._controller_name, self.controller().state()))
-                print(e)
+                traceback.print_exc(file=sys.stdout)
                 next_state = self._user_error_state
             next_state = module_state(next_state)
             if isinstance(next_state, tuple):
