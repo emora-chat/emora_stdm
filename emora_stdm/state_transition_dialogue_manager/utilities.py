@@ -117,7 +117,7 @@ def _json_serialize_flexible(obj, extra_mapping=None):
         obj = _json_serialize_flexible(['<__set__>'] + list(obj), extra_mapping)
     elif isinstance(obj, tuple):
         obj = '<__tuple__>' + '<__tuple__>'.join((json_serialize_flexible(x, extra_mapping) for x in obj))
-    elif isinstance(obj, str) or isinstance(obj, bool) or isinstance(obj, int) or isinstance(obj, float):
+    elif isinstance(obj, str) or isinstance(obj, bool) or isinstance(obj, int) or isinstance(obj, float) or obj is None:
         obj = obj
     else:
         obj = extra_mapping[obj]

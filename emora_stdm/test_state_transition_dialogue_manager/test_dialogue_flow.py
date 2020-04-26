@@ -425,6 +425,7 @@ def test_serialization():
     assert df.vars()["spoken"] == "C"
     expected_gates = {'States.B': [{}], 'States.C': [{'spoken': 'B'}]}
     assert df.gates() == expected_gates
+    df.vars()["testing_none"] = None
     d = df.serialize()
 
     df2 = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
@@ -446,6 +447,7 @@ def test_serialization():
     assert df.vars() == df2.vars()
     assert df.gates() == df2.gates()
     assert df.state() == df2.state()
+    assert df2.vars()["testing_none"] is None
 
 
 
