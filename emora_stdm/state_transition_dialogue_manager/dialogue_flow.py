@@ -61,7 +61,7 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
-                 default_system_state=None, end_state='end', all_multi_hop=True, wordnet=False):
+                 default_system_state=None, end_state='__end__', all_multi_hop=True, wordnet=False):
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -148,7 +148,7 @@ class DialogueFlow:
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
-        self.add_state('end')
+        self.add_state(end_state)
 
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES

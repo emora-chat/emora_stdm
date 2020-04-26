@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 import random
 import nltk
@@ -96,4 +97,50 @@ class AlterationTrackingDict(dict):
         return self._altered
     def clear_altered(self):
         self._altered.clear()
+
+def json_serialize_flexible(obj, extra_mapping=None):
+    return json.dumps(_json_serialize_flexible(obj, extra_mapping))
+
+def _json_serialize_flexible(obj, extra_mapping=None):
+    if extra_mapping is None:
+        extra_mapping = {}
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            obj[_json_serialize_flexible(k)] = _json_serialize_flexible(v)
+    elif isinstance(obj, list):
+        for i, e in enumerate(obj):
+            obj[i] = _json_serialize_flexible(e, extra_mapping)
+    elif isinstance(obj, set):
+        obj = _json_serialize_flexible(['<__set__>'] + list(obj), extra_mapping)
+    elif isinstance(obj, tuple):
+        obj = '<__tuple__>' + '<__tuple__>'.join((json_serialize_flexible(x, extra_mapping) for x in obj))
+    elif not (isinstance(obj, int)
+              or isinstance(obj, float)
+              or isinstance(obj, str)
+              or isinstance(obj, bool)):
+        obj = json_serialize_flexible(extra_mapping[obj], extra_mapping)
+    return obj
+
+def json_deserialize_flexible(obj, extra_mapping=None):
+    if extra_mapping is None:
+        extra_mapping = {}
+    if isinstance(obj, str):
+        if obj in extra_mapping:
+            return extra_mapping[obj]
+        tupleid = '<__tuple__>'
+        if len(obj) > len(tupleid) and obj[:len(tupleid)] == tupleid:
+            return (json_deserialize_flexible(x, extra_mapping) for x in obj[len(tupleid):].split(tupleid))
+        else:
+            return obj
+    elif isinstance(obj, list):
+        if len(obj) > 0 and obj[0] == '<__set__>':
+            return {json_deserialize_flexible(x, extra_mapping) for x in obj[1:]}
+        else:
+            return [json_deserialize_flexible(e, extra_mapping) for e in obj]
+    elif isinstance(obj, dict):
+        return {json_deserialize_flexible(k, extra_mapping): json_deserialize_flexible(v, extra_mapping) for k, v in obj.items()}
+    else:
+        return obj
+
+
 
