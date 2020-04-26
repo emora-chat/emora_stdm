@@ -223,8 +223,15 @@ class CompositeDialogueFlow:
         self._controller.set_vars(vars)
 
     def reset(self):
-        for name,component in self._components.items():
+        gates = None
+        goals = None
+        for name, component in self._components.items():
             component.reset()
+            if gates is None:
+                gates = component.gates()
+                goals = component.goals()
+            component.set_gates(gates)
+            component.set_goals(goals)
         self.set_controller("SYSTEM")
 
     def controller(self):
@@ -251,8 +258,9 @@ class CompositeDialogueFlow:
         self.reset()
         self.set_state(config['state'])
         self.set_vars(config['vars'])
-        for name,component in self._components.items():
-            component.set_gates(defaultdict(list,config['gates']))
+        gates = defaultdict(list, config['gates'])
+        for name, component in self._components.items():
+            component.set_gates(gates)
 
     def new_turn(self, toplevel="SYSTEM"):
         self.reset()
