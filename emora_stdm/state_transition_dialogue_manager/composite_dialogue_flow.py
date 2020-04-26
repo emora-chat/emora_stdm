@@ -60,7 +60,7 @@ class CompositeDialogueFlow:
                 assert next_state is not None
                 self.controller().set_state(next_state)
             except Exception as e:
-                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller(), self.controller().state()))
+                print('Error in CompositeDialogueFlow. Component: {}  State: {}'.format(self.controller_name(), self.controller().state()))
                 traceback.print_exc(file=sys.stdout)
                 response, next_state = '', self._system_error_state
                 visited = visited - {next_state}
@@ -239,11 +239,21 @@ class CompositeDialogueFlow:
     def serialize(self):
         """
         Returns json serialized dict of
-            {'vars': vars, 'gates': gates}
+            {'vars': vars, 'gates': gates, 'state': state}
         """
-        d = {'vars': self._controller.vars(),
-             'gates': self._controller.gates()}
-        return json_serialize_flexible(d, speaker_enum_mapping)
+        config = {'vars': self._controller.vars(),
+                 'gates': self._controller.gates(),
+                 'state': self.state()}
+        return json_serialize_flexible(config, speaker_enum_mapping)
 
-    def deserialize(self, d):
-        return json_deserialize_flexible(d, speaker_enum_rmapping)
+    def deserialize(self, config_str):
+        config = json_deserialize_flexible(config_str, speaker_enum_rmapping)
+        self.reset()
+        self.set_state(config['state'])
+        self.set_vars(config['vars'])
+        for name,component in self._components.items():
+            component.set_gates(config['gates'])
+
+    def new_turn(self, toplevel="SYSTEM"):
+        self.reset()
+        self.set_controller(toplevel)
