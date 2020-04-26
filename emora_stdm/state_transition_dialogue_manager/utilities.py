@@ -105,23 +105,28 @@ def _json_serialize_flexible(obj, extra_mapping=None):
     if extra_mapping is None:
         extra_mapping = {}
     if isinstance(obj, dict):
+        d = {}
         for k, v in obj.items():
-            obj[_json_serialize_flexible(k)] = _json_serialize_flexible(v)
+            k = _json_serialize_flexible(k, extra_mapping)
+            v = _json_serialize_flexible(v, extra_mapping)
+            d[k] = v
+        obj = d
     elif isinstance(obj, list):
-        for i, e in enumerate(obj):
-            obj[i] = _json_serialize_flexible(e, extra_mapping)
+        obj = [_json_serialize_flexible(e, extra_mapping) for e in obj]
     elif isinstance(obj, set):
         obj = _json_serialize_flexible(['<__set__>'] + list(obj), extra_mapping)
     elif isinstance(obj, tuple):
         obj = '<__tuple__>' + '<__tuple__>'.join((json_serialize_flexible(x, extra_mapping) for x in obj))
-    elif not (isinstance(obj, int)
-              or isinstance(obj, float)
-              or isinstance(obj, str)
-              or isinstance(obj, bool)):
-        obj = json_serialize_flexible(extra_mapping[obj], extra_mapping)
+    elif isinstance(obj, str) or isinstance(obj, bool) or isinstance(obj, int) or isinstance(obj, float):
+        obj = obj
+    else:
+        obj = extra_mapping[obj]
     return obj
 
 def json_deserialize_flexible(obj, extra_mapping=None):
+    return _json_deserialize_flexible(json.loads(obj), extra_mapping)
+
+def _json_deserialize_flexible(obj, extra_mapping=None):
     if extra_mapping is None:
         extra_mapping = {}
     if isinstance(obj, str):
@@ -129,18 +134,22 @@ def json_deserialize_flexible(obj, extra_mapping=None):
             return extra_mapping[obj]
         tupleid = '<__tuple__>'
         if len(obj) > len(tupleid) and obj[:len(tupleid)] == tupleid:
-            return (json_deserialize_flexible(x, extra_mapping) for x in obj[len(tupleid):].split(tupleid))
+            return tuple([json_deserialize_flexible(x, extra_mapping) for x in obj[len(tupleid):].split(tupleid)])
         else:
             return obj
     elif isinstance(obj, list):
         if len(obj) > 0 and obj[0] == '<__set__>':
-            return {json_deserialize_flexible(x, extra_mapping) for x in obj[1:]}
+            return {_json_deserialize_flexible(x, extra_mapping) for x in obj[1:]}
         else:
-            return [json_deserialize_flexible(e, extra_mapping) for e in obj]
+            return [_json_deserialize_flexible(e, extra_mapping) for e in obj]
     elif isinstance(obj, dict):
-        return {json_deserialize_flexible(k, extra_mapping): json_deserialize_flexible(v, extra_mapping) for k, v in obj.items()}
+        return {_json_deserialize_flexible(k, extra_mapping): _json_deserialize_flexible(v, extra_mapping)
+                for k, v in obj.items()}
     else:
         return obj
+
+def get_rmapping(mapping):
+    return {v: k for k, v in mapping.items()}
 
 
 

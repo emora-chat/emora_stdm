@@ -16,7 +16,9 @@ from emora_stdm.state_transition_dialogue_manager.knowledge_base import Knowledg
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
 from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
-from emora_stdm.state_transition_dialogue_manager.utilities import random_max
+from emora_stdm.state_transition_dialogue_manager.utilities import random_max, get_rmapping
+from emora_stdm.state_transition_dialogue_manager.utilities import \
+    json_serialize_flexible, json_deserialize_flexible
 from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -48,6 +50,9 @@ class EnumByName(Enum):
 class Speaker(EnumByName):
     SYSTEM = auto()
     USER = auto()
+
+speaker_enum_mapping = {Speaker.SYSTEM: 'speaker_system', Speaker.USER: 'speaker_user'}
+speaker_enum_rmapping = get_rmapping(speaker_enum_mapping)
 
 class DialogueFlow:
 
@@ -993,3 +998,16 @@ class DialogueFlow:
             'doom_counter': doom_counter
         }
         self._goals[id_string] = goal
+
+    def serialize(self):
+        """
+        Returns json serialized dict of
+            {'vars': vars, 'gates': gates, 'state': state}
+        """
+
+        d = {'vars': self.vars(),
+             'gates': self.gates()}
+        return json_serialize_flexible(d, speaker_enum_mapping)
+
+    def deserialize(self, d):
+        return json_deserialize_flexible(d, speaker_enum_rmapping)

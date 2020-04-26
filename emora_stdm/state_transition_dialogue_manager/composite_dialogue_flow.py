@@ -2,7 +2,10 @@
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow \
     import DialogueFlow, module_source_target, module_state
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
-from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
+from emora_stdm.state_transition_dialogue_manager.utilities import \
+    json_serialize_flexible, json_deserialize_flexible
+from emora_stdm.state_transition_dialogue_manager.dialogue_flow import \
+    speaker_enum_mapping, speaker_enum_rmapping
 from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -232,3 +235,15 @@ class CompositeDialogueFlow:
 
     def state(self):
         return self._controller_name, self._controller.state()
+
+    def serialize(self):
+        """
+        Returns json serialized dict of
+            {'vars': vars, 'gates': gates}
+        """
+        d = {'vars': self._controller.vars(),
+             'gates': self._controller.gates()}
+        return json_serialize_flexible(d, speaker_enum_mapping)
+
+    def deserialize(self, d):
+        return json_deserialize_flexible(d, speaker_enum_rmapping)

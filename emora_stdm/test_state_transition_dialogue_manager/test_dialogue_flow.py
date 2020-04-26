@@ -1,5 +1,5 @@
 
-import pytest
+import pytest, json
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow, Speaker
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
@@ -228,7 +228,7 @@ def test_transitions_to_transitions():
 
 def test_dialogue_flow_modular_transition():
     # test to ensure dialogue flow module with transition to other
-    # component does not crash when tested indpendently
+    # component does not crash when tested independently
     df = DialogueFlow('root', initial_speaker=Speaker.SYSTEM)
     transitions = {
         'state': 'root',
@@ -405,6 +405,47 @@ def test_enter_natex():
     assert df.system_turn() == 'hi'
     df.user_turn('hi')
     assert df.system_turn() == 'goodbye'
+
+def test_serialization():
+    df = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df.add_state(States.B, error_successor=States.E)
+    df.add_state(States.C, error_successor=States.E)
+    df.add_system_transition(States.A, States.B, '#GATE $spoken=B')
+    df.add_system_transition(States.A, States.C, '#GATE(spoken) $spoken=C')
+    df.add_system_transition(States.E, States.E, '$spoken=E')
+    df.add_user_transition(States.B, States.A, '$heard=b')
+    df.add_user_transition(States.E, States.A, '$heard=e')
+
+    df.system_turn()
+    assert df.state() == States.B
+    assert df.vars()["spoken"] == "B"
+    df.user_turn('b')
+    df.system_turn()
+    assert df.state() == States.C
+    assert df.vars()["spoken"] == "C"
+    expected_gates = {'States.B': [{}], 'States.C': [{'spoken': 'B'}]}
+    assert df.gates() == expected_gates
+    d = df.serialize()
+
+    df2 = DialogueFlow(States.A, initial_speaker=Speaker.SYSTEM)
+    df2.add_state(States.B, error_successor=States.E)
+    df2.add_state(States.C, error_successor=States.E)
+    df2.add_system_transition(States.A, States.B, '#GATE $spoken=B')
+    df2.add_system_transition(States.A, States.C, '#GATE(spoken) $spoken=C')
+    df2.add_system_transition(States.E, States.E, '$spoken=E')
+    df2.add_user_transition(States.B, States.A, '$heard=b')
+    df2.add_user_transition(States.E, States.A, '$heard=e')
+    assert df2.state() == States.A
+    assert 'spoken' not in df2.vars() and 'heard' not in df2.vars()
+    assert len(df2.gates()) == 0
+    
+    d2 = df2.deserialize(d)
+    df2.set_vars(d2['vars'])
+    df2.set_gates(d2['gates'])
+    
+    assert df.vars() == df2.vars()
+    assert df.gates() == df2.gates()
+    assert df.state() == df2.state()
 
 
 
