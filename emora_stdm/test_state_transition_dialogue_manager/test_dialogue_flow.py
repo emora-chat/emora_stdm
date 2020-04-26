@@ -440,9 +440,7 @@ def test_serialization():
     assert 'spoken' not in df2.vars() and 'heard' not in df2.vars()
     assert len(df2.gates()) == 0
     
-    d2 = df2.deserialize(d)
-    df2.set_vars(d2['vars'])
-    df2.set_gates(d2['gates'])
+    df2.deserialize(d)
     
     assert df.vars() == df2.vars()
     assert df.gates() == df2.gates()

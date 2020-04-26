@@ -252,7 +252,7 @@ class CompositeDialogueFlow:
         self.set_state(config['state'])
         self.set_vars(config['vars'])
         for name,component in self._components.items():
-            component.set_gates(config['gates'])
+            component.set_gates(defaultdict(list,config['gates']))
 
     def new_turn(self, toplevel="SYSTEM"):
         self.reset()

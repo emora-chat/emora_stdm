@@ -1004,10 +1004,14 @@ class DialogueFlow:
         Returns json serialized dict of
             {'vars': vars, 'gates': gates, 'state': state}
         """
+        config = {'vars': self.vars(),
+                 'gates': self.gates(),
+                 'state': self.state()}
+        return json_serialize_flexible(config, speaker_enum_mapping)
 
-        d = {'vars': self.vars(),
-             'gates': self.gates()}
-        return json_serialize_flexible(d, speaker_enum_mapping)
-
-    def deserialize(self, d):
-        return json_deserialize_flexible(d, speaker_enum_rmapping)
+    def deserialize(self, config_str):
+        config = json_deserialize_flexible(config_str, speaker_enum_rmapping)
+        self.reset()
+        self.set_state(config['state'])
+        self.set_vars(config['vars'])
+        self.set_gates(config['gates'])
