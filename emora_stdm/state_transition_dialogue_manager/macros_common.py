@@ -668,11 +668,11 @@ class SetGoalReturnPoint(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         vars['__goal_return_state__'] = args[0]
 
-
 class Target(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        vars['__target__'] = args[0]
+        if '__target__' not in vars or (vars['__target__'] is None or vars['__target__'] == 'None'):
+            vars['__target__'] = args[0]
 
 
 
