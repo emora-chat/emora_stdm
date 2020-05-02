@@ -343,6 +343,8 @@ class DialogueFlow:
         :param debugging:
         :return: a <state, response> tuple representing the successor state and response
         """
+        if '__gate__' in self._vars:
+            del self._vars['__gate__']
         state = module_state(state)
         ti = time()
         if state is None:
@@ -496,6 +498,8 @@ class DialogueFlow:
         :return: the successor state representing the highest score user transition
                  that matches natural_language, or None if none match
         """
+        if '__gate__' in self._vars:
+            del self._vars['__gate__']
         natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
         state = module_state(state)
         self._error_transitioned = False
