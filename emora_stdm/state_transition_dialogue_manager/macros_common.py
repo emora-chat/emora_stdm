@@ -360,6 +360,7 @@ class Gate(Macro):
             if val is None:
                 if var in vars:
                     configuration[var] = vars[var]
+                    configuration[var] = vars[var]
                 else:
                     return False
             elif val == 'None':
@@ -468,6 +469,11 @@ class Transition(Macro):
              score))
 
 class VirtualTransitions(Macro):
+    """
+    Add transitions from other states to be evaluated. If any of them succeed,
+    and their score is higher than other transitions, the target of the imported
+    transitions will be the next state.
+    """
 
     def __init__(self, dialogue_flow):
         self.dialogue_flow = dialogue_flow
@@ -524,6 +530,23 @@ class Default(Macro):
         vars['__score__'] = 0.001
         return ''
 
+class CanEnter(Macro):
+
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for state in args:
+            if ':' in state:
+                component, state = state.split(':')
+                enter = self.dialogue_flow.composite_dialogue_flow().\
+                    state_settings(component, state).enter
+            else:
+                enter = self.dialogue_flow.state_settings(state).enter
+            if enter is not None and enter.generate() is None:
+                return False
+        return True
+
 
 class GoalPursuit(Macro):
     """
@@ -555,6 +578,8 @@ class GoalCompletion(Macro):
     """
     Complete either the current goal, or a specified goal that
     is either the current goal or the first matching on the stack.
+    If a goal to complete is specified but not in the stack, this
+    macro does nothing.
     """
 
     def __init__(self, dialogue_flow):
@@ -564,7 +589,7 @@ class GoalCompletion(Macro):
         goal = None
         if len(args) == 1:
             goal = args[0]
-        if goal is None or goal == vars['__goal__']:
+        if goal is None or '__goal__' not in vars or goal == vars['__goal__']:
             vars['__goal__'] = 'None'
         else:
             stack = vars['__stack__']

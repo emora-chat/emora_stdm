@@ -148,7 +148,8 @@ class DialogueFlow:
             'DEFAULT': Default(),
             'VT': VirtualTransitions(self),
             'GSRET': SetGoalReturnPoint(),
-            'TARGET': Target()
+            'TARGET': Target(),
+            'CE': CanEnter(self)
         }
         if macros:
             self._macros.update(macros)
@@ -361,6 +362,7 @@ class DialogueFlow:
             transition_items.append((natex, transition, score))
         for natex, transition, score in transition_items:
             t1 = time()
+            transition_transition_enter = None
             vars = HashableDict(self._vars)
             self._potential_transition = transition # MOVED, todo
             try:
@@ -397,7 +399,10 @@ class DialogueFlow:
                     generation = None
             elif isinstance(transition[1], tuple) and '->' in transition[1][1]:
                 namespace = transition[1][0]
-                transition = ((namespace, target[1].split('->')[0]), (namespace, target[1].split('->')[1]), speaker)
+                source, target = (namespace, target[1].split('->')[0]), (namespace, target[1].split('->')[1])
+                source = State(module_state(state))
+                transition_transition_enter = source
+                transition = (source, target, speaker)
                 try:
                     appended_generation = self.composite_dialogue_flow().transition_natex(
                         namespace, *transition).generate(vars=vars, macros=self._macros, debugging=debugging)
@@ -416,20 +421,22 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            if self.is_module() and isinstance(target, tuple):
-                enter_natex = self.composite_dialogue_flow().state_settings(*target).enter
-            else:
-                enter_natex = self.state_settings(target).enter
             enter_natex_pass = True
-            if enter_natex is not None:
-                try:
-                    enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-                except Exception as e:
-                    print()
-                    print(e)
-                    print('Enter Natex {}: {} failed'.format(str(target), enter_natex))
-                    print()
-                    enter_natex_pass = None
+            for tx in target, transition_transition_enter:
+                if enter_natex_pass and tx is not None:
+                    if self.is_module() and isinstance(tx, tuple):
+                        enter_natex = self.composite_dialogue_flow().state_settings(*tx).enter
+                    else:
+                        enter_natex = self.state_settings(tx).enter
+                    if enter_natex is not None:
+                        try:
+                            enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                        except Exception as e:
+                            print()
+                            print(e)
+                            print('Enter Natex {}: {} failed'.format(str(tx), enter_natex))
+                            print()
+                            enter_natex_pass = None
             if generation is not None and enter_natex_pass is not None:
                 if '__score__' in vars:
                     score = vars['__score__']

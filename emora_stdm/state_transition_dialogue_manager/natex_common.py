@@ -77,8 +77,11 @@ class Unexpected(Macro):
                 vars['_explained_stupidity_'] = 'True'
                 vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
                                               'There\'s still a lot I\'m trying to figure out. '
+        elif len(ngrams.text().split()) < 3:
+            vars['__response_prefix__'] = ''
+            return True
         else:
-            options = {'Yeah.', 'For sure.', 'Gotcha.', 'Right.', 'Uh-huh.'} - {vars['__previous_unx_response__']}
+            options = {'Yeah.', 'For sure.', 'Right.', 'Uh-huh.'} - {vars['__previous_unx_response__']}
             statement_response = random.choice(list(options))
             if len(args) > 0:
                 statement_response = ', '.join(args)

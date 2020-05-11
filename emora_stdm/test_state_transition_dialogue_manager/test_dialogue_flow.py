@@ -288,7 +288,7 @@ def test_unexpected_input_macro():
     df = DialogueFlow('root', initial_speaker=Speaker.USER)
     df.add_user_transition('root', 'x', '#UNX')
     df.add_system_transition('x', 'y', '"So, whats for dinner?"')
-    df.user_turn('blah')
+    df.user_turn('blah blah blah blah blah blah')
     tokens = df.system_turn().split()
     assert len(tokens) > 4 and 'So, whats for dinner?' == ' '.join(tokens[-4:])
 
@@ -439,9 +439,9 @@ def test_serialization():
     assert df2.state() == States.A
     assert 'spoken' not in df2.vars() and 'heard' not in df2.vars()
     assert len(df2.gates()) == 0
-    
+
     df2.deserialize(d)
-    
+
     assert df.vars() == df2.vars()
     assert df.gates() == df2.gates()
     assert df.state() == df2.state()
