@@ -20,3 +20,4 @@ memory_debugging*
 opening_database*
 emora_stdm/modules/emora
 /stupid.py
+_globals.py

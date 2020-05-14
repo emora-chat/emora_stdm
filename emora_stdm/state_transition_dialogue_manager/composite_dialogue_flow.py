@@ -189,13 +189,16 @@ class CompositeDialogueFlow:
     def component(self, namespace):
         return self._components[namespace]
 
+    def components(self):
+        return self._components.values()
+
     def set_state(self, state):
         state = module_state(state)
         if isinstance(state, tuple):
             if self.component(state[0]) != self.controller():
                 self.component(state[0]).set_state(self.controller().state())  # so __system_state__ is set properly
                 self.set_controller(state[0])
-                state = state[1]
+            state = state[1]
         self.controller().set_state(state)
 
     def set_controller(self, controller_name):

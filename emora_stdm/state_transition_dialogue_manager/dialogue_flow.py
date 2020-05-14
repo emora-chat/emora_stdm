@@ -25,14 +25,17 @@ from pathos.multiprocessing import ProcessingPool as Pool
 
 def module_source_target(source, target):
     if isinstance(source, str) and ':' in source:
-        source = tuple(source.split(':'))
+        i = source.find(':')
+        source = (source[:i], source[i+1:])
     if isinstance(target, str) and ':' in target:
-        target = tuple(target.split(':'))
+        i = target.find(':')
+        target = (target[:i], target[i + 1:])
     return source, target
 
 def module_state(state):
     if isinstance(state, str) and ':' in state:
-        state = tuple(state.split(':'))
+        i = state.find(':')
+        state = (state[:i], state[i + 1:])
     return state
 
 def precache(transition_datas):
@@ -383,10 +386,12 @@ class DialogueFlow:
                 target = State(module_state(vars['__target__']))
                 del vars['__target__']
             transition = source, target, speaker
-            if not self.is_module() and isinstance(target, tuple):
-                continue
+            # if not self.is_module() and isinstance(target, tuple):
+            #     continue
             if '->' in transition[1]:
-                transition = (target.split('->')[0], target.split('->')[1], speaker)
+                _src, _tar = target.split('->')[0], target.split('->')[1]
+                _tar = State(module_state(_tar))
+                transition = (_src, _tar, speaker)
                 try:
                     appended_generation = self.transition_natex(*transition).generate(vars=vars, macros=self._macros, debugging=debugging)
                     if appended_generation is None:
@@ -401,8 +406,8 @@ class DialogueFlow:
                     generation = None
             elif isinstance(transition[1], tuple) and '->' in transition[1][1]:
                 namespace = transition[1][0]
-                source, target = (namespace, target[1].split('->')[0]), (namespace, target[1].split('->')[1])
-                source = State(module_state(state))
+                source, target = (namespace, target[1].split('->')[0]), target[1].split('->')[1]
+                target = State(module_state(target))
                 transition_transition_enter = source
                 transition = (source, target, speaker)
                 try:
@@ -424,21 +429,35 @@ class DialogueFlow:
                 del vars['__target__']
             transition = source, target, speaker
             enter_natex_pass = True
-            for tx in target, transition_transition_enter:
-                if enter_natex_pass and tx is not None:
-                    if self.is_module() and isinstance(tx, tuple):
-                        enter_natex = self.composite_dialogue_flow().state_settings(*tx).enter
-                    else:
-                        enter_natex = self.state_settings(tx).enter
-                    if enter_natex is not None:
-                        try:
-                            enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
-                        except Exception as e:
-                            print()
-                            print(e)
-                            print('Enter Natex {}: {} failed'.format(str(tx), enter_natex))
-                            print()
-                            enter_natex_pass = None
+            transition_transition_enter_vars = dict(vars)
+            if transition_transition_enter is not None:
+                if self.is_module() and isinstance(transition_transition_enter, tuple):
+                    enter_natex = self.composite_dialogue_flow().state_settings(*transition_transition_enter).enter
+                else:
+                    enter_natex = self.state_settings(transition_transition_enter).enter
+                if enter_natex is not None:
+                    try:
+                        enter_natex_pass = enter_natex.generate(vars=transition_transition_enter_vars, macros=self._macros, debugging=debugging)
+                    except Exception as e:
+                        print()
+                        print(e)
+                        print('Enter Natex {}: {} failed'.format(str(transition_transition_enter), enter_natex))
+                        print()
+                        enter_natex_pass = None
+            if enter_natex_pass:
+                if self.is_module() and isinstance(target, tuple):
+                    enter_natex = self.composite_dialogue_flow().state_settings(*target).enter
+                else:
+                    enter_natex = self.state_settings(target).enter
+                if enter_natex is not None:
+                    try:
+                        enter_natex_pass = enter_natex.generate(vars=vars, macros=self._macros, debugging=debugging)
+                    except Exception as e:
+                        print()
+                        print(e)
+                        print('Enter Natex {}: {} failed'.format(str(target), enter_natex))
+                        print()
+                        enter_natex_pass = None
             if generation is not None and enter_natex_pass is not None:
                 if '__score__' in vars:
                     score = vars['__score__']
@@ -453,8 +472,20 @@ class DialogueFlow:
                         if gate_var_config == vc:
                             gate_closed = True
                     del vars['__gate__']
+                tt_gate_var_config = None
+                tt_gate_target_id = None
+                if transition_transition_enter is not None and '__gate__' in transition_transition_enter_vars:
+                    tt_gate_var_config = transition_transition_enter_vars['__gate__']
+                    tt_gate_target_id = (self.namespace(), transition_transition_enter) if \
+                        (not isinstance(transition_transition_enter, tuple) and self.is_module()) else transition_transition_enter
+                    for vc in self.gates()[tt_gate_target_id]:
+                        if tt_gate_var_config == vc:
+                            gate_closed = True
+                    del transition_transition_enter_vars['__gate__']
+                transition_transition_enter_vars.update(vars)
+                vars = transition_transition_enter_vars
                 if not gate_closed:
-                    transition_options.append((score, generation, transition, vars, gate_var_config, gate_target_id))
+                    transition_options.append((score, generation, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -463,9 +494,12 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            score, response, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            score, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
+                random_max(transition_options, key=lambda x: x[0])
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
+            if tt_gate_var_config is not None:
+                self.gates()[tt_gate_target_id].append(tt_gate_var_config)
             if debugging:
                 updates = {}
                 for k, v in vars.items():
