@@ -145,7 +145,7 @@ class DialogueFlow:
             'UNX': Unexpected(),
             'INT': Intent(),
             'GEXT': goal_exit_macro,
-            'GOAL': GoalPursuit(goal_exit_macro),
+            'GOAL': GoalPursuit(goal_exit_macro, self),
             'GCOM': GoalCompletion(self),
             'GRET': GoalReturn(self),
             'DEFAULT': Default(),

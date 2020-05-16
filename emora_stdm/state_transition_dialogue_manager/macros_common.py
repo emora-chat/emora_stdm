@@ -559,8 +559,9 @@ class GoalPursuit(Macro):
     [goal id str, return state str, return phrase str, doom counter int]
     """
 
-    def __init__(self, goal_exit_macro):
+    def __init__(self, goal_exit_macro, df=None):
         self.goal_exit_macro = goal_exit_macro
+        self.df = df
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if '__stack__' not in vars:
@@ -644,6 +645,9 @@ class GoalExit(Macro):
         if vars['__goal__'] != 'None':
             push_goal_id = vars['__goal__']
             push_goal_state = self.goal_return_state(push_goal_id, vars)
+            if self.dialogue_flow.composite_dialogue_flow():
+                push_goal_state = self.dialogue_flow.composite_dialogue_flow().controller_name() \
+                                  + ':' + push_goal_state
             push_goal_return_phrase = self.goal_return_phrase(push_goal_id, vars)
             push_goal_doom_counter = self.goal_doom_counter(push_goal_id, vars)
             push_goal = [push_goal_id, push_goal_state, push_goal_return_phrase, push_goal_doom_counter]
