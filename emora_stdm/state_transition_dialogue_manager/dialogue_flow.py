@@ -152,12 +152,14 @@ class DialogueFlow:
             'VT': VirtualTransitions(self),
             'GSRET': SetGoalReturnPoint(),
             'TARGET': Target(),
-            'CE': CanEnter(self)
+            'CE': CanEnter(self),
+            'RW': Rewrite()
         }
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
         self.add_state(end_state)
+        self._vars['__user_utterance__'] = None
 
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
@@ -210,6 +212,7 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
+        natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
@@ -541,7 +544,10 @@ class DialogueFlow:
         """
         if '__gate__' in self._vars:
             del self._vars['__gate__']
-        natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
+        if '__user_utterance__' in self.vars() and self.vars()['__user_utterance__'] is not None:
+            natural_language = self.vars()['__user_utterance__']
+        else:
+            natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
         state = module_state(state)
         self._error_transitioned = False
         ti = time()
@@ -1034,6 +1040,10 @@ class DialogueFlow:
             nlu = nlu + ' #GEXT'
             self.add_global_nlu(state, nlu, score)
         self.load_transitions(transitions, Speaker.USER)
+
+    def load_update_rules(self, rules_dict):
+        for pre, post in rules_dict.items():
+            self.update_rules().add(pre, post)
 
     def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
         goal = {

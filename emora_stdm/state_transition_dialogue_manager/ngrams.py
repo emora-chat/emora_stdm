@@ -3,6 +3,10 @@
 class Ngrams(set):
 
     def __init__(self, text, n=None):
+        self.update(text, n)
+
+    def update(self, text, n=None):
+        set.__init__(self)
         if '_END_' == text[-5:]:
             text = text[:-5]
         self._text = text
@@ -15,7 +19,7 @@ class Ngrams(set):
         for gram, l in self._all_n_grams(tokens, n):
             self._n[l].add(gram)
             all_grams.append(gram)
-        set.__init__(self, all_grams)
+        set.update(self, all_grams)
 
     def n(self, number_tokens):
         return self._n[number_tokens]

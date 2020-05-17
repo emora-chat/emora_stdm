@@ -10,6 +10,9 @@ class UpdateRule:
         self.precondition_score = 1.0
         self.postcondition = None
         self.postcondition_score = None
+        self.is_repeating = len(precondition) > 0 and precondition[0] == '*'
+        if self.is_repeating:
+            precondition = precondition[1:]
         if macros is None:
             macros = {}
         if vars is None:

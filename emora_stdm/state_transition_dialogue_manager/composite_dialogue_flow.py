@@ -119,9 +119,15 @@ class CompositeDialogueFlow:
         self.component(namespace).set_state(old_state)
         self.set_controller(namespace)
         self.controller().set_speaker(speaker)
-        if speaker == DialogueFlow.Speaker.USER and not self.controller().state_settings(state).user_multi_hop:
+        if isinstance(state, tuple):
+            umh = self.state_settings(*state).user_multi_hop
+            smh = self.state_settings(*state).system_multi_hop
+        else:
+            umh = self.state_settings(namespace, state).user_multi_hop
+            smh = self.state_settings(namespace, state).system_multi_hop
+        if speaker == DialogueFlow.Speaker.USER and not umh:
             self.controller().change_speaker()
-        elif speaker == DialogueFlow.Speaker.SYSTEM and not self.controller().state_settings(state).system_multi_hop:
+        elif speaker == DialogueFlow.Speaker.SYSTEM and not smh:
             self.controller().change_speaker()
         self.controller().set_state(state)
 

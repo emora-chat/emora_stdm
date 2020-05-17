@@ -697,6 +697,7 @@ class SetGoalReturnPoint(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         vars['__goal_return_state__'] = args[0]
 
+
 class Target(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -704,6 +705,26 @@ class Target(Macro):
             vars['__target__'] = args[0]
 
 
+class Rewrite(Macro):
+    """
+    Macro that rewrites substrings with the string specified as an arg.
+
+    Substrings to rewrite are specified by setting vars prefixed by '__rw',
+    as in __rw_1__
+    """
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        nl = vars['__user_utterance__']
+        rewrite = ', '.join(args)
+        for var, val in vars.items():
+            if '__rw' in var:
+                cap = r'\b(?:{})\b'.format('|'.join(args))
+                matches = regex.findall(cap, nl)
+                for match in matches[::-1]:
+                    i, j = match.span()
+                    nl = nl[:i] + rewrite + nl[j:]
+                del vars[var]
+        vars['__user_utterance__'] = nl
 
 
 

@@ -31,41 +31,52 @@ class UpdateRules:
         self.vars['__converged__'] = 'False'
         while not self.vars['__converged__'] == 'True':
             response = self.update_step(user_input, debugging=debugging)
+            if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
+                user_input.update(self.vars['__user_utterance__'])
         return response
 
     def update_step(self, user_input, debugging=False):
         self.vars['__converged__'] = 'False'
         for i, rule in enumerate(self.untapped):
-            try:
-                vars = HashableDict(self.vars)
-                satisfaction = rule.satisfied(user_input, vars, debugging=debugging)
-            except RuntimeError as e:
-                print('Failed information state update condition check:')
-                print('  ', rule)
-                print(e)
-                del self.untapped[i]
-                return None
-            if satisfaction:
-                if debugging:
-                    print('Rule triggered: ', rule.precondition, '==>', rule.postcondition)
-                if rule.postcondition_score is None:
-                    try:
-                        rule.apply(vars, debugging=debugging)
-                    except RuntimeError as e:
-                        print('Failed information state update application')
-                        print('  ', rule)
-                        print(e)
-                        del self.untapped[i]
-                        return None
-                    self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+            star_repeat = rule.is_repeating
+            repeating = True
+            while repeating:
+                repeating = False
+                try:
+                    vars = HashableDict(self.vars)
+                    satisfaction = rule.satisfied(user_input, vars, debugging=debugging)
+                except RuntimeError as e:
+                    print('Failed information state update condition check:')
+                    print('  ', rule)
+                    print(e)
                     del self.untapped[i]
                     return None
-                else:
-                    self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
-                    response_natex = rule.postcondition
-                    generation = (response_natex, rule.postcondition_score)
-                    del self.untapped[i]
-                    self.vars['__converged__'] = 'True'
-                    return generation
+                if satisfaction:
+                    if debugging:
+                        print('Rule triggered: ', rule.precondition, '==>', rule.postcondition)
+                    if rule.postcondition_score is None:
+                        try:
+                            rule.apply(vars, debugging=debugging)
+                        except Exception as e:
+                            print('Failed information state update application')
+                            print('  ', rule)
+                            print(e)
+                            del self.untapped[i]
+                            return None
+                        self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+                        if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
+                            user_input.update(self.vars['__user_utterance__'])
+                        if star_repeat:
+                            repeating = True
+                            continue
+                        del self.untapped[i]
+                        return None
+                    else:
+                        self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+                        response_natex = rule.postcondition
+                        generation = (response_natex, rule.postcondition_score)
+                        del self.untapped[i]
+                        self.vars['__converged__'] = 'True'
+                        return generation
         self.vars['__converged__'] = 'True'
         return None
