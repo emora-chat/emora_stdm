@@ -716,6 +716,7 @@ class Rewrite(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         nl = vars['__user_utterance__']
         rewrite = ', '.join(args)
+        todelete = []
         for var, val in vars.items():
             if '__rw' in var:
                 cap = r'\b(?:{})\b'.format('|'.join(args))
@@ -723,7 +724,9 @@ class Rewrite(Macro):
                 for match in matches[::-1]:
                     i, j = match.span()
                     nl = nl[:i] + rewrite + nl[j:]
-                del vars[var]
+                todelete.append(var)
+        for e in todelete:
+            del vars[e]
         vars['__user_utterance__'] = nl
 
 

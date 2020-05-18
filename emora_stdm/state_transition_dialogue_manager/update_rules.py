@@ -64,8 +64,6 @@ class UpdateRules:
                             del self.untapped[i]
                             return None
                         self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
-                        if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
-                            user_input.update(self.vars['__user_utterance__'])
                         if star_repeat:
                             repeating = True
                             continue
