@@ -41,10 +41,17 @@ class CompositeDialogueFlow:
         """
         while True:
             if self.controller().speaker() == DialogueFlow.Speaker.SYSTEM:
-                print("S:", self.system_turn(debugging=debugging))
+                t1 = time()
+                response = self.system_turn(debugging=debugging)
+                if debugging:
+                    print('System turn in {:5}'.format(time() - t1))
+                print("S:", response)
             else:
                 user_input = input("U: ")
+                t1 = time()
                 self.user_turn(user_input, debugging=debugging)
+                if debugging:
+                    print('User turn in {:5}'.format(time() - t1))
 
     def system_turn(self, debugging=False):
         """
