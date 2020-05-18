@@ -81,19 +81,19 @@ def test_EXP():
     assert natex.match('i play basketball')
     assert not natex.match('i play soccer')
 
-def test_WN():
-    debugging = True
-    if debugging:
-        macro = WN()
-        print(macro(None, {}, ['emotion']))
-    natex = NatexNLU('[!i feel #WN(emotion)]', macros={'WN': WN()})
-    assert natex.match('i feel happy')
-    assert natex.match('i feel sad')
-    assert natex.match('i feel joyful')
-    assert natex.match('i feel worrying')
-    assert natex.match('i feel worried')
-    assert not natex.match('i am person')
-    assert not natex.match('i am green')
+# def test_WN():
+#     debugging = True
+#     if debugging:
+#         macro = WN()
+#         print(macro(None, {}, ['emotion']))
+#     natex = NatexNLU('[!i feel #WN(emotion)]', macros={'WN': WN()})
+#     assert natex.match('i feel happy')
+#     assert natex.match('i feel sad')
+#     assert natex.match('i feel joyful')
+#     assert natex.match('i feel worrying')
+#     assert natex.match('i feel worried')
+#     assert not natex.match('i am person')
+#     assert not natex.match('i am green')
 
 def test_NOT():
     natex = NatexNLU('[!#NOT(#U(hello, there)) [dog]]', macros=macros)
@@ -197,19 +197,19 @@ def test_EQ():
     vars['focus'] = 'cat'
     assert natex.generate(vars=vars) == ''
 
-def test_NER():
-    natex = NatexNLU('[this is a test for #NER()]', macros=macros)
-    match = natex.match('this is a test for America by Mike', debugging=False)
-    assert match
-    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
-    match = natex.match('this is a test for America', debugging=False)
-    assert not match
-    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
-    match = natex.match('this is a test for Mike', debugging=False)
-    assert match
-    natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
-    match = natex.match('this is a test for someone', debugging=False)
-    assert not match
+# def test_NER():
+#     natex = NatexNLU('[this is a test for #NER()]', macros=macros)
+#     match = natex.match('this is a test for America by Mike', debugging=False)
+#     assert match
+#     natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+#     match = natex.match('this is a test for America', debugging=False)
+#     assert not match
+#     natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+#     match = natex.match('this is a test for Mike', debugging=False)
+#     assert match
+#     natex = NatexNLU('[this is a test for #NER(person)]', macros=macros)
+#     match = natex.match('this is a test for someone', debugging=False)
+#     assert not match
 
 def test_LEM():
     natex = NatexNLU('[Swimming has same lemma as #LEM(swim)]', macros=macros)

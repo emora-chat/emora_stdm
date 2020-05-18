@@ -153,7 +153,8 @@ class DialogueFlow:
             'GSRET': SetGoalReturnPoint(),
             'TARGET': Target(),
             'CE': CanEnter(self),
-            'RW': Rewrite()
+            'RW': Rewrite(),
+            'CONTRACTIONS': ExpandContractions()
         }
         if macros:
             self._macros.update(macros)
@@ -669,7 +670,8 @@ class DialogueFlow:
                 data['natex'].precache()
             for rule in self.update_rules().rules:
                 rule.precondition.precache()
-                rule.postcondition.precache()
+                if rule.postcondition:
+                    rule.postcondition.precache()
         else:
             # transition_data_sets = []
             # for i in range(process_num):
@@ -939,6 +941,7 @@ class DialogueFlow:
         self._vars = HashableDict()
         self.vars()['__state__'] = self._initial_state
         self.vars()['__stack__'] = []
+        self.vars()['__user_utterance__'] = None
         self.vars()['__system_state__'] = 'None' if self._initial_speaker == Speaker.USER else self._initial_state
         self.set_state(self._initial_state)
         self._rules.set_vars(self._vars)

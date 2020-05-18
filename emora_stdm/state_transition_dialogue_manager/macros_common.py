@@ -14,7 +14,7 @@ import traceback
 import spacy
 import sys
 try:
-    nlp = spacy.load("en_core_web_md")
+    pass#nlp = spacy.load("en_core_web_md")
 except Exception as e:
     traceback.print_exc()
     print('Error loading Spacy', file=sys.stderr)
@@ -32,6 +32,7 @@ from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
 from nltk.corpus import wordnet
 import regex
+import re
 
 
 def _process_args_set(args, vars):
@@ -398,19 +399,21 @@ class NamedEntity(Macro):
     def __init__(self):
         pass
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        doc = nlp(ngrams.text())
-        entities = set()
-        for ent in doc.ents:
-            if not args or ent.label_.lower() in {x.lower() for x in args}:
-                entities.add(ent.text)
-        return entities
+        pass
+        # doc = nlp(ngrams.text())
+        # entities = set()
+        # for ent in doc.ents:
+        #     if not args or ent.label_.lower() in {x.lower() for x in args}:
+        #         entities.add(ent.text)
+        # return entities
 
 class PartOfSpeech(Macro):
     def __init__(self):
         pass
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        doc = nlp(ngrams.text())
-        return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
+        pass
+        # doc = nlp(ngrams.text())
+        # return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
 
 class Lemma(Macro):
     """
@@ -507,21 +510,22 @@ class Intent(Macro):
         return user_utterance.similarity(dev_utterance)
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        for i, arg in enumerate(args):
-            if isinstance(arg, str) and arg.isnumeric():
-                threshold = float(arg)
-                del args[i]
-                break
-        else:
-            threshold = 0.0
-        user = nlp(ngrams.text())
-        dev = [nlp(arg) for arg in args]
-        similarity = max([self._similarity(user, x) for x in dev])
-        vars['__score__'] = similarity
-        if similarity < threshold:
-            return False
-        else:
-            return True
+        pass
+        # for i, arg in enumerate(args):
+        #     if isinstance(arg, str) and arg.isnumeric():
+        #         threshold = float(arg)
+        #         del args[i]
+        #         break
+        # else:
+        #     threshold = 0.0
+        # user = nlp(ngrams.text())
+        # dev = [nlp(arg) for arg in args]
+        # similarity = max([self._similarity(user, x) for x in dev])
+        # vars['__score__'] = similarity
+        # if similarity < threshold:
+        #     return False
+        # else:
+        #     return True
 
 
 class Default(Macro):
@@ -717,17 +721,126 @@ class Rewrite(Macro):
         nl = vars['__user_utterance__']
         rewrite = ', '.join(args)
         todelete = []
+        torewrite = []
         for var, val in vars.items():
             if '__rw' in var:
-                cap = r'\b(?:{})\b'.format('|'.join(args))
-                matches = regex.findall(cap, nl)
-                for match in matches[::-1]:
-                    i, j = match.span()
-                    nl = nl[:i] + rewrite + nl[j:]
+                torewrite.append(val)
                 todelete.append(var)
-        for e in todelete:
-            del vars[e]
+        cap = r'\b(?:{})\b'.format('|'.join(torewrite))
+        matches = list(re.finditer(cap, nl))
+        for match in matches[::-1]:
+            i, j = match.span()
+            nl = nl[:i] + rewrite + nl[j:]
+        for el in todelete:
+            del vars[el]
         vars['__user_utterance__'] = nl
+
+
+class ExpandContractions(Macro):
+
+    def __init__(self):
+        contractions = {
+            "ain't": "is not",
+            "aren't": "are not",
+            "cannot": "can not",
+            "can't": "can not",
+            "can't've": "can not have",
+            "'cause": "because",
+            "could've": "could have",
+            "couldn't": "could not",
+            "couldn't've": "could not have",
+            "didn't": "did not",
+            "doesn't": "does not",
+            "don't": "do not",
+            "hadn't": "had not",
+            "hasn't": "has not",
+            "haven't": "have not",
+            "he'd": "he would",
+            "he'd've": "he would have",
+            "he'll": "he will",
+            "he's": "he is",
+            "how'd": "how did",
+            "how'll": "how will",
+            "how's": "how is",
+            "I'd": "I would",
+            "I'd've": "I would have",
+            "I'll": "I will",
+            "I'll've": "I will have",
+            "I'm": "I am",
+            "I've": "I have",
+            "isn't": "is not",
+            "it'd": "it would",
+            "it'll": "it will",
+            "it's": "it is",
+            "let's": "let us",
+            "might've": "might have",
+            "must've": "must have",
+            "mustn't": "must not",
+            "she'd": "she would",
+            "she'll": "she will",
+            "she's": "she is",
+            "should've": "should have",
+            "shouldn't": "should not",
+            "shouldn't've": "should not have",
+            "so's": "so is",
+            "that's": "that is",
+            "there'd": "there would",
+            "there'd've": "there would have",
+            "there's": "there is",
+            "they'd": "they would",
+            "they'll": "they will",
+            "they're": "they are",
+            "they've": "they have",
+            "wanna": "want to",
+            "wasn't": "was not",
+            "we'd": "we would",
+            "we'd've": "we would have",
+            "we'll": "we will",
+            "we're": "we are",
+            "we've": "we have",
+            "weren't": "were not",
+            "what'll": "what will",
+            "what're": "what are",
+            "what's": "what is",
+            "what've": "what have",
+            "when's": "when is",
+            "when've": "when have",
+            "where'd": "where did",
+            "where's": "where is",
+            "where've": "where have",
+            "who'll": "who will",
+            "who'll've": "who will have",
+            "who's": "who is",
+            "who've": "who have",
+            "why's": "why is",
+            "why've": "why have",
+            "will've": "will have",
+            "won't": "will not",
+            "won't've": "will not have",
+            "would've": "would have",
+            "wouldn't": "would not",
+            "wouldn't've": "would not have",
+            "y'all": "you all",
+            "y'all're": "you all are",
+            "y'all've": "you all have",
+            "you'd": "you would",
+            "you'd've": "you would have",
+            "you'll": "you will",
+            "you'll've": "you will have",
+            "you're": "you are",
+            "you've": "you have"
+        }
+        self.contractions = {''.join([a.lower() for a in k if a.isalpha() or a == ' ']): v.lower() for k, v in contractions.items()}
+        self.re = r'\b(?:{})\b'.format('|'.join(self.contractions.keys()))
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        nl = vars['__user_utterance__']
+        matches = list(re.finditer(self.re, nl))
+        for match in matches[::-1]:
+            i, j = match.span()
+            nl = nl[:i] + self.contractions[match.group()] + nl[j:]
+        vars['__user_utterance__'] = nl
+        return True
 
 
 

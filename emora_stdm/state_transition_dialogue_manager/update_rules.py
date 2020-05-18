@@ -32,7 +32,7 @@ class UpdateRules:
         while not self.vars['__converged__'] == 'True':
             response = self.update_step(user_input, debugging=debugging)
             if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
-                user_input.update(self.vars['__user_utterance__'])
+                user_input = self.vars['__user_utterance__']
         return response
 
     def update_step(self, user_input, debugging=False):
@@ -64,6 +64,8 @@ class UpdateRules:
                             del self.untapped[i]
                             return None
                         self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+                        if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
+                            user_input = self.vars['__user_utterance__']
                         if star_repeat:
                             repeating = True
                             continue

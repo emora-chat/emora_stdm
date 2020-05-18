@@ -4,6 +4,7 @@ from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from copy import deepcopy
+import sys, traceback
 
 class NatexNLU:
 
@@ -267,6 +268,7 @@ class NatexNLU:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
                     print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
+                    traceback.print_exc(file=sys.stdout)
                     tree.children[0] = '_MACRO_EXCEPTION_'
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:
