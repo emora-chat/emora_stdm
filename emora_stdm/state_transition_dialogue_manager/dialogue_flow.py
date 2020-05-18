@@ -154,7 +154,8 @@ class DialogueFlow:
             'TARGET': Target(),
             'CE': CanEnter(self),
             'RW': Rewrite(),
-            'CONTRACTIONS': ExpandContractions()
+            'CONTRACTIONS': ExpandContractions(),
+            'SBS': ScoreBySimilarity()
         }
         if macros:
             self._macros.update(macros)

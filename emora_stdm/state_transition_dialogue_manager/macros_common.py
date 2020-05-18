@@ -14,7 +14,7 @@ import traceback
 import spacy
 import sys
 try:
-    pass#nlp = spacy.load("en_core_web_md")
+    nlp = spacy.load("en_core_web_md")
 except Exception as e:
     traceback.print_exc()
     print('Error loading Spacy', file=sys.stderr)
@@ -399,21 +399,19 @@ class NamedEntity(Macro):
     def __init__(self):
         pass
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        pass
-        # doc = nlp(ngrams.text())
-        # entities = set()
-        # for ent in doc.ents:
-        #     if not args or ent.label_.lower() in {x.lower() for x in args}:
-        #         entities.add(ent.text)
-        # return entities
+        doc = nlp(ngrams.text())
+        entities = set()
+        for ent in doc.ents:
+            if not args or ent.label_.lower() in {x.lower() for x in args}:
+                entities.add(ent.text)
+        return entities
 
 class PartOfSpeech(Macro):
     def __init__(self):
         pass
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        pass
-        # doc = nlp(ngrams.text())
-        # return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
+        doc = nlp(ngrams.text())
+        return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
 
 class Lemma(Macro):
     """
@@ -510,23 +508,43 @@ class Intent(Macro):
         return user_utterance.similarity(dev_utterance)
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        pass
-        # for i, arg in enumerate(args):
-        #     if isinstance(arg, str) and arg.isnumeric():
-        #         threshold = float(arg)
-        #         del args[i]
-        #         break
-        # else:
-        #     threshold = 0.0
-        # user = nlp(ngrams.text())
-        # dev = [nlp(arg) for arg in args]
-        # similarity = max([self._similarity(user, x) for x in dev])
-        # vars['__score__'] = similarity
-        # if similarity < threshold:
-        #     return False
-        # else:
-        #     return True
+        for i, arg in enumerate(args):
+            if isinstance(arg, str) and arg.isnumeric():
+                threshold = float(arg)
+                del args[i]
+                break
+        else:
+            threshold = 0.0
+        user = nlp(ngrams.text())
+        dev = [nlp(arg) for arg in args]
+        similarity = max([self._similarity(user, x) for x in dev])
+        vars['__score__'] = similarity
+        if similarity < threshold:
+            return False
+        else:
+            return True
 
+
+class ScoreBySimilarity(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        for i, arg in enumerate(args):
+            if isinstance(arg, str) and arg.isnumeric():
+                threshold = float(arg)
+                del args[i]
+                break
+        else:
+            threshold = 0.0
+        variable = args[0]
+        if variable[0] == '$': variable = variable[1:]
+        match = nlp(', '.join(args[1:]))
+        value = nlp(vars[variable])
+        similarity = Intent._similarity(None, match, value)
+        vars['__score__'] = similarity
+        if similarity < threshold:
+            return False
+        else:
+            return True
 
 class Default(Macro):
 
