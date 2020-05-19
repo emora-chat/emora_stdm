@@ -499,6 +499,7 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
+            print('\n'.join([str(x) for x in transition_options]))
             score, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
                 random_max(transition_options, key=lambda x: x[0])
             if gate_var_config is not None:
