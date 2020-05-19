@@ -9,6 +9,7 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from emora_stdm.state_transition_dialogue_manager.natex_common import *
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from spacy.pipeline import EntityRecognizer
 import traceback
 import spacy
@@ -28,6 +29,10 @@ try:
     nltk.find('averaged_perceptron_tagger')
 except:
     nltk.download('averaged_perceptron_tagger')
+try:
+    nltk.find('vader_lexicon')
+except:
+    nltk.download('vader_lexicon')
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
 from nltk.corpus import wordnet
@@ -390,6 +395,24 @@ class Clear(Macro):
                 vars[arg] = None
 
 
+class Sentiment(Macro):
+
+    def __init__(self):
+        self.analyzer = SentimentIntensityAnalyzer()
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        results = self.analyzer.polarity_scores(ngrams.text())
+        print(results)
+        if 'pos' in args[0].lower():
+            return results['pos'] > results['neu'] and results['pos'] > results['neg']
+        elif 'neg' in args[0].lower():
+            return results['neg'] > results['neu'] and results['neg'] > results['pos']
+        elif 'neu' in args[0].lower():
+            return results['neu'] > results['pos'] and results['neu'] > results['neg']
+        else:
+            return results['pos'] > results['neu'] or results['neg'] > results['neu']
+
+
 class NamedEntity(Macro):
     """
     NER tags: PERSON, NORP, FAC, ORG, GPE, LOC, PRODUCT, EVENT, WORK_OF_ART, LAW, LANGUAGE,
@@ -445,7 +468,7 @@ class Score(Macro):
 
 class TokLimit(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if ngrams.text().split() <= int(args[0]):
+        if len(ngrams.text().split()) <= int(args[0]):
             return True
         else:
             return False
