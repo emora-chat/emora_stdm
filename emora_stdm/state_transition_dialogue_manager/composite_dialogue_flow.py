@@ -60,6 +60,7 @@ class CompositeDialogueFlow:
         :return: the natural language system response
         """
         visited = {self._controller.state()}
+        self.controller().vars()['__goal_return_state__'] = 'None'
         responses = []
         while self.controller().speaker() is DialogueFlow.Speaker.SYSTEM:
             try:
