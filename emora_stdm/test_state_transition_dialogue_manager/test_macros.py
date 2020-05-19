@@ -56,7 +56,8 @@ macros = {
     'AGREE': Agree(),
     'DISAGREE': Disagree(),
     'QUESTION': Question(),
-    'NEGATION': Negation()
+    'NEGATION': Negation(),
+    'SENTIMENT': Sentiment()
 }
 
 def test_ONT():
@@ -389,6 +390,12 @@ def test_virtual_transitions_cross_module():
     cdf.user_turn('x', debugging=True)
     assert cdf.system_turn() == 'you win'
     assert cdf.state() == ('two', 'success')
+
+def test_sentiment_analysis():
+    nlu = NatexNLU('#SENTIMENT(pos)', macros=macros)
+    assert nlu.match('this is awesome')
+    assert not nlu.match('this is terrible')
+    assert not nlu.match('this is something')
 
 
 

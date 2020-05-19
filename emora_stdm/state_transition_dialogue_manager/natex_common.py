@@ -45,7 +45,8 @@ confirm = '{%s, [!-{%s, %s} [{okay, ok, alright, i understand, understood, sound
 Confirm = CommonNatexMacro(confirm)
 
 dont_know = '[{' \
-                    'dont know,do not know,unsure,[not,{sure,certain}],hard to say,no idea,uncertain,[!no {opinion,opinions,idea,ideas,thought,thoughts,knowledge}],' \
+                    'dont know,do not know,unsure,[not,{sure,certain}],hard to say,no idea,uncertain, ' \
+                    '[!no {opinion,opinions,idea,ideas,thought,thoughts,knowledge}],' \
                     '[{dont,do not}, have, {opinion,opinions,idea,ideas,thought,thoughts,knowledge}],' \
                     '[!{cant,cannot,dont} {think,remember,recall}]' \
                     '}]'
@@ -53,6 +54,11 @@ DontKnow = CommonNatexMacro(dont_know)
 
 maybe = '[{maybe,possibly,sort of,kind of,kinda,a little,at times,sometimes,could be,potentially,its possible}]'
 Maybe = CommonNatexMacro(dont_know)
+
+notinterested = '''{
+#TOKLIMIT(2)
+}'''
+
 
 class Unexpected(Macro):
 
