@@ -258,6 +258,44 @@ def _assignment_to_var_val(arg):
     var, val = match.groups()
     return var, val
 
+def _get_terms(arg, operator, vars):
+    t1, t2 = arg.split(operator)
+    if t1[0] == '$':
+        var = t1[1:]
+        t1 = vars[var] if var in vars else 'None'
+    if t2[0] == '$':
+        var = t2[1:]
+        t2 = vars[var] if var in vars else 'None'
+    return t1, t2
+
+def _term_op_term(arg, vars):
+    if '<=' in arg:
+        operator = '<='
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 <= t2
+    elif '>=' in arg:
+        operator = '>='
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 >= t2
+    elif '!=' in arg:
+        operator = '!='
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 != t2
+    elif '<' in arg:
+        operator = '<'
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 < t2
+    elif '>' in arg:
+        operator = '>'
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 > t2
+    elif '=' in arg:
+        operator = '='
+        t1, t2 = _get_terms(arg, operator, vars)
+        return t1 == t2
+    else:
+        return False
+
 class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
@@ -268,17 +306,14 @@ class SetVars(Macro):
 class CheckVarsConjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
-            var, val = _assignment_to_var_val(arg)
-            if (var not in vars and val != 'None') or (var in vars and vars[var] != val):
+            if not _term_op_term(arg, vars):
                 return False
         return True
-
 
 class CheckVarsDisjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
-            var, val = _assignment_to_var_val(arg)
-            if (val == 'None' and var not in vars) or (var in vars and vars[var] == val):
+            if _term_op_term(arg, vars):
                 return True
         return False
 
@@ -339,6 +374,13 @@ class PossessivePronoun(Macro):
             return 'its'
         else:
             return 'their'
+
+
+class Increment(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars[args[0]] += 1
+
 
 class Equal(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -473,6 +515,8 @@ class TokLimit(Macro):
                 return True
             else:
                 return False
+
+
 
 class Transition(Macro):
     """
