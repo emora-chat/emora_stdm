@@ -14,6 +14,7 @@ from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
+from emora_stdm.state_transition_dialogue_manager.natex_common import natex_macros_common
 from emora_stdm.state_transition_dialogue_manager.state import State
 from emora_stdm.state_transition_dialogue_manager.update_rules import UpdateRules
 from emora_stdm.state_transition_dialogue_manager.utilities import random_max, get_rmapping
@@ -105,7 +106,6 @@ class DialogueFlow:
         onte = ONTE(self._kb)
         kbe = KBE(self._kb)
         goal_exit_macro = GoalExit(self)
-        conjunction_macro = CheckVarsConjunction()
         self._macros = {
             'WN': WN(wordnet),
             'ONT': onte, 'ONTE': onte,
@@ -113,50 +113,21 @@ class DialogueFlow:
             'ONTN': ONTN(self._kb),
             'EXP': EXP(self._kb),
             'ONT_NEG': ONT_NEG(self._kb),
-            'NOT': NOT(),
-            'U': UnionMacro(),
-            'I': Intersection(),
-            'DIF': Difference(),
-            'SET': SetVars(),
-            'ALL': conjunction_macro,
-            'IF': conjunction_macro,
-            'ANY': CheckVarsDisjunction(),
-            'ISP': IsPlural(),
             'FPP': FirstPersonPronoun(self._kb),
             'TPP': ThirdPersonPronoun(self._kb),
             'PSP': PossessivePronoun(self._kb),
-            'EQ': Equal(),
             'GATE': Gate(self),
-            'UNSET': Unset(),
-            'CLR': Clear(),
-            'NER': NamedEntity(),
-            'POS': PartOfSpeech(),
-            'LEM': Lemma(),
-            'SCORE': Score(),
-            'TOKLIMIT': TokLimit(),
-            'AGREE': Agree(),
-            'DISAGREE': Disagree(),
-            'QUESTION': Question(),
-            'NEGATION': Negation(),
-            'IDK': DontKnow(),
-            'MAYBE': Maybe(),
-            'CONFIRM': Confirm(),
             'TRANSITION': Transition(self),
-            'UNX': Unexpected(),
-            'INT': Intent(),
-            'GEXT': goal_exit_macro,
             'GOAL': GoalPursuit(goal_exit_macro, self),
             'GCOM': GoalCompletion(self),
-            'GRET': GoalReturn(self),
-            'DEFAULT': Default(),
-            'VT': VirtualTransitions(self),
+            'GEXT': goal_exit_macro,
             'GSRET': SetGoalReturnPoint(),
-            'TARGET': Target(),
-            'CE': CanEnter(self),
-            'RW': Rewrite(),
-            'CONTRACTIONS': ExpandContractions(),
-            'SBS': ScoreBySimilarity()
+            'GRET': GoalReturn(self),
+            'VT': VirtualTransitions(self),
+            'CE': CanEnter(self)
         }
+        self._macros.update(macros_common_dict)
+        self._macros.update(natex_macros_common)
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
@@ -533,7 +504,7 @@ class DialogueFlow:
                 if debugging:
                     print('No valid system transitions found, going to default state...')
                 return self.system_transition(self.state(), debugging=debugging)
-            raise AssertionError('dialogue flow system transition found no valid options')
+            raise AssertionError('dialogue flow system transition found no valid options from state {}'.format(state))
 
 
     def user_transition(self, natural_language: str, state: Union[Enum, str, tuple], debugging=False):
@@ -793,6 +764,11 @@ class DialogueFlow:
         source, target = module_source_target(source, target)
         source = State(source)
         target = State(target)
+        if isinstance(natex, str):
+            if speaker == Speaker.USER:
+                natex = NatexNLU(natex, macros=self._macros)
+            else:
+                natex = NatexNLG(natex, macros=self._macros)
         self._graph.arc_data(source, target, speaker)['natex'] = natex
 
     def transition_settings(self, source: Union[Enum, str, tuple], target: Union[Enum, str, tuple], speaker: Enum):

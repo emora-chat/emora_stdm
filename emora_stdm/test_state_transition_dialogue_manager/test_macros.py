@@ -3,6 +3,7 @@ import pytest
 
 from emora_stdm import NatexNLU, NatexNLG
 from emora_stdm.state_transition_dialogue_manager.macros_common import *
+from emora_stdm.state_transition_dialogue_manager.natex_common import *
 from emora_stdm.state_transition_dialogue_manager.knowledge_base import KnowledgeBase
 from emora_stdm.state_transition_dialogue_manager.dialogue_flow import DialogueFlow
 from emora_stdm.state_transition_dialogue_manager.composite_dialogue_flow import CompositeDialogueFlow

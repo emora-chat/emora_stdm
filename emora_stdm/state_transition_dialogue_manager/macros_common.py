@@ -6,7 +6,7 @@ from emora_stdm.state_transition_dialogue_manager.memory import Memory
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableSet, HashableDict, ConfigurationDict
 from emora_stdm.state_transition_dialogue_manager.natex_nlg import NatexNLG
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
-from emora_stdm.state_transition_dialogue_manager.natex_common import *
+# from emora_stdm.state_transition_dialogue_manager.natex_common import *
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -468,10 +468,11 @@ class Score(Macro):
 
 class TokLimit(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if len(ngrams.text().split()) <= int(args[0]):
-            return True
-        else:
-            return False
+        if ngrams:
+            if len(ngrams.text().split()) <= int(args[0]):
+                return True
+            else:
+                return False
 
 class Transition(Macro):
     """
@@ -884,13 +885,33 @@ class ExpandContractions(Macro):
         return True
 
 
+_conjunction_macro = CheckVarsConjunction()
 
-
-
-
-
-
-
+macros_common_dict = {
+    'RW': Rewrite(),
+    'CONTRACTIONS': ExpandContractions(),
+    'SBS': ScoreBySimilarity(),
+    'TARGET': Target(),
+    'DEFAULT': Default(),
+    'INT': Intent(),
+    'UNSET': Unset(),
+    'CLR': Clear(),
+    'NER': NamedEntity(),
+    'POS': PartOfSpeech(),
+    'LEM': Lemma(),
+    'SCORE': Score(),
+    'TOKLIMIT': TokLimit(),
+    'EQ': Equal(),
+    'NOT': NOT(),
+    'U': UnionMacro(),
+    'I': Intersection(),
+    'DIF': Difference(),
+    'SET': SetVars(),
+    'ALL': _conjunction_macro,
+    'IF': _conjunction_macro,
+    'ANY': CheckVarsDisjunction(),
+    'ISP': IsPlural(),
+}
 
 
 

@@ -3,13 +3,15 @@ from emora_stdm.state_transition_dialogue_manager.macro import Macro
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
+from emora_stdm.state_transition_dialogue_manager import macros_common as mc
 import random
 
 def CommonNatexMacro(natex_string):
     class _CommonNatex(Macro):
 
-        def __init__(self):
-            self.natex = NatexNLU(natex_string)
+        def __init__(self, macro_dependencies=None):
+            if macro_dependencies is None: macro_dependencies = {}
+            self.natex = NatexNLU(natex_string, macros={**mc.macros_common_dict, **macro_dependencies})
             self.natex.compile()
             self.natex._regex = self.natex.regex().replace("_END_", "").strip()
 
@@ -17,6 +19,18 @@ def CommonNatexMacro(natex_string):
             return self.natex.regex()
     return _CommonNatex
 
+def NatexMacro(natex_string):
+    class _CommonNatex(Macro):
+
+        def __init__(self, macro_dependencies=None):
+            if macro_dependencies is None: macro_dependencies = {}
+            self.natex = NatexNLU(natex_string, macros={**mc.macros_common_dict, **macro_dependencies})
+            self.natex.precache()
+
+        def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+            match = self.natex.match(ngrams.text(), vars=vars)
+            return bool(match)
+    return _CommonNatex
 
 agree = '[!-{not, "don\'t", dont, "isn\'t", isnt} {{sure, i know, "I know"}' \
         '[{yes, yeah, yea, yep, yup, think so, i know, absolutely, exactly, precisely, ' \
@@ -55,10 +69,14 @@ DontKnow = CommonNatexMacro(dont_know)
 maybe = '[{maybe,possibly,sort of,kind of,kinda,a little,at times,sometimes,could be,potentially,its possible}]'
 Maybe = CommonNatexMacro(dont_know)
 
-notinterested = '''{
-#TOKLIMIT(2)
-}'''
+unintrerested = '[!-oh #TOKLIMIT(3) [{okay, sure, alright, all right, fine, um}]]'
+Uninterested = NatexMacro(unintrerested)
 
+notinterested = '{[i, not, care], um? {so, so what, big deal, what, no}, [!#TOKLIMIT(3) [{weird, strange, dumb, stupid, boring, dull}]]}'
+NotInterested = NatexMacro(notinterested)
+
+interested = '{[!-not [{great, good, cool, awesome, nice, sweet, wonderful, amazing, fun, interesting}]], really}'
+Interested = CommonNatexMacro(interested)
 
 class Unexpected(Macro):
 
@@ -97,6 +115,19 @@ class Unexpected(Macro):
             vars['__response_prefix__'] = statement_response
         return True
 
+natex_macros_common = {
+    'AGREE': Agree(),
+    'DISAGREE': Disagree(),
+    'QUESTION': Question(),
+    'NEGATION': Negation(),
+    'IDK': DontKnow(),
+    'MAYBE': Maybe(),
+    'CONFIRM': Confirm(),
+    'UNINTERESTED': Uninterested(),
+    'NOTINTERESTED': NotInterested(),
+    'INTERESTED': Interested(),
+    'UNX': Unexpected(),
+}
 
 if __name__ == '__main__':
     from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
