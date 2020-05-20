@@ -884,6 +884,22 @@ class ExpandContractions(Macro):
         vars['__user_utterance__'] = nl
         return True
 
+class CheckNotComponent(Macro):
+    """
+    Determines if the current controller of a CompositeDialogueFlow is not a specified component
+    If equal,
+        return False
+    Otherwise,
+        return True
+    """
+    def __init__(self, dialogue_flow):
+        self.dialogue_flow = dialogue_flow
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if self.dialogue_flow.controller_name().lower() == args[0].lower():
+            return False
+        return True
+
 
 _conjunction_macro = CheckVarsConjunction()
 
