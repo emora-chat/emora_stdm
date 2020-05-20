@@ -563,7 +563,6 @@ class ScoreBySimilarity(Macro):
         match = nlp(', '.join(args[1:]))
         value = nlp(vars[variable])
         similarity = Intent._similarity(None, match, value)
-        print(value, "<->", match, "=", similarity)
         vars['__score__'] = similarity
         if similarity < threshold:
             return False
