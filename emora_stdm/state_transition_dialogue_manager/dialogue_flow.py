@@ -1021,6 +1021,9 @@ class DialogueFlow:
     def namespace(self):
         return self._namespace
 
+    def add_macros(self, macro_dict):
+        self._macros.update(macro_dict)
+
     def set_namespace(self, namespace):
         self._namespace = namespace
 
