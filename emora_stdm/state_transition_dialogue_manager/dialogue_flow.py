@@ -124,7 +124,8 @@ class DialogueFlow:
             'GSRET': SetGoalReturnPoint(),
             'GRET': GoalReturn(self),
             'VT': VirtualTransitions(self),
-            'CE': CanEnter(self)
+            'CE': CanEnter(self),
+            'EXTR': ExtractList(self._kb)
         }
         self._macros.update(macros_common_dict)
         self._macros.update(natex_macros_common)
