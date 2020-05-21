@@ -29,6 +29,17 @@ kb = KnowledgeBase([
     ('female', 'type', 'person'),
     ('friend', 'type', 'person')
 ])
+ont = {
+        "ontology": {
+            "person": [
+                "mom",
+                "dad",
+                "sister",
+                "brother"
+            ]
+        }
+    }
+kb.load_json(ont)
 
 df = DialogueFlow(initial_state='start')
 df.add_state('start', 'start')
@@ -58,7 +69,8 @@ macros = {
     'DISAGREE': Disagree(),
     'QUESTION': Question(),
     'NEGATION': Negation(),
-    'SENTIMENT': Sentiment()
+    'SENTIMENT': Sentiment(),
+    'EXTR': ExtractList(kb)
 }
 
 def test_ONT():
@@ -398,6 +410,37 @@ def test_sentiment_analysis():
     assert not nlu.match('this is terrible')
     assert not nlu.match('this is something')
 
+def test_extract_list():
+    vars={}
+    nlu = NatexNLU('[#EXTR(family,person)]', macros=macros)
+    assert nlu.match('mom', vars=vars)
+    assert "family" in vars
+    assert isinstance(vars["family"], set)
+    assert "mom" in vars["family"]
+    vars.clear()
+    assert nlu.match('i have a mom dad and a sister', vars=vars)
+    assert "family" in vars
+    assert isinstance(vars["family"], set)
+    assert "mom" in vars["family"]
+    assert "dad" in vars["family"]
+    assert "sister" in vars["family"]
+    nlu = NatexNLU('[#EXTR(family,dog,person,cat)]', macros=macros)
+    assert nlu.match('my dog and cat are my family but i also have a mom and sister', vars=vars)
+    assert "family" in vars
+    assert isinstance(vars["family"], set)
+    assert "mom" in vars["family"]
+    assert "sister" in vars["family"]
+    assert "dog" in vars["family"]
+    assert "cat" in vars["family"]
+    assert nlu.match('oh yeah brother and dad too', vars=vars)
+    assert "family" in vars
+    assert isinstance(vars["family"], set)
+    assert "mom" in vars["family"]
+    assert "sister" in vars["family"]
+    assert "dog" in vars["family"]
+    assert "cat" in vars["family"]
+    assert "brother" in vars["family"]
+    assert "dad" in vars["family"]
 
 
 ########################################## BUG TESTS ###############################################
