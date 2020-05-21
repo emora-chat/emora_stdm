@@ -473,7 +473,7 @@ class DialogueFlow:
             if debugging:
                 print('Transition options: ------------')
                 for option in transition_options:
-                    print('{}: {}'.format(option[0], option[1]))
+                    print('{} {}: {}'.format(option[0], option[3][1], option[1]))
                 print('--------------------------------')
             score, natex, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
                 random_max(transition_options, key=lambda x: x[0])
@@ -611,7 +611,7 @@ class DialogueFlow:
             if debugging:
                 print('Transition options: ------------')
                 for option in transition_options:
-                    print('{}: {}'.format(option[0], option[1]))
+                    print('{} {}: {}'.format(option[0], option[2][1], option[1]))
                 print('--------------------------------')
             score, natex, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
             if gate_var_config is not None:
@@ -804,7 +804,7 @@ class DialogueFlow:
         state = State(state)
         return self._graph.data(state)['settings']
 
-    def add_global_nlu(self, state, nlu, score=0.5):
+    def add_global_nlu(self, state, nlu, score=0.5, post_nlu=None):
         state = module_state(state)
         state = State(state)
         if not self.has_state(state):
@@ -813,7 +813,10 @@ class DialogueFlow:
             state = ':'.join(state)
         if isinstance(nlu, list) or isinstance(nlu, set):
             nlu = '{' + ', '.join(nlu) + '}'
-        self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
+        if post_nlu is None:
+            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
+        else:
+            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {}, {})'.format(state, score, post_nlu))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
@@ -1015,11 +1018,10 @@ class DialogueFlow:
     def set_gates(self, gates):
         self._gates = gates
 
-    def load_global_nlu(self, transitions):
+    def load_global_nlu(self, transitions, default_score=0.5):
         for nlu, followup in transitions.items():
             if nlu == 'state':
                 continue
-            score = 0.5
             if isinstance(followup, str):
                 state = followup
             else:
@@ -1029,9 +1031,8 @@ class DialogueFlow:
                 else:
                     state = followup['state']
                 if 'score' in followup:
-                    score = followup['score']
-            nlu = nlu + ' #GEXT'
-            self.add_global_nlu(state, nlu, score)
+                    default_score = followup['score']
+            self.add_global_nlu(state, nlu, default_score, post_nlu='/.*/ #GEXT')
         self.load_transitions(transitions, Speaker.USER)
 
     def load_update_rules(self, rules_dict):

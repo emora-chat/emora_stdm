@@ -530,10 +530,14 @@ class Transition(Macro):
             score = float(args[1])
         else:
             score = 0.5
+        if len(args) > 2:
+            natex = NatexNLU(args[2], macros=self.dialogue_flow._macros)
+        else:
+            natex = NatexNLU('/.*/', macros=self.dialogue_flow._macros)
         target = args[0]
         vars['__converged__'] = 'True'
         self.dialogue_flow.dynamic_transitions().append(
-            (NatexNLU('/.*/'),
+            (natex,
              (self.dialogue_flow.state(), target, self.dialogue_flow.speaker()),
              score))
 
