@@ -517,7 +517,6 @@ class TokLimit(Macro):
                 return False
 
 
-
 class Transition(Macro):
     """
 
