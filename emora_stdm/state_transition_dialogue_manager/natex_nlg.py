@@ -111,8 +111,9 @@ class NatexNLG:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
-        macro_arg: macro_literal | macro
-        macro_literal: /[^#), ][^#),]*/
+        macro_arg: macro_arg_string | macro_literal | macro
+        macro_literal: /[^#), `][^#),`]*/
+        macro_arg_string: "`" /[^`]+/ "`"
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\"" | "`" /[^`]+/ "`"
         symbol: /[a-z_A-Z.0-9]+/
         """

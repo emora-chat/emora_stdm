@@ -1032,7 +1032,7 @@ class DialogueFlow:
                     state = followup['state']
                 if 'score' in followup:
                     default_score = followup['score']
-            self.add_global_nlu(state, nlu, default_score, post_nlu='/.*/ #GEXT')
+            self.add_global_nlu(state, nlu, default_score, post_nlu='`/.*/ #GEXT`')
         self.load_transitions(transitions, Speaker.USER)
 
     def load_update_rules(self, rules_dict):
