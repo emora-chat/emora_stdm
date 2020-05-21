@@ -461,7 +461,7 @@ class DialogueFlow:
                 transition_transition_enter_vars.update(vars)
                 vars = transition_transition_enter_vars
                 if not gate_closed:
-                    transition_options.append((score, generation, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id))
+                    transition_options.append((score, natex, generation, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -470,7 +470,12 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            score, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
+            if debugging:
+                print('Transition options: ------------')
+                for option in transition_options:
+                    print('{}: {}'.format(option[0], option[1]))
+                print('--------------------------------')
+            score, natex, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
                 random_max(transition_options, key=lambda x: x[0])
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
@@ -594,7 +599,7 @@ class DialogueFlow:
                             gate_closed = True
                     del vars['__gate__']
                 if not gate_closed:
-                    transition_options.append((score, transition, vars, gate_var_config, gate_target_id))
+                    transition_options.append((score, natex, transition, vars, gate_var_config, gate_target_id))
             t2 = time()
             if debugging:
                 print('Transition {} evaluated in {:.5f}'.format(transition, t2-t1))
@@ -603,7 +608,12 @@ class DialogueFlow:
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
         if transition_options:
-            score, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            if debugging:
+                print('Transition options: ------------')
+                for option in transition_options:
+                    print('{}: {}'.format(option[0], option[1]))
+                print('--------------------------------')
+            score, natex, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if debugging:

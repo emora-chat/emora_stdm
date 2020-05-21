@@ -34,13 +34,14 @@ def NatexMacro(natex_string):
 
 agree = '[!-{not, "don\'t", dont, "isn\'t", isnt} {{sure, i know, "I know"}' \
         '[{yes, yeah, yea, yep, yup, think so, i know, absolutely, exactly, precisely, ' \
-        'certainly, surely, definitely, probably, true, of course}]}]'
+        'certainly, surely, definitely, probably, true, of course, right}]}]'
 Agree = CommonNatexMacro(agree)
 
 disagree = '{' + ', '.join([
-    '[{no, nay, nah, not really}]',
+    '[{no, nay, nah, not really, nope, no way, wrong}]',
     '[{absolutely, surely, definitely, certainly, i think} {not}]',
-    '[i {dont, "don\'t", do not} think so]'
+    '[i {dont, "don\'t", do not} think so]',
+    '[not true]'
 ]) + '}'
 Disagree = CommonNatexMacro(disagree)
 
@@ -55,7 +56,8 @@ negation = '{not, "dont", "cant", "wont", "shouldnt", "cannot", "didnt", "doesnt
            '"no way", "none", "nothing"}'
 Negation = CommonNatexMacro(negation)
 
-confirm = '{%s, [!-{%s, %s} [{okay, ok, alright, i understand, understood, sounds good, perfect}]]}' % (agree, disagree, negation)
+confirm = '{%s, [!-{%s, %s} [{okay, ok, alright, all right, right, i understand, ' \
+          'i see, got it, makes sense, understood, sounds good, perfect}]]}' % (agree, disagree, negation)
 Confirm = CommonNatexMacro(confirm)
 
 dont_know = '[{' \
@@ -75,7 +77,8 @@ Uninterested = NatexMacro(unintrerested)
 notinterested = '{[i, not, care], um? {so, so what, big deal, what, no}, [!#TOKLIMIT(3) [{weird, strange, dumb, stupid, boring, dull}]]}'
 NotInterested = NatexMacro(notinterested)
 
-interested = '{[!-not [{great, good, cool, awesome, nice, sweet, wonderful, amazing, fun, interesting}]], really}'
+interested = '{[!-not [{great, good, cool, awesome, nice, sweet, wonderful, amazing, fun, ' \
+             'wow, my god, woah, interesting, oh}]], really}'
 Interested = CommonNatexMacro(interested)
 
 class Unexpected(Macro):
