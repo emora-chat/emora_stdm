@@ -212,7 +212,10 @@ class UnionMacro(Macro):
         for arg in args:
             if isinstance(arg, str):
                 if arg[0] == '$':
-                    arg = vars[arg[1:]]
+                    if arg[1:] in vars:
+                        arg = vars[arg[1:]]
+                    else:
+                        return set()
             if isinstance(arg, set):
                 sets.append(arg)
             if isinstance(arg, str):
@@ -227,7 +230,10 @@ class Intersection(Macro):
         for arg in args:
             if isinstance(arg, str):
                 if arg[0] == '$':
-                    arg = vars[arg[1:]]
+                    if arg[1:] in vars:
+                        arg = vars[arg[1:]]
+                    else:
+                        return set()
             if isinstance(arg, set):
                 sets.append(arg)
             if isinstance(arg, str):
