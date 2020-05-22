@@ -210,11 +210,12 @@ class UnionMacro(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         sets = []
         for arg in args:
-            if isinstance(arg, set):
-                sets.append(arg)
             if isinstance(arg, str):
                 if arg[0] == '$':
                     arg = vars[arg[1:]]
+            if isinstance(arg, set):
+                sets.append(arg)
+            if isinstance(arg, str):
                 sets.append({arg})
             elif isinstance(arg, list):
                 sets.append(set(arg))
@@ -224,11 +225,12 @@ class Intersection(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         sets = []
         for arg in args:
-            if isinstance(arg, set):
-                sets.append(arg)
             if isinstance(arg, str):
                 if arg[0] == '$':
                     arg = vars[arg[1:]]
+            if isinstance(arg, set):
+                sets.append(arg)
+            if isinstance(arg, str):
                 sets.append({arg})
             elif isinstance(arg, list):
                 sets.append(set(arg))
@@ -269,39 +271,43 @@ def _get_terms(arg, operator, vars):
     return t1, t2
 
 def _term_op_term(arg, vars):
-    if '<=' in arg:
-        operator = '<='
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 <= t2
-    elif '>=' in arg:
-        operator = '>='
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 >= t2
-    elif '!=' in arg:
-        operator = '!='
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 != t2
-    elif '<' in arg:
-        operator = '<'
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 < t2
-    elif '>' in arg:
-        operator = '>'
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 > t2
-    elif '=' in arg:
-        operator = '='
-        t1, t2 = _get_terms(arg, operator, vars)
-        return t1 == t2
+    if isinstance(arg, str):
+        if '<=' in arg:
+            operator = '<='
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 <= t2
+        elif '>=' in arg:
+            operator = '>='
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 >= t2
+        elif '!=' in arg:
+            operator = '!='
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 != t2
+        elif '<' in arg:
+            operator = '<'
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 < t2
+        elif '>' in arg:
+            operator = '>'
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 > t2
+        elif '=' in arg:
+            operator = '='
+            t1, t2 = _get_terms(arg, operator, vars)
+            return t1 == t2
+        elif '$' == arg[0]:
+            return bool(vars[arg[1:]])
+        else:
+            return None
     else:
-        return False
+        return bool(arg)
 
 class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         for arg in args:
             var, val = _assignment_to_var_val(arg)
             vars[var] = val
-        return None
 
 class CheckVarsConjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
