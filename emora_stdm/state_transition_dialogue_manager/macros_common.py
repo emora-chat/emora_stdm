@@ -14,6 +14,7 @@ from spacy.pipeline import EntityRecognizer
 import traceback
 import spacy
 import sys
+import random
 try:
     nlp = spacy.load("en_core_web_md")
 except Exception as e:
@@ -990,6 +991,10 @@ class Contains(Macro):
         else:
             return args[0] in args[1]
 
+class RandomSet(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars[args[0]] = random.choice(args[1:])
 
 _conjunction_macro = CheckVarsConjunction()
 
@@ -1017,7 +1022,8 @@ macros_common_dict = {
     'IF': _conjunction_macro,
     'ANY': CheckVarsDisjunction(),
     'ISP': IsPlural(),
-    'IN': Contains()
+    'IN': Contains(),
+    'RAND': RandomSet()
 }
 
 
