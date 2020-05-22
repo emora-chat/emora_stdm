@@ -947,6 +947,37 @@ class CheckNotComponent(Macro):
             return False
         return True
 
+class ExtractList(Macro):
+    """
+    Extracts all matching phrases from user utterance, given ontology categories or phrase literals, and
+    stores them in the provided variable name as a list
+
+    args:
+        [0] - variable name
+        [1 - n] - ontology categories and phrase literals
+    """
+
+    def __init__(self, kb):
+        self.onte = ONTE(kb)
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        var = args[0]
+        if var not in vars:
+            vars[var] = set()
+        # find matches
+        matches = self.onte(ngrams, None, args[1:])
+        matches.update({arg for arg in args[1:] if arg in ngrams})
+        vars[var].update(matches)
+        return matches
+
+class Contains(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if isinstance(args[1], str):
+            return args[0] in args[1:]
+        else:
+            return args[0] in args[1]
+
 
 _conjunction_macro = CheckVarsConjunction()
 
@@ -974,29 +1005,8 @@ macros_common_dict = {
     'IF': _conjunction_macro,
     'ANY': CheckVarsDisjunction(),
     'ISP': IsPlural(),
+    'IN': Contains()
 }
-
-class ExtractList(Macro):
-    """
-    Extracts all matching phrases from user utterance, given ontology categories or phrase literals, and
-    stores them in the provided variable name as a list
-
-    args:
-        [0] - variable name
-        [1 - n] - ontology categories and phrase literals
-    """
-
-    def __init__(self, kb):
-        self.onte = ONTE(kb)
-
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        var = args[0]
-        if var not in vars:
-            vars[var] = set()
-        # find matches
-        matches = self.onte(ngrams, None, args[1:])
-        matches.update({arg for arg in args[1:] if arg in ngrams})
-        vars[var].update(matches)
 
 
 
