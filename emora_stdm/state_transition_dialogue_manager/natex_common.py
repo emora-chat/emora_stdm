@@ -81,6 +81,13 @@ interested = '{[!-not [{great, good, cool, awesome, nice, sweet, wonderful, amaz
              'wow, my god, woah, interesting, oh}]], really}'
 Interested = CommonNatexMacro(interested)
 
+decline_share = "{" \
+                "[not, #LEM(talk,discuss,share,give,tell,say)]," \
+                "[none,your,business]," \
+                "[that is private]" \
+                "}"
+DeclineShare = CommonNatexMacro(decline_share)
+
 class Unexpected(Macro):
 
     def __init__(self):
@@ -130,6 +137,7 @@ natex_macros_common = {
     'NOTINTERESTED': NotInterested(),
     'INTERESTED': Interested(),
     'UNX': Unexpected(),
+    'PRIVATE': DeclineShare()
 }
 
 if __name__ == '__main__':
