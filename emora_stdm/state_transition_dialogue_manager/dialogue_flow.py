@@ -187,6 +187,7 @@ class DialogueFlow:
         """
         t1 = time()
         natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
+        self.vars()['__user_utterance__'] = natural_language
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
