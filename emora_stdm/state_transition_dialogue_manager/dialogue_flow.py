@@ -1024,7 +1024,9 @@ class DialogueFlow:
         self._gates = gates
 
     def load_global_nlu(self, transitions, default_score=0.5):
+        orig_score=default_score
         for nlu, followup in transitions.items():
+            default_score=orig_score
             if nlu == 'state':
                 continue
             if isinstance(followup, str):
