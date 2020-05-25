@@ -123,6 +123,7 @@ class DialogueFlow:
             'GEXT': goal_exit_macro,
             'GSRET': SetGoalReturnPoint(),
             'GRET': GoalReturn(self),
+            'GCLR': ClearGoalStack(),
             'VT': VirtualTransitions(self),
             'CE': CanEnter(self),
             'EXTR': ExtractList(self._kb)

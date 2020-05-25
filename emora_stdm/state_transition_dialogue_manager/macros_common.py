@@ -653,6 +653,14 @@ class CanEnter(Macro):
                 return False
         return True
 
+class ClearGoalStack(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        vars['__stack__'] = []
+        vars['__goal__'] = 'None'
+        vars['__goal_return_state__'] = 'None'
+        vars['__goal_return_phrase__'] = 'None'
+        vars['__goal_doom_counter__'] = 'None'
 
 class GoalPursuit(Macro):
     """
