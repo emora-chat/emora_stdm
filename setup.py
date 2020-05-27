@@ -3,7 +3,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
      name='emora-stdm',
-     version='1.80',
+     version='1.81',
      scripts=[],
      author="James Finch",
      author_email="jdfinch@emory.edu",

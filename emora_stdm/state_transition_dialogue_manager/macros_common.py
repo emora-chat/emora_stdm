@@ -897,6 +897,7 @@ class ExpandContractions(Macro):
             "theyll": "they will",
             "theyre": "they are",
             "theyve": "they have",
+            "wanna": "want to",
             "wasnt": "was not",
             "wed": "we would",
             "wedve": "we would have",

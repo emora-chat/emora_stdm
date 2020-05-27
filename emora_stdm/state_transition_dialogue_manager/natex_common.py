@@ -104,7 +104,7 @@ class Unexpected(Macro):
         is_question = self.question_natex.match(ngrams.text())
         if is_question and statement_only:
             return False
-        elif self.question_natex.match(ngrams.text()):
+        elif is_question:
             if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
                 options = {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''} - {
                     vars['__previous_unx_response__']}
@@ -115,14 +115,14 @@ class Unexpected(Macro):
                 vars['_explained_stupidity_'] = 'True'
                 vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
                                               'There\'s still a lot I\'m trying to figure out. '
-        elif len(ngrams.text().split()) < 2:
+        elif len(ngrams.text().split()) < 2 and len(args) == 0:
             vars['__response_prefix__'] = ''
             return True
         else:
             options = {'Yeah.', 'For sure.', 'Right.', 'Uh-huh.'} - {vars['__previous_unx_response__']}
             statement_response = random.choice(list(options))
             if len(args) > 0:
-                statement_response = ', '.join([arg for arg in args if arg not in {'s', 'state', 'statement'}])
+                statement_response = ', '.join([arg for arg in args if arg not in {'s', 'state', 'statement'}]) + ', '
                 if args[0] == 'None':
                     statement_response = ''
             vars['__previous_unx_response__'] = statement_response
