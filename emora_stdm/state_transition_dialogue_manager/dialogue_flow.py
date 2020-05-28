@@ -1043,6 +1043,9 @@ class DialogueFlow:
         for pre, post in rules_dict.items():
             self.update_rules().add(pre, post)
 
+    def macros(self):
+        return self._macros
+
     def add_goal(self, id_string, return_state=None, return_phrase=None, doom_counter=None):
         goal = {
             'id': id_string,
