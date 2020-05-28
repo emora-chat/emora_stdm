@@ -115,8 +115,9 @@ class Unexpected(Macro):
                 vars['__response_prefix__'] = question_response
             else:
                 vars['_explained_stupidity_'] = 'True'
-                vars['__response_prefix__'] = 'Sorry, I don\'t think I understand your question. ' \
-                                              'There\'s still a lot I\'m trying to figure out. '
+                vars['__response_prefix__'] = 'I\'m not sure.'
+        elif len(ngrams.text().split()) < 3:
+                vars['__response_prefix__'] = 'I\'m not sure'
         elif len(ngrams.text().split()) < 2 and len(args) == 0:
             vars['__response_prefix__'] = ''
             return True
