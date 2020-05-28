@@ -123,6 +123,7 @@ class DialogueFlow:
             'GEXT': goal_exit_macro,
             'GSRET': SetGoalReturnPoint(),
             'GRET': GoalReturn(self),
+            'GCLR': ClearGoalStack(),
             'VT': VirtualTransitions(self),
             'CE': CanEnter(self),
             'EXTR': ExtractList(self._kb)
@@ -187,6 +188,7 @@ class DialogueFlow:
         """
         t1 = time()
         natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
+        self.vars()['__user_utterance__'] = natural_language
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
@@ -1023,7 +1025,9 @@ class DialogueFlow:
         self._gates = gates
 
     def load_global_nlu(self, transitions, default_score=0.5):
+        orig_score=default_score
         for nlu, followup in transitions.items():
+            default_score=orig_score
             if nlu == 'state':
                 continue
             if isinstance(followup, str):

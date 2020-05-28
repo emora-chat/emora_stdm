@@ -81,6 +81,13 @@ interested = '{[!-not [{great, good, cool, awesome, nice, sweet, wonderful, amaz
              'wow, my god, woah, interesting, oh}]], really}'
 Interested = CommonNatexMacro(interested)
 
+decline_share = "{" \
+                "[not, #LEM(talk,discuss,share,give,tell,say)]," \
+                "[none,your,business]," \
+                "[that is private]" \
+                "}"
+DeclineShare = CommonNatexMacro(decline_share)
+
 class Unexpected(Macro):
 
     def __init__(self):
@@ -97,7 +104,7 @@ class Unexpected(Macro):
         is_question = self.question_natex.match(ngrams.text())
         if is_question and statement_only:
             return False
-        elif self.question_natex.match(ngrams.text()):
+        elif is_question:
             if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
                 options = {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''} - {
                     vars['__previous_unx_response__']}
@@ -108,13 +115,15 @@ class Unexpected(Macro):
                 vars['_explained_stupidity_'] = 'True'
                 vars['__response_prefix__'] = 'I\'m not sure.'
         elif len(ngrams.text().split()) < 3:
+                vars['__response_prefix__'] = 'I\'m not sure'
+        elif len(ngrams.text().split()) < 2 and len(args) == 0:
             vars['__response_prefix__'] = ''
             return True
         else:
             options = {'Yeah.', 'For sure.', 'Right.', 'Uh-huh.'} - {vars['__previous_unx_response__']}
             statement_response = random.choice(list(options))
             if len(args) > 0:
-                statement_response = ', '.join([arg for arg in args if arg not in {'s', 'state', 'statement'}])
+                statement_response = ', '.join([arg for arg in args if arg not in {'s', 'state', 'statement'}]) + ', '
                 if args[0] == 'None':
                     statement_response = ''
             vars['__previous_unx_response__'] = statement_response
@@ -133,6 +142,7 @@ natex_macros_common = {
     'NOTINTERESTED': NotInterested(),
     'INTERESTED': Interested(),
     'UNX': Unexpected(),
+    'PRIVATE': DeclineShare()
 }
 
 if __name__ == '__main__':
