@@ -32,15 +32,17 @@ def NatexMacro(natex_string):
             return bool(match)
     return _CommonNatex
 
-agree = '[!-{not, "don\'t", dont, "isn\'t", isnt} {{sure, i know, "I know"}' \
+agree = '[! -not {' \
+        'sure, i know,' \
         '[{yes, yeah, yea, yep, yup, think so, i know, absolutely, exactly, precisely, ' \
-        'certainly, surely, definitely, probably, true, of course, right}]}]'
+        'certainly, surely, definitely, probably, true, of course, right}]' \
+        '}]'
 Agree = CommonNatexMacro(agree)
 
 disagree = '{' + ', '.join([
-    '[{no, nay, nah, not really, nope, no way, wrong}]',
-    '[{absolutely, surely, definitely, certainly, i think} {not}]',
-    '[i {dont, "don\'t", do not} think so]',
+    '[{no, nay, nah, na, not really, nope, no way, wrong}]',
+    '[{absolutely, surely, definitely, certainly, i think} not]',
+    '[i, do not, think so]',
     '[not true]'
 ]) + '}'
 Disagree = CommonNatexMacro(disagree)
