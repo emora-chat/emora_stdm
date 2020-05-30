@@ -312,8 +312,13 @@ def _term_op_term(arg, vars):
 
 class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        for arg in args:
-            var, val = _assignment_to_var_val(arg)
+        if len(args) == 1:
+            var, val = _assignment_to_var_val(args[0])
+            vars[var] = val
+        else:
+            var, val = args[0], args[1]
+            if isinstance(val, str) and val[0] == '$':
+                val = vars[val[1:]]
             vars[var] = val
 
 class CheckVarsConjunction(Macro):
@@ -988,10 +993,11 @@ class ExtractList(Macro):
 class Contains(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if isinstance(args[1], str):
-            return args[0] in args[1:]
-        else:
-            return args[0] in args[1]
+        if isinstance(args[0], str) and args[0][0] == '$':
+            args[0] = vars[args[0][1:]]
+        if isinstance(args[1], str) and args[1][0] == '$':
+            args[1] = vars[args[1][1:]]
+        return args[0] in args[1]
 
 class RandomSet(Macro):
 
