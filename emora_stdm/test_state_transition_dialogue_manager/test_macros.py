@@ -278,7 +278,7 @@ def test_DISAGREE():
     assert not match
     match = natex.match('of course', debugging=False)
     assert not match
-    match = natex.match('i dont think so', debugging=False)
+    match = natex.match('i do not think so', debugging=False)
     assert match
     match = natex.match('i think so', debugging=False)
     assert not match

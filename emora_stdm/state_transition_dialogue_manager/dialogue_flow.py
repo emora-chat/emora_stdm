@@ -176,7 +176,9 @@ class DialogueFlow:
         t2 = time()
         if debugging:
             print('System turn in {:.5f}'.format(t2-t1))
-        return  ' '.join(responses)
+        full_response = ' '.join(responses)
+        self.vars()['__selected_response__'] = full_response
+        return full_response
 
     def user_turn(self, natural_language, debugging=False):
         """
