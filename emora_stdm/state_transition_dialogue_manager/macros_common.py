@@ -304,6 +304,8 @@ def _term_op_term(arg, vars):
             t1, t2 = _get_terms(arg, operator, vars)
             return t1 == t2
         elif '$' == arg[0]:
+            if arg[1:] not in vars:
+                return False
             return bool(vars[arg[1:]])
         else:
             return None
@@ -312,14 +314,19 @@ def _term_op_term(arg, vars):
 
 class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if len(args) == 1:
-            var, val = _assignment_to_var_val(args[0])
-            vars[var] = val
-        else:
-            var, val = args[0], args[1]
-            if isinstance(val, str) and val[0] == '$':
-                val = vars[val[1:]]
-            vars[var] = val
+        i = 0
+        while i < len(args):
+            arg = args[i]
+            if isinstance(arg, str) and '=' in arg:
+                var, val = _assignment_to_var_val(arg)
+                vars[var] = val
+            else:
+                var, val = args[i], args[i + 1]
+                if isinstance(val, str) and val[0] == '$':
+                    val = vars[val[1:]]
+                vars[var] = val
+                i += 1
+            i += 1
 
 class CheckVarsConjunction(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
@@ -994,9 +1001,15 @@ class Contains(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if isinstance(args[0], str) and args[0][0] == '$':
-            args[0] = vars[args[0][1:]]
+            var = args[0][1:]
+            if var not in vars:
+                return False
+            args[0] = vars[var]
         if isinstance(args[1], str) and args[1][0] == '$':
-            args[1] = vars[args[1][1:]]
+            var = args[1][1:]
+            if var not in vars:
+                return False
+            args[1] = vars[var]
         return args[0] in args[1]
 
 class RandomSet(Macro):
@@ -1031,7 +1044,7 @@ macros_common_dict = {
     'ANY': CheckVarsDisjunction(),
     'ISP': IsPlural(),
     'IN': Contains(),
-    'RAND': RandomSet()
+    'RAND': RandomSet(),
 }
 
 

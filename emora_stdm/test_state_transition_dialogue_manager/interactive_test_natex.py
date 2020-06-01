@@ -1,4 +1,7 @@
 
+import os
+print(os.getcwd())
+
 from emora_stdm import DialogueFlow
 
 df = DialogueFlow('start')
@@ -6,6 +9,8 @@ df.add_user_transition('start', 'success', '/.*/')
 df.set_error_successor('start', 'fail')
 df.add_system_transition('success', 'start', 'success')
 df.add_system_transition('fail', 'start', 'fail')
+
+df.knowledge_base().load_json_file('_common.json')
 
 if __name__ == '__main__':
     while True:
