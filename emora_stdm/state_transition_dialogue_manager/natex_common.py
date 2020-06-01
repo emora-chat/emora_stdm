@@ -130,6 +130,7 @@ class Unexpected(Macro):
             vars['__response_prefix__'] = statement_response
         return True
 
+
 natex_macros_common = {
     'AGREE': Agree(),
     'DISAGREE': Disagree(),
@@ -142,7 +143,7 @@ natex_macros_common = {
     'NOTINTERESTED': NotInterested(),
     'INTERESTED': Interested(),
     'UNX': Unexpected(),
-    'PRIVATE': DeclineShare()
+    'PRIVATE': DeclineShare(),
 }
 
 if __name__ == '__main__':

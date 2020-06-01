@@ -142,19 +142,10 @@ def test_DIFFERENCE():
 
 def test_SET():
     vars = {'a': 'apple', 'b': 'banana'}
-    natex = NatexNLU('[!#SET($a=pie, $c=cookie, $d=dog), hello world]', macros=macros)
+    natex = NatexNLU('[!#SET($a=pie), hello world]', macros=macros)
     assert natex.match('hello world', vars=vars, debugging=False)
     assert vars['a'] == 'pie'
     assert vars['b'] == 'banana'
-    assert vars['c'] == 'cookie'
-    assert vars['d'] == 'dog'
-    assert len(vars) == 4
-    vars = {'a': 'apple', 'b': 'banana'}
-    natex = NatexNLU('[!#SET($a=pie, $c=cookie), hello $d=dog]', macros=macros)
-    assert natex.match('hello dog', vars=vars)
-    assert vars['d'] == 'dog'
-    assert vars['a'] == 'pie'
-    assert vars['c'] == 'cookie'
 
 def test_ALL():
     natex = NatexNLU('[!#ALL($a=apple, $b=banana), hello]', macros=macros)
