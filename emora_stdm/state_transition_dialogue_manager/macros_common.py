@@ -970,7 +970,10 @@ class CheckNotComponent(Macro):
         self.dialogue_flow = dialogue_flow
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if self.dialogue_flow.controller_name().lower() == args[0].lower():
+        if args[0] in {'movies','music','news','nba'}:
+            if self.dialogue_flow.state() == args[0].lower():
+                return False
+        elif self.dialogue_flow.controller_name().lower() == args[0].lower():
             return False
         return True
 
