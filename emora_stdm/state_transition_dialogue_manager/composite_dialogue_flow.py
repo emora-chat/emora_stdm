@@ -78,7 +78,9 @@ class CompositeDialogueFlow:
             if next_state in visited or not self.state_settings(*self.state()).system_multi_hop:
                 self.controller().set_speaker(DialogueFlow.Speaker.USER)
             visited.add(next_state)
-        return  ' '.join(responses)
+        full_response = ' '.join(responses)
+        self.controller().vars()['__selected_response__'] = full_response
+        return full_response
 
     def user_turn(self, natural_language, debugging=False):
         """

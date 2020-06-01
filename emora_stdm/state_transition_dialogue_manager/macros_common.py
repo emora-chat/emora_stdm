@@ -1017,6 +1017,24 @@ class RandomSet(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         vars[args[0]] = random.choice(args[1:])
 
+class Repeat(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if '__goal_return_state__(copy)' in vars:
+            vars['__goal_return_state__'] = vars['__goal_return_state__(copy)']
+            del vars['__goal_return_state__(copy)']
+        if '__selected_response__' in vars and len(vars['__selected_response__']) > 0:
+            return 'Sure. What I said was, ' + vars['__selected_response__']
+        else:
+            return 'Sorry, I\'m not sure how to repeat what I said.'
+
+class Copy(Macro):
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if args[0] in vars:
+            vars[args[0]+'(copy)'] = vars[args[0]]
+
+
 _conjunction_macro = CheckVarsConjunction()
 
 macros_common_dict = {
@@ -1045,6 +1063,8 @@ macros_common_dict = {
     'ISP': IsPlural(),
     'IN': Contains(),
     'RAND': RandomSet(),
+    'COPY': Copy(),
+    'REPEAT': Repeat()
 }
 
 
