@@ -970,7 +970,7 @@ class CheckNotComponent(Macro):
         self.dialogue_flow = dialogue_flow
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if args[0] in {'movies','music','news','nba'}:
+        if args[0] in {'movies','music','external_news','sports'}:
             if self.dialogue_flow.state()[1] == args[0].lower():
                 return False
         elif self.dialogue_flow.controller_name().lower() == args[0].lower():
@@ -1031,11 +1031,14 @@ class Repeat(Macro):
         else:
             return 'Sorry, I\'m not sure how to repeat what I said.'
 
-class Copy(Macro):
+class CopyGoalReturn(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        if args[0] in vars:
-            vars[args[0]+'(copy)'] = vars[args[0]]
+        copy_name = '__goal_return_state__(copy)'
+        if '__goal_return_state__' in vars and vars['__goal_return_state__'] != 'None':
+            vars[copy_name] = vars['__goal_return_state__']
+        else:
+            vars[copy_name] = vars['__system_state__']
 
 
 _conjunction_macro = CheckVarsConjunction()
@@ -1066,7 +1069,7 @@ macros_common_dict = {
     'ISP': IsPlural(),
     'IN': Contains(),
     'RAND': RandomSet(),
-    'COPY': Copy(),
+    'COPYGR': CopyGoalReturn(),
     'REPEAT': Repeat()
 }
 
