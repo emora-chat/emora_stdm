@@ -971,7 +971,7 @@ class CheckNotComponent(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if args[0] in {'movies','music','news','nba'}:
-            if self.dialogue_flow.state() == args[0].lower():
+            if self.dialogue_flow.state()[1] == args[0].lower():
                 return False
         elif self.dialogue_flow.controller_name().lower() == args[0].lower():
             return False
