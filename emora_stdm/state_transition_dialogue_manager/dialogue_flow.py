@@ -413,7 +413,7 @@ class DialogueFlow:
                 del vars['__target__']
             transition = source, target, speaker
             enter_natex_pass = True
-            transition_transition_enter_vars = dict(vars)
+            transition_transition_enter_vars = vars
             if transition_transition_enter is not None:
                 if self.is_module() and isinstance(transition_transition_enter, tuple):
                     enter_natex = self.composite_dialogue_flow().state_settings(*transition_transition_enter).enter
