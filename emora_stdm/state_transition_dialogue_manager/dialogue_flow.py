@@ -109,6 +109,7 @@ class DialogueFlow:
         self._macros = {
             'WN': WN(wordnet),
             'ONT': onte, 'ONTE': onte,
+            'ONTUL': ONTUL(self._kb),
             'KBQ': kbe, 'KBE': kbe,
             'ONTN': ONTN(self._kb),
             'EXP': EXP(self._kb),

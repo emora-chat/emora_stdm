@@ -94,6 +94,21 @@ class ONTN(Macro):
             return ont_result
 
 
+class ONTUL(Macro):
+    """
+   get the set of expressions matching the entire descendent subtree
+   underneath a given set of ontology nodes (usually 1)
+   """
+
+    def __init__(self, kb):
+        self.kb = kb
+
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        node_set = set(_process_args_set(args, vars))
+        ont_result = self.kb.expressions(self.kb.subtypes(node_set))
+        return ont_result.intersection(ngrams)
+
+
 class ONT_NEG(Macro):
     def __init__(self, kb):
         self.kb = kb
