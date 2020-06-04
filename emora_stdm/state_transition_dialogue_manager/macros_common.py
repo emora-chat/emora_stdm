@@ -297,11 +297,11 @@ def _term_op_term(arg, vars):
         if '<=' in arg:
             operator = '<='
             t1, t2 = _get_terms(arg, operator, vars)
-            return t1 <= t2
+            return float(t1) <= float(t2)
         elif '>=' in arg:
             operator = '>='
             t1, t2 = _get_terms(arg, operator, vars)
-            return t1 >= t2
+            return float(t1) >= float(t2)
         elif '!=' in arg:
             operator = '!='
             t1, t2 = _get_terms(arg, operator, vars)
@@ -309,11 +309,11 @@ def _term_op_term(arg, vars):
         elif '<' in arg:
             operator = '<'
             t1, t2 = _get_terms(arg, operator, vars)
-            return t1 < t2
+            return float(t1) < float(t2)
         elif '>' in arg:
             operator = '>'
             t1, t2 = _get_terms(arg, operator, vars)
-            return t1 > t2
+            return float(t1) > float(t2)
         elif '=' in arg:
             operator = '='
             t1, t2 = _get_terms(arg, operator, vars)

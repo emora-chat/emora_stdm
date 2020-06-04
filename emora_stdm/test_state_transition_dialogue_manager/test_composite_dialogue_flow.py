@@ -190,3 +190,39 @@ def test_serialization():
     cdf.deserialize(s)
     cdf.user_turn('catfish')
     assert cdf.controller_name() == 'one'
+
+def test_serialization_gates():
+    cdf = CompositeDialogueFlow('start', 'topic_err', 'topic', initial_speaker=DialogueFlow.Speaker.USER)
+    cdf.add_user_transition('start', 'one', 'hello')
+    cdf.add_system_transition('one', 'two', '`one to two` #GATE', score=10)
+    cdf.add_user_transition('two', 'one', 'hello')
+    cdf.add_system_transition('one', 'three', '`one to three`')
+
+    cdf.new_turn()
+    cdf.user_turn('hello')
+    assert cdf.system_turn().strip() == 'one to two'
+    s = cdf.serialize()
+
+    cdf.new_turn()
+    cdf.deserialize(s)
+    cdf.user_turn('hello')
+    assert cdf.system_turn().strip() == 'one to three'
+
+    cdf = CompositeDialogueFlow('start', 'topic_err', 'topic', initial_speaker=DialogueFlow.Speaker.USER)
+    cdf.controller().add_state('one', enter='#GATE')
+    cdf.add_user_transition('start', 'one', 'hello')
+    cdf.add_system_transition('one', 'two', '`one to two`')
+    cdf.add_user_transition('two', 'one', 'hello', score=10)
+    cdf.add_user_transition('two', 'three', 'hello')
+    cdf.add_system_transition('three', 'four', '`three to four`')
+
+    cdf.new_turn()
+    cdf.user_turn('hello')
+    assert cdf.system_turn().strip() == 'one to two'
+    s = cdf.serialize()
+    print(s)
+
+    cdf.new_turn()
+    cdf.deserialize(s)
+    cdf.user_turn('hello')
+    assert cdf.system_turn().strip() == 'three to four'

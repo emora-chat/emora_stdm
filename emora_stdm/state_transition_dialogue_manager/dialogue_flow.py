@@ -1046,9 +1046,9 @@ class DialogueFlow:
             self.add_global_nlu(state, nlu, default_score, post_nlu='`/.*/ #GEXT`')
         self.load_transitions(transitions, Speaker.USER)
 
-    def load_update_rules(self, rules_dict):
+    def load_update_rules(self, rules_dict, score=None):
         for pre, post in rules_dict.items():
-            self.update_rules().add(pre, post)
+            self.update_rules().add(pre, post, score=score)
 
     def macros(self):
         return self._macros

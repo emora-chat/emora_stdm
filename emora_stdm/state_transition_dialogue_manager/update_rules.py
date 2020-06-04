@@ -22,8 +22,11 @@ class UpdateRules:
         for rule in self.rules:
             rule.set_vars(vars)
 
-    def add(self, precondition, postcondition=''):
-        self.rules.append(UpdateRule(precondition, postcondition, vars=self.vars, macros=self.macros))
+    def add(self, precondition, postcondition='', score=None):
+        rule = UpdateRule(precondition, postcondition, vars=self.vars, macros=self.macros)
+        if score is not None:
+            rule.precondition_score = score
+        self.rules.append(rule)
 
     def update(self, user_input, debugging=False):
         self.untapped = sorted(self.rules, key=lambda x: x.precondition_score, reverse=True)
