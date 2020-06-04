@@ -310,7 +310,7 @@ def _term_op_term(arg, vars):
         else:
             return None
     else:
-        return bool(arg)
+        return bool(arg and arg != 'None')
 
 class SetVars(Macro):
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):

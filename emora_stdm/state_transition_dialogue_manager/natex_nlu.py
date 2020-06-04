@@ -244,6 +244,8 @@ class NatexNLU:
                 value = self._vars[symbol]
             else:
                 value = None
+            if value == 'None':
+                value = None
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 

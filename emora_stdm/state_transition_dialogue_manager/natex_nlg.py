@@ -202,6 +202,9 @@ class NatexNLG:
             else:
                 value = None
                 self._failed = True
+            if value == 'None':
+                value = None
+                self._failed = True
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
