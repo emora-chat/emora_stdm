@@ -1007,7 +1007,7 @@ class ExtractList(Macro):
 
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         var = args[0]
-        if var not in vars:
+        if var not in vars or vars[var] == 'None':
             vars[var] = set()
         # find matches
         matches = self.onte(ngrams, None, args[1:])
