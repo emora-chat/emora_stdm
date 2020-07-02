@@ -228,6 +228,13 @@ the object returned, with the following return types supported:
 * `string`: directly inserted as a regex term
 * `set of strings`: converted to a regex disjunction, i.e. `(?:e1|e2|e3|...)`
 * `boolean`:   `True` converts to `.*?` and `False` converts to `__FALSE__`
+
+Note that if macro call terms are directly nested within each other, e.g. `#A(#B(arg))`,
+the return value of the inner macro call will be passed into the `args` list of the outer
+macro _without_ conversion to a string.
+This allows chaining macros together to increase expressiveness and reduce the number
+of times a new macro must be created.
+If you wanted, you could easily create an entire programming language out of macros! (not recommended)
  
 The internal logic of a macro is dependent on the developer's needs.
 In the case of the above example,
@@ -248,6 +255,9 @@ class NamedEntity(Macro):
             if not args or ent.label_.lower() in {x.lower() for x in args}:
                 entities.add(ent.text)
         return entities
+
+natex = NatexNLU('[#NER(person), my, friend]', macros={'NER': NamedEntity()})
+assert natex.match('Lionel is my friend')
 ```
 
 # Built-In Macros
