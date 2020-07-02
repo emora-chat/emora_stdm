@@ -18,29 +18,45 @@ or those who want to do some rapid prototyping of a dialogue agent.
   chatbot = DialogueFlow('start')
   transitions = {
       'state': 'start',
+
       '"Hello."': {
           '#INT(Hi! How are you?, How are you doing?)': {
+
               '"Good. How are you?"': {
-                  '[{good, great, okay}]': {
-                      '"That\'s great!" Bye!': 'end'
+                  'state': 'asking-user-mood',
+    
+                  '[{good, great, okay}]': {    
+            
+                      '"That\'s great! ' 
+                      'Know what\'s good about today?"': {
+                            'error': 'weather-subconvo'     # !!! Link to weather-subconvo
+                      }
                   },
-                  '{[bad, horrible, awful]}': {
+                  '{[bad, horrible, awful]}': {     
+    
                       '"Oh no! Bye!"': 'end'
                   },
-                  'error': {
+                  'error': {            
+                    
                       '"I do not understand! Bye!"': 'end'
                   }
               }
           },
           '#INT(Tell me the weather.)': {
+
+              'state': 'weather-subconvo',                 # !!! weather-subconvo
+    
               '"It is sunny out!"': {
+
                   'error': {
+
                       '"Bye!"': 'end'
                   }
               }
           }
       }
   }
+
   chatbot.load_transitions(transitions)
   chatbot.run()
   ```
@@ -326,7 +342,7 @@ S: It is sunny out!
 ...
 ```
 
-The reason we are able to link back to the start of the conversation is because the staring state is already named.
+The reason we are able to link back to the start of the conversation is because the starting state is already named.
 This is what the line `'state': 'start'` at the top of the json dictionary means.
 
 We can actually use this notation to name any state we want: 
