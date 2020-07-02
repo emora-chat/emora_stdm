@@ -6,6 +6,8 @@ Novice developers, or those who just want to develop a dialogue agent as quickly
 
 Emora STDM also affords a high degree of controllability to experts: it is easy to integrate NLP models, database queries, and custom logic, and chatbots can be created entirely from state update rules, following an information state approach ([ref](https://people.ict.usc.edu/~traum/Papers/traumlarsson.pdf)) to dialogue. Although we provide a host of built-in NLP models and useful functionality, your imagination is the limit when extending Emora STDM.
 
+Links: [Github](https://github.com/emora-chat/emora_stdm)  [Paper](https://arxiv.org/abs/2006.06143)
+
 # Quick Start
 
 ## Installation
@@ -92,3 +94,4 @@ You can read more about Update Rules in the [Update Rules Tutorial](/docs/Update
 * [**Dialogue Graph Tutorial**](/docs/DialogueGraphTutorial.md), explaining the core dialogue management functionality of Emora STDM
 * [**Natex Tutorial**](/docs/NatexTutorial.md), explaining the framework's core natural language understanding and generation functionality
 * [Update Rules Tutorial](/docs/UpdateRulesTutorial.md), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
+* [Ontology Example](/docs/OntologyTutorial.md), showing how to use an ontology to efficiently categorize entities.

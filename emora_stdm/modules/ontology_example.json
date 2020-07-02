@@ -1,0 +1,13 @@
+
+{
+  "ontology": {
+    "animal": ["mammal", "fish", "bird", "reptile", "amphibian"],
+    "mammal": ["dog", "ape", "rat"],
+    "reptile": ["snake", "lizard"],
+    "amphibian": ["frog"]
+  },
+
+  "expressions": {
+    "dog": ["canine", "puppy"]
+  }
+}
