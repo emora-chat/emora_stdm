@@ -4,6 +4,8 @@ from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.stochastic_options import StochasticOptions
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from copy import deepcopy
+import sys
+import traceback
 
 
 class NatexNLG:
@@ -109,8 +111,9 @@ class NatexNLG:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
-        macro_arg: macro_literal | macro
-        macro_literal: /[^#), ][^#),]*/
+        macro_arg: macro_arg_string | macro_literal | macro
+        macro_literal: /[^#), `][^#),`]*/
+        macro_arg_string: "`" /[^`]+/ "`"
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "\"" "\"" | "`" /[^`]+/ "`"
         symbol: /[a-z_A-Z.0-9]+/
         """
@@ -199,6 +202,9 @@ class NatexNLG:
             else:
                 value = None
                 self._failed = True
+            if value == 'None':
+                value = None
+                self._failed = True
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
@@ -225,7 +231,9 @@ class NatexNLG:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
                     print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
+                    traceback.print_exc(file=sys.stdout)
                     tree.children[0] = '_MACRO_EXCEPTION_'
+
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:
                 print('ERROR: Macro {} not found'.format(symbol))

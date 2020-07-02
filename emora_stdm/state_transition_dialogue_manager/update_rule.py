@@ -10,6 +10,9 @@ class UpdateRule:
         self.precondition_score = 1.0
         self.postcondition = None
         self.postcondition_score = None
+        self.is_repeating = len(precondition) > 0 and precondition[0] == '*'
+        if self.is_repeating:
+            precondition = precondition[1:]
         if macros is None:
             macros = {}
         if vars is None:
@@ -40,11 +43,14 @@ class UpdateRule:
             return natex_string[:i], float(natex_string[i + len(' ('):-1])
         return natex_string, None
 
-    def satisfied(self, user_input, debugging=False):
-        return self.precondition.match(user_input, vars=self.vars, debugging=debugging)
+    def satisfied(self, user_input, vars, debugging=False):
+        return self.precondition.match(user_input, vars=vars, debugging=debugging)
 
-    def apply(self, debugging=False):
-        return self.postcondition.generate(vars=self.vars, debugging=debugging)
+    def apply(self, vars, debugging=False):
+        if self.postcondition is not None:
+            return self.postcondition.generate(vars=vars, debugging=debugging)
+        else:
+            return ''
 
     def set_vars(self, vars):
         self.vars = vars

@@ -1,6 +1,7 @@
 
 from emora_stdm.state_transition_dialogue_manager.database import GraphDatabase as Graph
 from structpy.graph.traversal import preset as traversal
+from emora_stdm.state_transition_dialogue_manager.utilities import lemmatize_ontology
 import json
 from collections import defaultdict
 import regex
@@ -110,18 +111,21 @@ class KnowledgeBase(Graph):
         return json.dumps({'ontology': ontology_arcs, 'predicates': relation_arcs,
                            'expressions': expression_arcs}, indent=4, sort_keys=True)
 
-    def load_json_file(self, json_file):
+    def load_json_file(self, json_file, lemmatize=False):
         f = open(json_file, "r")
         d = json.load(f)
-        self.load_json(d)
+        self.load_json(d, lemmatize)
 
-    def load_json_string(self, json_string):
+    def load_json_string(self, json_string, lemmatize=False):
         d = json.loads(json_string)
-        self.load_json(d)
+        self.load_json(d, lemmatize)
 
-    def load_json(self, d):
+    def load_json(self, d, lemmatize=False):
         if 'ontology' in d:
-            ontology = d['ontology']
+            if lemmatize:
+                ontology = lemmatize_ontology(d['ontology'])
+            else:
+                ontology = d['ontology']
             for k, l in ontology.items():
                 for e in l:
                     self.add_type(e, k)

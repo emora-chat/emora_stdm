@@ -4,6 +4,7 @@ from lark import Lark, Transformer, Tree, Visitor, Token
 from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from copy import deepcopy
+import sys, traceback
 
 class NatexNLU:
 
@@ -39,7 +40,7 @@ class NatexNLU:
         self._regex = None
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
-            original_vars.update({k: vars[k] for k in vars.altered()})
+            original_vars.update({k: vars[k] for k in vars})
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):
@@ -112,8 +113,9 @@ class NatexNLU:
         reference: "$" symbol
         assignment: "$" symbol "=" term
         macro: "#" symbol ( "(" macro_arg? (","? " "? macro_arg)* ")" )? 
-        macro_arg: macro_literal | macro
-        macro_literal: /[^#), ][^#),]*/
+        macro_arg: macro_arg_string | macro_literal | macro
+        macro_literal: /[^#), `][^#),`]*/
+        macro_arg_string: "`" /[^`]+/ "`"
         literal: /[a-z_A-Z@.0-9:]+( +[a-z_A-Z@.0-9:]+)*/ | "\"" /[^\"]+/ "\"" | "`" /[^`]+/ "`"
         symbol: /[a-z_A-Z.0-9]+/
         regex_value: /[^\/]+/
@@ -242,6 +244,8 @@ class NatexNLU:
                 value = self._vars[symbol]
             else:
                 value = None
+            if value == 'None':
+                value = None
             tree.children[0] = value
             if self._debugging: print('    {:15} {}'.format('Var reference', self._current_compilation(self._tree)))
 
@@ -267,6 +271,7 @@ class NatexNLU:
                     tree.children[0] = macro(self._ngrams, self._vars, macro_args)
                 except Exception as e:
                     print('ERROR: Macro {} raised exception {}'.format(symbol, repr(e)))
+                    traceback.print_exc(file=sys.stdout)
                     tree.children[0] = '_MACRO_EXCEPTION_'
                 if self._debugging: print('    {:15} {}'.format(symbol, self._current_compilation(self._tree)))
             else:

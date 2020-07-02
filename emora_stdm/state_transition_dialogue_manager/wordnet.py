@@ -15,11 +15,12 @@ wordnet_knowledge_base = KnowledgeBase()
 import importlib_resources as impr
 from . import data
 try:
-    t1 = time()
-    sys.stderr.write('Loading wordnet.json... ')
-    json_str = impr.read_text(data, 'wordnet.json')
-    wordnet_knowledge_base.load_json_string(json_str)
-    sys.stderr.write(' done in {}s'.format(time() - t1))
+    pass
+    # t1 = time()
+    # sys.stderr.write('Loading wordnet.json... ')
+    # json_str = impr.read_text(data, 'wordnet.json')
+    # wordnet_knowledge_base.load_json_string(json_str)
+    # sys.stderr.write(' done in {}s'.format(time() - t1))
 except FileNotFoundError:
     sys.stderr.write(' failed to load.')
 

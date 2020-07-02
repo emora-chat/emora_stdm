@@ -9,7 +9,6 @@ Emora STDM also affords a high degree of controllability to experts: it is easy 
 # Quick Start
 
 ## Installation
-
 ```
 pip install emora_stdm
 python -m spacy download en_core_web_md
