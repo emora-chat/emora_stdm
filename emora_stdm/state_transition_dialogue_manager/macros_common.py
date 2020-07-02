@@ -501,8 +501,6 @@ class NamedEntity(Macro):
               DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
         https://spacy.io/api/annotation
     """
-    def __init__(self):
-        pass
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         doc = nlp(ngrams.text())
         entities = set()
