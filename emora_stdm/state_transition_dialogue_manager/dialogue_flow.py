@@ -78,6 +78,7 @@ class DialogueFlow:
         self._speaker = self._initial_speaker
         self._vars = HashableDict()
         self._transitions = []
+        self._update_transitions = []
         self.vars()['__state__'] = self._initial_state
         self.set_state(self._initial_state)
         self._gates = defaultdict(list)
@@ -346,6 +347,9 @@ class DialogueFlow:
             transition_items.append((natex, transition, score))
         while self._transitions:
             natex, transition, score = self._transitions.pop()
+            transition_items.append((natex, transition, score))
+        while self._update_transitions:
+            natex, transition, score = self._update_transitions.pop()
             transition_items.append((natex, transition, score))
         for natex, transition, score in transition_items:
             t1 = time()
@@ -981,9 +985,9 @@ class DialogueFlow:
         result = self._rules.update(user_input, debugging)
         if result is not None:
             response, score = result
-            self._transitions.append(
+            self._update_transitions.append(
                 (response, (self.state(), self.state(), Speaker.SYSTEM), score))
-            self.set_speaker(Speaker.SYSTEM)
+            #self.set_speaker(Speaker.SYSTEM)
 
     def knowledge_base(self):
         return self._kb
