@@ -93,5 +93,6 @@ You can read more about Update Rules in the [Update Rules Tutorial](/docs/Update
 
 * [**Dialogue Graph Tutorial**](/docs/DialogueGraphTutorial.md), explaining the core dialogue management functionality of Emora STDM
 * [**Natex Tutorial**](/docs/NatexTutorial.md), explaining the framework's core natural language understanding and generation functionality
-* [Update Rules Tutorial](/docs/UpdateRulesTutorial.md), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
+* [**Update Rules Tutorial**](/docs/UpdateRulesTutorial.md), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
 * [Ontology Example](/docs/OntologyTutorial.md), showing how to use an ontology to efficiently categorize entities.
+* [Multiple Components Example](/docs/MultipleComponentsTutorial.md), a quick example of multiple dialogue agents being combined into a single larger system.

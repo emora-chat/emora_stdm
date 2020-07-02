@@ -273,6 +273,19 @@ DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
 
 https://spacy.io/api/annotation
 
+### `#INT(sentence one, sentence two, ...)`
+matches user input using a simple intent classifier based on the _maximum_ GloVe embedding similarity
+between the user input and the natural language arguments
+
+### `#POS(tag)`
+matches a token with a particular part of speech tag `tag`, using SpaCy's POS tagger
+
+### `#LEM(rootform)`
+matches any surface form of the provided `rootform` word using nltk lemmatizer.
+
+### `#TARGET(state)`
+forces the Dialogue Graph to jump to a specific state
+
 ### `#GATE(var1, var2, ...)`
 records the values of the provided variables, and returns `True` if that set of variable:value
 pairs has not yet been recorded while taking the transition. If the transition is evaluated
