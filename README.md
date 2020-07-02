@@ -85,10 +85,10 @@ Most simple dialogue agents will not have any update rules.
 However, Update Rules can very useful to maninpulate state variables and perform complex interactions.
 Before updating the Dialogue Graph, Update Rules are iteratively applied by evaluating each of their precondition Natexes on the user input, and applying the postcondition if the precondition succeeds.
 The iteration continues until no more rules preconditions pass, at which point the Dialogue Graph update is performed.
-You can read more about Update Rules in the [Update Rules Tutorial]().
+You can read more about Update Rules in the [Update Rules Tutorial](/docs/UpdateRulesTutorial.md).
 
 # Tutorials
 
 * [**Dialogue Graph Tutorial**](/docs/DialogueGraphTutorial.md), explaining the core dialogue management functionality of Emora STDM
-* [**Natex Tutorial**](), explaining the framework's core natural language understanding and generation functionality
-* [Update Rules Tutorial](), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
+* [**Natex Tutorial**](/docs/NatexTutorial.md), explaining the framework's core natural language understanding and generation functionality
+* [Update Rules Tutorial](/docs/UpdateRulesTutorial.md), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
