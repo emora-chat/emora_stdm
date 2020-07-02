@@ -170,7 +170,11 @@ transitions = {
 }
 ```
 
-Now if you run the system, the bot will appropriately distinguish between you asking the bot how it's doing and asking about the weather:
+Now when the user responds, the user's utterance will be scored against our two intents.
+Depending on whether the user utterance was more similar to the phrase "Hi! How are you?" or "Tell me about the weather", 
+the bot will classify the user input differently, and thus have a different response.
+
+If you run the system, the bot will appropriately distinguish between you asking the bot how it's doing and asking about the weather:
 ```
 S: Hello!
 U: Hey, how do you feel today?
@@ -182,6 +186,249 @@ U: Is it cloudy outside?
 S: It is sunny!
 ```
 
+Another (very) simple approach to NLU is to match keywords. 
+Instead of using a Natex of the form `#INT(similar phrase)` to classify user input, 
+we can use a Natex of the form `[{key phrase A, key phrase B, ...}]`. 
+A transition of this form will match any user input containing one of the specified key phrases. 
+Let's extend our example, asking the user "How are you?" if they ask the bot and classifying
+their response using key phrase matching.
+
+```python3
+{
+  'state': 'start',
+  '"Hello."': {
+      '#INT(Hi! How are you?, How are you doing?)': {
+          '"Good. How are you?"': {
+              '[{good, great, okay}]': {            # !!! key phrase matching!
+                  '"That\'s great! Bye!"': 'end'
+              },
+              '{[bad, horrible, awful]}': {         # !!! key phrase matching!
+                  '"Oh no! Bye!"': 'end'
+              }
+          }
+      },
+      '#INT(Tell me the weather.)': {
+          '"It is sunny out!"': {
+              'error': {
+                  '"Bye!"': 'end'
+              }
+          }
+      }
+  }
+}
+```
+
+Our bot will now ask the user how they are (but only if the user asks first!)
+and can usually understand the user's reply.
+Specifically, the user's reply has to exactly contain one of the phrases used
+in the key phrase matching, for example:
+
+```
+S: Hello!
+U: Hey, how do you feel today?
+S: Good! How are you?
+U: I am great today.             <-- matches key phrase "great"
+S: That's great! Bye!
+```
+
+But what if the user replies without using any of the key phrases we specified?
+With how our bot is currently defined, it actually would crash. 
+This is because there is no available transition that matches the user utterance.
+
+```
+S: Hello!
+U: Hey, how do you feel today?
+S: Good! How are you?
+U: I'm fine.                     <-- doesn't match any transition
+*crash*
+```
+
+We can fix this by adding an `error` transition. 
+Error transitions are special transitions that are able to match any user utterance,
+but they are not chosen to update the dialogue state unless no other transition matches. 
+To add an error transition, just use the string `"error"` to mark the user transition in the code: 
+
+
+```python3
+{
+  'state': 'start',
+  '"Hello."': {
+      '#INT(Hi! How are you?, How are you doing?)': {
+          '"Good. How are you?"': {
+              '[{good, great, okay}]': {            
+                  '"That\'s great!" Bye!': 'end'
+              },
+              '{[bad, horrible, awful]}': {         
+                  '"Oh no! Bye!"': 'end'
+              },
+              'error': {                                 # !!! matches ANY user input!
+                  '"I do not understand! Bye!"': 'end'
+              }
+          }
+      },
+      '#INT(Tell me the weather.)': {
+          '"It is sunny out!"': {
+              'error': {
+                  '"Bye!"': 'end'
+              }
+          }
+      }
+  }
+}
+```
+
+With the error transition in place, no matter what the user says, the chatbot will have a reply.
+
+
+To learn about adding more advanced NLU to your chatbot, 
+refer to the [Natex Tutorial](https://github.com/emora-chat/emora_stdm/blob/master/docs/NatexTutorial.md).
+
+
+## State References
+
+So far in this tutorial, we have built a chat bot that uses a tree-like json structure to model dialogue.
+However, Emora-STDM chatbots are not restricted to tree structures for state-machine-based dialogue management.
+Modelling conversation as an arbitrary graph with cycles and diamonds is easy to do by connecting transitions
+directly to other points in the dialogue. Doing this requires two steps.
+
+First, the point in the dialogue you want to connect to needs to have a state identifier. 
+Second, we link a transition to this identifier.
+
+In fact, we have already done the first step by naming the initial state in our dialogue graph `"start"`.
+Let's say we want the dialogue to repeat itself instead of ending by creating a cycle back to this initial state.
+We can do so by simply connecting back to `"start"` using the colon `:` notation after defining a transition:
+ 
+
+```python3
+transitions = {
+    'state': 'start',
+    '"Hello!"': {
+        '#INT(Tell me the weather.)': {
+            '"It is sunny out!"': {
+                'error': 'start'         # !!! Link back to the start state!
+            }
+        }
+    }
+}
+```
+
+The above transition structure would cause a very repetitive conversation, 
+but it illustrates how it is easy to create cycles in the conversation graph:
+
+```
+S: Hello!
+U: What's the weather like?
+S: It is sunny out!
+U: Okay.                 <-- Transitions back to "start" state!
+S: Hello!
+U: Didn't you already say hi?
+S: It is sunny out!
+...
+```
+
+The reason we are able to link back to the start of the conversation is because the staring state is already named.
+This is what the line `'state': 'start'` at the top of the json dictionary means.
+
+We can actually use this notation to name any state we want: 
+just put `'state': '<state name>'` at the point of the conversation you want to name:
+
+```python3
+{
+  'state': 'start',
+  '"Hello."': {
+      '#INT(Hi! How are you?, How are you doing?)': {
+          '"Good. How are you?"': {
+              'state': 'asking-user-mood',    # !!! Named state
+
+              '[{good, great, okay}]': {    
+        
+                  '"That\'s great! Bye!"': 'end'
+              },
+              '{[bad, horrible, awful]}': {         
+                  '"Oh no! Bye!"': 'end'
+              },
+              'error': {                                
+                  '"I do not understand! Bye!"': 'end'
+              }
+          }
+      },
+      '#INT(Tell me the weather.)': {
+          'state': 'weather-subconvo',       # !!! Named state
+
+          '"It is sunny out!"': {
+              'error': {
+                  '"Bye!"': 'end'
+              }
+          }
+      }
+  }
+}
+```
+
+Note that `'state'` is a special key that indicates a state naming, not a transition.
+This is similar to how `'error'` is a string identifying a special type of transition.
+
+In the above example, the state `'asking-user-mood'` is the end state of the transition `'"Good. How are you?"'`
+and it is the start state of transitions `'[{good, great, okay}]'`, `'{[bad, horrible, awful]}'`, and the `'error'` transition. 
+Similarly, `'weather-subconvo'` is the state entered after taking the user transition `'#INT(Tell me the weather.)'`.
+
+Let's now use one of our newly named states to extend the interaction by linking to it:
+
+```python3
+{
+  'state': 'start',
+  '"Hello."': {
+      '#INT(Hi! How are you?, How are you doing?)': {
+          '"Good. How are you?"': {
+              'state': 'asking-user-mood',
+
+              '[{good, great, okay}]': {    
+        
+                  '"That\'s great! ' 
+                  'Know what\'s good about today?"': {
+                        'error': 'weather-subconvo'     # !!! Link to weather-subconvo
+                  }
+              },
+              '{[bad, horrible, awful]}': {         
+                  '"Oh no! Bye!"': 'end'
+              },
+              'error': {                                
+                  '"I do not understand! Bye!"': 'end'
+              }
+          }
+      },
+      '#INT(Tell me the weather.)': {
+          'state': 'weather-subconvo',                 # !!! weather-subconvo
+
+          '"It is sunny out!"': {
+              'error': {
+                  '"Bye!"': 'end'
+              }
+          }
+      }
+  }
+}
+```
+
+Our chatbot now supports two different conversation paths that lead to talking about weather:
+
+```
+S: Hello!
+U: What's the weather like?
+S: It is sunny out!
+...
+```
+
+```
+S: Hello!
+U: Hi! How are ya?
+S: Good. How are you?
+U: I feel good.
+S: That's great! Know what's good about today?
+U: What?
+S: It is sunny out!
+...
+```
 
 
 ## Want to learn more?
