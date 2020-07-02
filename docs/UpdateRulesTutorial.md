@@ -12,7 +12,7 @@ Here is an example of update rules being used in Emora-STDM to drive dialogue ma
 
 ```python
 system = DialogueFlow('start', initial_speaker=DialogueFlow.Speaker.USER)
-system.load_transitions({'state': 'start'}) # annoying, but necessary for now
+system.load_transitions({'state': 'start', 'error': {'` `': {'score': -1, 'state': 'start'}}})
 
 system.load_update_rules({
     '[news]': '`Coronavirus, argh!` (1)',
@@ -25,6 +25,8 @@ system.run()
 
 The core of this code is the middle three lines, which define 3 update rules.
 These rules form a reactionary chatbot that responds to certain patterns.
+Note that the `.load_transitions` line is just creating a placeholder loop in the Dialogue Graph:
+in future updates to Emora-STDM this will not be necessary for Update Rule-driven chatbots.
 
 Each turn, the user input is matched against each rule's precondition natex, top to bottom.
 If the input matches, the rule "fires", applying the postcondition.
