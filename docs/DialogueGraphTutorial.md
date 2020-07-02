@@ -29,7 +29,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
             
                       '"That\'s great! ' 
                       'Know what\'s good about today?"': {
-                            'error': 'weather-subconvo'     # !!! Link to weather-subconvo
+                            'error': 'weather-subconvo'    
                       }
                   },
                   '{[bad, horrible, awful]}': {     
@@ -44,7 +44,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
           },
           '#INT(Tell me the weather.)': {
 
-              'state': 'weather-subconvo',                 # !!! weather-subconvo
+              'state': 'weather-subconvo',            
     
               '"It is sunny out!"': {
 
