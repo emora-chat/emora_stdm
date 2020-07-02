@@ -17,12 +17,10 @@ python -m spacy download en_core_web_md
 
 Once installed, see if you can run the Hello World example below, and check out the [tutorials](https://github.com/emora-chat/emora_stdm/blob/master/README.md#tutorials).
 
-For novice developers or those who don't care about the details, see the [Quick and Easy Tutorial](/docs/NoviceTutorial.md).
-
 ## Hello World Example
 
 Below is an example of a simple chatbot created with Emora STDM.
-The [easiest way to add content]() to a chatbot is to use this nested dictionary syntax.
+The easiest way to add content to a chatbot is to use this nested dictionary syntax.
 
 ```python3
 from emora_stdm import DialogueFlow
@@ -92,15 +90,6 @@ You can read more about Update Rules in the [Update Rules Tutorial]().
 
 # Tutorials
 
-* [Quick and Easy Tutorial](/docs/NoviceTutorial.md), for novices, or people who don't care about the full functionality of the framework
+* [**Dialogue Graph Tutorial**](/docs/DialogueGraphTutorial.md), explaining the core dialogue management functionality of Emora STDM
 * [**Natex Tutorial**](), explaining the framework's core natural language understanding and generation functionality
-* [**Dialogue Graph Tutorial**](), explaining the core dialogue management functionality of Emora STDM
 * [Update Rules Tutorial](), explaining how to create dialogue agents using Update Rules instead of the Dialogue Graph 
-* [Advanced Tutorial](), explaining advanced and experimental features of the framework
-
-## Specific Use Cases
-
-I want to...
-* x
-* y
-* z
