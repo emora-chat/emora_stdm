@@ -15,7 +15,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
   ```python3
   from emora_stdm import DialogueFlow
 
-  chatbot = DialogueFlow('start')
+  chatbot = DialogueFlow('start', end_state='end')
   transitions = {
       'state': 'start',
 
@@ -32,7 +32,7 @@ or those who want to do some rapid prototyping of a dialogue agent.
                             'error': 'weather-subconvo'    
                       }
                   },
-                  '{[bad, horrible, awful]}': {     
+                  '[{bad, horrible, awful}]': {     
     
                       '"Oh no! Bye!"': 'end'
                   },
@@ -67,10 +67,11 @@ or those who want to do some rapid prototyping of a dialogue agent.
 
 ```python3
 from emora_stdm import DialogueFlow
-chatbot = DialogueFlow('start')
+chatbot = DialogueFlow('start', end_state='end')
 ```
 Import DialogueFlow class and create a DialogueFlow object.
 This object is your dialogue agent, and `'start'` indicates where the conversation begins.
+`end_state='end'` means that the dialouge will exit once it reaches the `'end'` state.
 
 ```python3
 transitions = {
@@ -218,7 +219,7 @@ their response using key phrase matching.
               '[{good, great, okay}]': {            # !!! key phrase matching!
                   '"That\'s great! Bye!"': 'end'
               },
-              '{[bad, horrible, awful]}': {         # !!! key phrase matching!
+              '[{bad, horrible, awful}]': {         # !!! key phrase matching!
                   '"Oh no! Bye!"': 'end'
               }
           }
@@ -274,7 +275,7 @@ To add an error transition, just use the string `"error"` to mark the user trans
               '[{good, great, okay}]': {            
                   '"That\'s great!" Bye!': 'end'
               },
-              '{[bad, horrible, awful]}': {         
+              '[{bad, horrible, awful}]': {         
                   '"Oh no! Bye!"': 'end'
               },
               'error': {                                 # !!! matches ANY user input!
@@ -360,7 +361,7 @@ just put `'state': '<state name>'` at the point of the conversation you want to 
         
                   '"That\'s great! Bye!"': 'end'
               },
-              '{[bad, horrible, awful]}': {         
+              '[{bad, horrible, awful}]': {         
                   '"Oh no! Bye!"': 'end'
               },
               'error': {                                
@@ -405,7 +406,7 @@ Let's now use one of our newly named states to extend the interaction by linking
                         'error': 'weather-subconvo'     # !!! Link to weather-subconvo
                   }
               },
-              '{[bad, horrible, awful]}': {         
+              '[{bad, horrible, awful}]': {         
                   '"Oh no! Bye!"': 'end'
               },
               'error': {                                
