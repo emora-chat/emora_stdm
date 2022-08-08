@@ -20,19 +20,26 @@ try:
 except Exception as e:
     traceback.print_exc()
     print('Error loading Spacy', file=sys.stderr)
-    print('Please run the following command:', file=sys.stderr)
+    print('To resolve, please run the following command:', file=sys.stderr)
     print('python -m spacy download en_core_web_md', file=sys.stderr)
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
 try:
     nltk.data.find('wordnet')
-except:
+except Exception:
     nltk.download('wordnet')
 try:
     nltk.find('averaged_perceptron_tagger')
-except:
+except Exception:
     nltk.download('averaged_perceptron_tagger')
 try:
     nltk.find('vader_lexicon')
-except:
+except Exception:
     nltk.download('vader_lexicon')
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of

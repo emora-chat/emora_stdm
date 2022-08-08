@@ -457,7 +457,7 @@ class DialogueFlow:
                 if '__gate__' in vars:
                     gate_var_config = vars['__gate__']
                     gate_target_id = (self.namespace(), target) if (not isinstance(target, tuple) and self.is_module()) else target
-                    for vc in self.gates()[gate_target_id]:
+                    for vc in self.gates().get(gate_target_id, ()):
                         if gate_var_config == vc:
                             gate_closed = True
                     del vars['__gate__']
@@ -467,7 +467,7 @@ class DialogueFlow:
                     tt_gate_var_config = transition_transition_enter_vars['__gate__']
                     tt_gate_target_id = (self.namespace(), transition_transition_enter) if \
                         (not isinstance(transition_transition_enter, tuple) and self.is_module()) else transition_transition_enter
-                    for vc in self.gates()[tt_gate_target_id]:
+                    for vc in self.gates().get(tt_gate_target_id, ()):
                         if tt_gate_var_config == vc:
                             gate_closed = True
                     del transition_transition_enter_vars['__gate__']
@@ -607,7 +607,7 @@ class DialogueFlow:
                     gate_var_config = vars['__gate__']
                     gate_target_id = (self.namespace(), target) if (
                                 not isinstance(target, tuple) and self.is_module()) else target
-                    for vc in self.gates()[gate_target_id]:
+                    for vc in self.gates().get(gate_target_id, ()):
                         if gate_var_config == vc:
                             gate_closed = True
                     del vars['__gate__']
@@ -1081,4 +1081,6 @@ class DialogueFlow:
         self.reset()
         self.set_state(config['state'])
         self.set_vars(config['vars'])
-        self.set_gates(config['gates'])
+        gates = defaultdict(list)
+        gates.update(config['gates'])
+        self.set_gates(gates)
