@@ -24,6 +24,8 @@ from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
 
+from emora_stdm.state_transition_dialogue_manager.patch import set_system_stack_state, JMP, RET, MANAGE_STACK
+
 def module_source_target(source, target):
     if isinstance(source, str) and ':' in source:
         i = source.find(':')
@@ -71,6 +73,7 @@ class DialogueFlow:
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
                  default_system_state=None, end_state='__end__', all_multi_hop=True, wordnet=False):
+        self._global_nlu_transitions = []
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
         self._potential_transition = None
@@ -128,7 +131,10 @@ class DialogueFlow:
             'GCLR': ClearGoalStack(),
             'VT': VirtualTransitions(self),
             'CE': CanEnter(self),
-            'EXTR': ExtractList(self._kb)
+            'EXTR': ExtractList(self._kb),
+            'JMP': JMP(),
+            'RET': RET(),
+            'MANAGE_STACK': MANAGE_STACK(),
         }
         self._macros.update(macros_common_dict)
         self._macros.update(natex_macros_common)
@@ -620,6 +626,7 @@ class DialogueFlow:
                 natex, transition, score = self._transitions.pop()
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
+        set_system_stack_state(self, transition_options)
         if transition_options:
             if debugging:
                 print('Transition options: ------------')
@@ -816,20 +823,6 @@ class DialogueFlow:
         state = module_state(state)
         state = State(state)
         return self._graph.data(state)['settings']
-
-    def add_global_nlu(self, state, nlu, score=0.5, post_nlu=None):
-        state = module_state(state)
-        state = State(state)
-        if not self.has_state(state):
-            self.add_state(state)
-        if isinstance(state, tuple):
-            state = ':'.join(state)
-        if isinstance(nlu, list) or isinstance(nlu, set):
-            nlu = '{' + ', '.join(nlu) + '}'
-        if post_nlu is None:
-            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
-        else:
-            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {}, {})'.format(state, score, post_nlu))
 
     def update_state_settings(self, state, **settings):
         state = module_state(state)
@@ -1031,7 +1024,21 @@ class DialogueFlow:
     def set_gates(self, gates):
         self._gates = gates
 
-    def load_global_nlu(self, transitions, default_score=0.5):
+    def add_global_nlu(self, state, nlu, score=0.5, post_nlu=None):
+        state = module_state(state)
+        state = State(state)
+        if not self.has_state(state):
+            self.add_state(state)
+        if isinstance(state, tuple):
+            state = ':'.join(state)
+        if isinstance(nlu, list) or isinstance(nlu, set):
+            nlu = '{' + ', '.join(nlu) + '}'
+        if post_nlu is None:
+            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {})'.format(state, score))
+        else:
+            self._rules.add('{} ({})'.format(nlu, score), '#TRANSITION({}, {}, {})'.format(state, score, post_nlu))
+
+    def load_global_nlu(self, transitions, default_score=0.5, full_global=False):
         orig_score=default_score
         for nlu, followup in transitions.items():
             default_score=orig_score
@@ -1048,7 +1055,19 @@ class DialogueFlow:
                 if 'score' in followup:
                     default_score = followup['score']
             self.add_global_nlu(state, nlu, default_score, post_nlu='`/.*/ #GEXT`')
+            if full_global:
+                self._global_nlu_transitions.append((state, nlu, default_score))
+                if self._composite_dialogue_flow:
+                    cdf = self._composite_dialogue_flow
+                    cdf._update_global_transitions(self._namespace)
         self.load_transitions(transitions, Speaker.USER)
+
+    local_transitions = load_transitions
+
+    topic_transitions = load_global_nlu
+
+    def global_transitions(self, transitions, default_score=0.5):
+        self.load_global_nlu(transitions, default_score, True)
 
     def load_update_rules(self, rules_dict, score=None):
         for pre, post in rules_dict.items():

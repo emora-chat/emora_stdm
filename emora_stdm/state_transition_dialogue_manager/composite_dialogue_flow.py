@@ -21,6 +21,7 @@ class CompositeDialogueFlow:
 
     def __init__(self, initial_state, system_error_state, user_error_state,
                  initial_speaker = DialogueFlow.Speaker.SYSTEM, macros=None, kb=None):
+        self._global_transitions = defaultdict(list)
         if isinstance(system_error_state, str):
             system_error_state = ('SYSTEM', system_error_state)
         if isinstance(user_error_state, str):
@@ -173,6 +174,23 @@ class CompositeDialogueFlow:
 
         print("Elapsed: ", time() - start)
 
+    def _update_global_transitions(self, component_namespace):
+        component = self._components[component_namespace]
+        for (state, nlu, default_score) in component._global_nlu_transitions:
+            if isinstance(state, str) and ':' not in state:
+                state = component_namespace+':'+state
+            self._global_transitions[component_namespace].append((state, nlu, default_score))
+            for other in (other for other in self.components() if other is not component):
+                other.add_global_nlu(state, nlu, default_score)
+        component._global_nlu_transitions.clear()
+
+    def _update_new_component_global_transitions(self, component_namespace):
+        for other, global_nlus in self._global_transitions.items():
+            if other != component_namespace:
+                for state, nlu, default_score in global_nlus:
+                    self.component(component_namespace).add_global_nlu(state, nlu, default_score)
+        self._update_global_transitions(component_namespace)
+
     def add_state(self, state, error_successor=None):
         state = module_state(state)
         if isinstance(state, tuple):
@@ -202,6 +220,7 @@ class CompositeDialogueFlow:
         component.set_is_module(self)
         component.set_namespace(namespace)
         component.set_gates(self.component('SYSTEM').gates())
+        self._update_new_component_global_transitions(namespace)
 
     def component(self, namespace):
         return self._components[namespace]
