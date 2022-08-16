@@ -37,6 +37,8 @@ def set_system_stack_state(df, transition_options):
                 df.update_vars(dict(__stack_return = successor_state))
                 break
         if local_sys_trans(df, successor_state):
+            if df.namespace() and isinstance(successor_state, str) and ':' not in successor_state:
+                successor_state = (df.namespace(), successor_state)
             df.update_vars(dict(__stack_return = successor_state))
             break
     else:
@@ -48,29 +50,36 @@ def macro_parse_args(args, expected=None):
         expected = tuple(range(len(args)))
     kwargs = {}
     for kw, arg in itertools.zip_longest(expected, args, fillvalue=None):
-        if '=' in arg:
+        if isinstance(arg, str) and '=' in arg:
             kw, arg = arg.split('=')
         kwargs[kw] = arg
     return kwargs
 
 
 class JMP(Macro):
+
+    def __init__(self, df):
+        self.df = df
+
     def run(self, ngrams, vars, args):
-        args = macro_parse_args(args, ('phrase', 'return', 'doom'))
-        jump_return = args['return'] or vars.get('__stack_return')
-        return_phrase = args.get('return')
-        return_phrase = (
-          return_phrase if return_phrase is not None else
-          vars.get('__stack_phrase', '')
-        )
-        doom = args.get('doom')
-        doom = vars.get('__stack_doom', -1) if doom is None else doom
-        if jump_return:
-            vars['__stack'].append({
-              'phrase': return_phrase,
-              'return': jump_return,
-              'doom': int(doom)
-            })
+        arguments = macro_parse_args(args, ('phrase', 'return', 'doom'))
+        def on_transition_fn():
+            jump_return = arguments['return'] or self.df.vars().get('__stack_return')
+            return_phrase = arguments.get('return')
+            return_phrase = (
+              return_phrase if return_phrase is not None else
+              vars.get('__stack_phrase', '')
+            )
+            doom = arguments.get('doom')
+            doom = vars.get('__stack_doom', -1) if doom is None else doom
+            if jump_return:
+                vars.setdefault('__stack', []).append({
+                  'phrase': return_phrase,
+                  'return': jump_return,
+                  'doom': int(doom)
+                })
+        vars['__on_transition__'] = on_transition_fn
+        return True
 
 
 class RET(Macro):

@@ -132,7 +132,7 @@ class DialogueFlow:
             'VT': VirtualTransitions(self),
             'CE': CanEnter(self),
             'EXTR': ExtractList(self._kb),
-            'JMP': JMP(),
+            'JMP': JMP(self),
             'RET': RET(),
             'MANAGE_STACK': MANAGE_STACK(),
         }
@@ -496,6 +496,8 @@ class DialogueFlow:
                 print('--------------------------------')
             score, natex, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
                 random_max(transition_options, key=lambda x: x[0])
+            on_transition_fn = vars.pop('__on_transition__', lambda: None)
+            on_transition_fn()
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if tt_gate_var_config is not None:
@@ -634,6 +636,8 @@ class DialogueFlow:
                     print('{} {}: {}'.format(option[0], option[2][1], option[1]))
                 print('--------------------------------')
             score, natex, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            on_transition_fn = vars.pop('__on_transition__', lambda: None)
+            on_transition_fn()
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
