@@ -36,6 +36,10 @@ ont = {
                 "dad",
                 "sister",
                 "brother"
+            ],
+            "num": [
+                '1',
+                '2'
             ]
         }
     }
@@ -78,6 +82,11 @@ def test_ONT():
     assert natex.match('look its a lion', debugging=False)
     assert natex.match('look its a panther')
     assert not natex.match('look its a animal')
+
+def test_ONT_number():
+    natex = NatexNLU('[!you are number #ONT(num)]', macros=macros)
+    assert natex.match('you are number 1')
+    assert not natex.match('you are number one')
 
 def test_ONT_lemmatizer():
     natex = NatexNLU('[!look at the #ONT(cat)]', macros=macros)

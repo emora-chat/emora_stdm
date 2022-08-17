@@ -197,7 +197,8 @@ class DialogueFlow:
         :return: None
         """
         t1 = time()
-        natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
+        # natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
+        natural_language = natural_language.lower()
         self.vars()['__user_utterance__'] = natural_language
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
@@ -667,9 +668,6 @@ class DialogueFlow:
             return next_state
 
     def precache_transitions(self, process_num=1):
-        """
-        Make DialogueFlow fast from the start with the power of precache!
-        """
         if process_num == 1:
             for transition in self._graph.arcs():
                 data = self._graph.arc_data(*transition)
