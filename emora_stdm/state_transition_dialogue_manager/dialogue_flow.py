@@ -198,7 +198,7 @@ class DialogueFlow:
         """
         t1 = time()
         # natural_language = ''.join([c.lower() for c in natural_language if c.isalpha() or c == ' '])
-        self.vars()['__user_utterance__'] = natural_languagegit
+        self.vars()['__user_utterance__'] = natural_language
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
@@ -626,7 +626,7 @@ class DialogueFlow:
                 natex, transition, score = self._transitions.pop()
                 transition_items.append((natex, transition, score))
         self._transitions.clear()
-        set_system_stack_state(self, transition_options)
+        # set_system_stack_state(self, transition_options)
         if transition_options:
             if debugging:
                 print('Transition options: ------------')
