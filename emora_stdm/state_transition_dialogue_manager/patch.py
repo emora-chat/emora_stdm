@@ -12,6 +12,15 @@ Patch notes
 from emora_stdm.state_transition_dialogue_manager.macro import Macro
 
 import itertools
+from copy import deepcopy
+
+
+def update_var_table(var_table, deepcopied_var_table, debugging=None):
+    if debugging:
+        print(debugging)
+    var_table.clear()
+    var_table.update(deepcopied_var_table)
+    return var_table
 
 
 def set_system_stack_state(df, transition_options):
@@ -20,13 +29,14 @@ def set_system_stack_state(df, transition_options):
       list(df.transitions(s, speaker=df.Speaker.SYSTEM))
     )
     error_successor = df.error_successor(df.state())
-    error_transition = [error_successor] if error_successor else []
+    error_transition = {error_successor: deepcopy(df.vars())} if error_successor else {}
     if transition_options:
-        sorted_options = list(zip(*sorted(transition_options, reverse=True)))[2]
-        sorted_options = list(list(zip(*sorted_options))[1])
+        scores, natexes, transitions, varss, four, five = zip(*sorted(transition_options, reverse=True))
+        sources, targets, speakers = zip(*transitions)
+        sorted_options = dict(zip(targets, varss))
     else:
-        sorted_options = []
-    for successor_state in sorted_options + error_transition:
+        sorted_options = {}
+    for successor_state, var_table in {**sorted_options, **error_transition}.items():
         if isinstance(successor_state, tuple) and df.composite_dialogue_flow():
             cdf = df.composite_dialogue_flow()
             component, state = successor_state
@@ -34,15 +44,13 @@ def set_system_stack_state(df, transition_options):
               component in cdf._components
               and local_sys_trans(cdf.component(component), state)
             ):
-                df.update_vars(dict(__stack_return = successor_state))
+                var_table.update(dict(__stack_return = successor_state))
                 break
         if local_sys_trans(df, successor_state):
             if df.namespace() and isinstance(successor_state, str) and ':' not in successor_state:
                 successor_state = (df.namespace(), successor_state)
-            df.update_vars(dict(__stack_return = successor_state))
+            var_table.update(dict(__stack_return = successor_state))
             break
-    else:
-        df.update_vars(dict(__stack_return = None))
 
 
 def macro_parse_args(args, expected=None):

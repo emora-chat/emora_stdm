@@ -4,6 +4,8 @@ from collections import defaultdict
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from copy import deepcopy
 
+from emora_stdm.state_transition_dialogue_manager.patch import update_var_table
+
 
 class UpdateRules:
 
@@ -46,7 +48,7 @@ class UpdateRules:
             while repeating:
                 repeating = False
                 try:
-                    vars = HashableDict(self.vars)
+                    vars = deepcopy(self.vars)
                     satisfaction = rule.satisfied(user_input, vars, debugging=debugging)
                 except RuntimeError as e:
                     print('Failed information state update condition check:')
@@ -66,7 +68,7 @@ class UpdateRules:
                             print(e)
                             del self.untapped[i]
                             return None
-                        self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+                        update_var_table(self.vars, vars)
                         if '__user_utterance__' in self.vars and self.vars['__user_utterance__'] is not None:
                             user_input = self.vars['__user_utterance__']
                         if star_repeat:
@@ -75,7 +77,7 @@ class UpdateRules:
                         del self.untapped[i]
                         return None
                     else:
-                        self.vars.update({k: vars[k] for k in vars if k != '__score__' and k in vars})
+                        update_var_table(self.vars, vars)
                         response_natex = rule.postcondition
                         generation = (response_natex, rule.postcondition_score)
                         del self.untapped[i]
