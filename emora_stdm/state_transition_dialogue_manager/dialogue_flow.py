@@ -25,7 +25,7 @@ import dill
 from pathos.multiprocessing import ProcessingPool as Pool
 from copy import deepcopy
 
-from emora_stdm.state_transition_dialogue_manager.patch import update_var_table, set_system_stack_state, JMP, RET, MANAGE_STACK
+from emora_stdm.state_transition_dialogue_manager.patch import update_var_table, set_system_stack_state, JMP, RET, RPT, MANAGE_STACK
 
 def module_source_target(source, target):
     if isinstance(source, str) and ':' in source:
@@ -134,6 +134,7 @@ class DialogueFlow:
             'EXTR': ExtractList(self._kb),
             'JMP': JMP(self),
             'RET': RET(),
+            'RPT': RPT(),
             'MANAGE_STACK': MANAGE_STACK(),
         }
         self._macros.update(macros_common_dict)
@@ -634,8 +635,8 @@ class DialogueFlow:
                     print('{} {}: {}'.format(option[0], option[2][1], option[1]))
                 print('--------------------------------')
             score, natex, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
-            on_transition_fn = vars.pop('__on_transition__', lambda: None)
-            on_transition_fn()
+            on_transition_fn = vars.pop('__on_transition__', lambda _: None)
+            on_transition_fn(vars)
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if debugging:

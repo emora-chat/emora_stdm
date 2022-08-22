@@ -28,15 +28,29 @@ def set_system_stack_state(df, transition_options):
       df.has_state(s) and
       list(df.transitions(s, speaker=df.Speaker.SYSTEM))
     )
+    jump_back_point = None
+    for source, target, speaker in list(
+        df.transitions(df.state(), speaker=df.speaker())
+    ):
+        if '#RPT' in df.transition_natex(source, target, speaker).expression():
+            jump_back_point = {target: df.vars()}
     error_successor = df.error_successor(df.state())
-    error_transition = {error_successor: deepcopy(df.vars())} if error_successor else {}
+    error_transition = {error_successor: df.vars()} if error_successor else {}
     if transition_options:
         scores, natexes, transitions, varss, four, five = zip(*sorted(transition_options, reverse=True))
         sources, targets, speakers = zip(*transitions)
         sorted_options = dict(zip(targets, varss))
+        varss = list(varss)
     else:
         sorted_options = {}
-    for successor_state, var_table in {**sorted_options, **error_transition}.items():
+        varss = []
+    if jump_back_point:
+        candidate_returns = jump_back_point
+    else:
+        candidate_returns = {**sorted_options, **error_transition}
+    varss.append(df._vars)
+    jump_back_state = None
+    for successor_state, var_table in candidate_returns.items():
         if isinstance(successor_state, tuple) and df.composite_dialogue_flow():
             cdf = df.composite_dialogue_flow()
             component, state = successor_state
@@ -44,13 +58,16 @@ def set_system_stack_state(df, transition_options):
               component in cdf._components
               and local_sys_trans(cdf.component(component), state)
             ):
-                var_table.update(dict(__stack_return = successor_state))
+                jump_back_state = successor_state
                 break
         if local_sys_trans(df, successor_state):
             if df.namespace() and isinstance(successor_state, str) and ':' not in successor_state:
                 successor_state = (df.namespace(), successor_state)
-            var_table.update(dict(__stack_return = successor_state))
+            jump_back_state = successor_state
             break
+    if jump_back_state is not None:
+        for v in varss:
+            v.update(dict(__stack_return = jump_back_state))
 
 
 def macro_parse_args(args, expected=None):
@@ -71,8 +88,8 @@ class JMP(Macro):
 
     def run(self, ngrams, vars, args):
         arguments = macro_parse_args(args, ('phrase', 'return', 'doom'))
-        def on_transition_fn():
-            jump_return = arguments['return'] or self.df.vars().get('__stack_return')
+        def on_transition_fn(vars):
+            jump_return = arguments['return'] or vars.get('__stack_return')
             return_phrase = arguments.get('return')
             return_phrase = (
               return_phrase if return_phrase is not None else
@@ -97,6 +114,11 @@ class RET(Macro):
             return_phrase, return_state, doom = stack.pop().values()
             vars['__target__'] = return_state
             return return_phrase
+
+
+class RPT(Macro):
+    def run(self, ngrams, vars, args):
+        return False
 
 
 class MANAGE_STACK(Macro):
