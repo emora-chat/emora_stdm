@@ -6,6 +6,9 @@ from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
 from copy import deepcopy
 import sys, traceback
 
+from emora_stdm.state_transition_dialogue_manager.patch import update_var_table
+
+
 class NatexNLU:
 
     def __init__(self, expression, macros=None):
@@ -30,9 +33,9 @@ class NatexNLU:
     def match(self, natural_language, vars=None, macros=None, ngrams=None, debugging=False):
         natural_language += ' _END_'
         if vars is None:
-            vars = HashableDict()
+            vars = {}
         original_vars = vars
-        vars = HashableDict(vars)
+        vars = deepcopy(original_vars)
         if ngrams is None:
             ngrams = Ngrams(natural_language)
         self.compile(ngrams, vars, macros, debugging)
@@ -40,7 +43,7 @@ class NatexNLU:
         self._regex = None
         if match:
             vars.update({k: v for k, v in match.groupdict().items() if v is not None})
-            original_vars.update({k: vars[k] for k in vars})
+            update_var_table(original_vars, vars)
         return match
 
     def compile(self, ngrams=None, vars=None, macros=None, debugging=False):

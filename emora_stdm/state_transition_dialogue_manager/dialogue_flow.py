@@ -23,8 +23,9 @@ from emora_stdm.state_transition_dialogue_manager.utilities import \
 from time import time
 import dill
 from pathos.multiprocessing import ProcessingPool as Pool
+from copy import deepcopy
 
-from emora_stdm.state_transition_dialogue_manager.patch import set_system_stack_state, JMP, RET, MANAGE_STACK
+from emora_stdm.state_transition_dialogue_manager.patch import update_var_table, set_system_stack_state, JMP, RET, RPT, MANAGE_STACK
 
 def module_source_target(source, target):
     if isinstance(source, str) and ':' in source:
@@ -79,14 +80,13 @@ class DialogueFlow:
         self._potential_transition = None
         self._initial_speaker = initial_speaker
         self._speaker = self._initial_speaker
-        self._vars = HashableDict()
+        self._vars = {}
         self._transitions = []
         self._update_transitions = []
         self.vars()['__state__'] = self._initial_state
         self.set_state(self._initial_state)
         self._gates = defaultdict(list)
         self._prepends = {}
-        self._var_dependencies = defaultdict(set)
         self._error_transitioned = False
         self._default_state = default_system_state
         self._end_state = end_state
@@ -132,8 +132,9 @@ class DialogueFlow:
             'VT': VirtualTransitions(self),
             'CE': CanEnter(self),
             'EXTR': ExtractList(self._kb),
-            'JMP': JMP(),
+            'JMP': JMP(self),
             'RET': RET(),
+            'RPT': RPT(),
             'MANAGE_STACK': MANAGE_STACK(),
         }
         self._macros.update(macros_common_dict)
@@ -360,7 +361,7 @@ class DialogueFlow:
         for natex, transition, score in transition_items:
             t1 = time()
             transition_transition_enter = None
-            vars = HashableDict(self._vars)
+            vars = deepcopy(self._vars)
             self._potential_transition = transition # MOVED, todo
             try:
                 generation = natex.generate(vars=vars, macros=self._macros, debugging=debugging)
@@ -424,7 +425,7 @@ class DialogueFlow:
                 del vars['__target__']
             transition = source, target, speaker
             enter_natex_pass = True
-            transition_transition_enter_vars = vars
+            transition_transition_enter_vars = deepcopy(vars)
             if transition_transition_enter is not None:
                 if self.is_module() and isinstance(transition_transition_enter, tuple):
                     enter_natex = self.composite_dialogue_flow().state_settings(*transition_transition_enter).enter
@@ -477,8 +478,7 @@ class DialogueFlow:
                         if tt_gate_var_config == vc:
                             gate_closed = True
                     del transition_transition_enter_vars['__gate__']
-                transition_transition_enter_vars.update(vars)
-                vars = transition_transition_enter_vars
+                update_var_table(vars, transition_transition_enter_vars)
                 if not gate_closed:
                     transition_options.append((score, natex, generation, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id))
             t2 = time()
@@ -496,6 +496,8 @@ class DialogueFlow:
                 print('--------------------------------')
             score, natex, response, transition, vars, gate_var_config, gate_target_id, tt_gate_var_config, tt_gate_target_id =\
                 random_max(transition_options, key=lambda x: x[0])
+            on_transition_fn = vars.pop('__on_transition__', lambda: None)
+            on_transition_fn()
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if tt_gate_var_config is not None:
@@ -512,7 +514,7 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self.update_vars(vars)
+            update_var_table(self._vars, vars)
             next_state = transition[1]
             if debugging:
                 tf = time()
@@ -569,7 +571,7 @@ class DialogueFlow:
             t1 = time()
             if debugging:
                 print('Evaluating transition {}'.format(transition[:2]))
-            vars = HashableDict(self._vars)
+            vars = deepcopy(self._vars)
             try:
                 match = natex.match(natural_language, vars, self._macros, ngrams, debugging)
             except Exception as e:
@@ -634,6 +636,8 @@ class DialogueFlow:
                     print('{} {}: {}'.format(option[0], option[2][1], option[1]))
                 print('--------------------------------')
             score, natex, transition, vars, gate_var_config, gate_target_id = random_max(transition_options, key=lambda x: x[0])
+            on_transition_fn = vars.pop('__on_transition__', lambda _: None)
+            on_transition_fn(vars)
             if gate_var_config is not None:
                 self.gates()[gate_target_id].append(gate_var_config)
             if debugging:
@@ -648,7 +652,7 @@ class DialogueFlow:
                             print('  {} = {} -> {}'.format(k, self._vars[k], v))
                         else:
                             print('  {} = None -> {}'.format(k, v))
-            self.update_vars(vars)
+            update_var_table(self._vars, vars)
             next_state = transition[1]
             if debugging:
                 print('User transition in {:.5f}'.format(time() - ti))
@@ -663,9 +667,6 @@ class DialogueFlow:
             return next_state
 
     def precache_transitions(self, process_num=1):
-        """
-        Make DialogueFlow fast from the start with the power of precache!
-        """
         if process_num == 1:
             for transition in self._graph.arcs():
                 data = self._graph.arc_data(*transition)
@@ -934,7 +935,7 @@ class DialogueFlow:
     def reset(self):
         self._transitions.clear()
         self._speaker = self._initial_speaker
-        self._vars = HashableDict()
+        self._vars = {}
         self.vars()['__state__'] = self._initial_state
         self.vars()['__stack__'] = []
         self.vars()['__user_utterance__'] = None
@@ -944,24 +945,13 @@ class DialogueFlow:
         self._gates = defaultdict(list)
 
     def update_vars(self, variables: HashableDict):
-        if not isinstance(variables, HashableDict):
-            variables = HashableDict(variables)
-        for k in variables:
-            if k in self._var_dependencies:
-                dependencies = self._var_dependencies[k]
-                for dependency in dependencies:
-                    if dependency in self._vars:
-                        self._vars[dependency] = None
-        self._vars.update({k: variables[k] for k in variables if k != '__score__' and k in variables})
+        self._vars.update(variables)
 
     def potential_transition(self):
         return self._potential_transition
 
     def gates(self):
         return self._gates
-
-    def var_dependencies(self):
-        return self._var_dependencies
 
     def set_state_prepend(self, state, prepend):
         state = module_state(state)

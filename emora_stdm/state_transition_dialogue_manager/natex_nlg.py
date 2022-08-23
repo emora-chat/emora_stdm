@@ -7,6 +7,8 @@ from copy import deepcopy
 import sys
 import traceback
 
+from emora_stdm.state_transition_dialogue_manager.patch import update_var_table
+
 
 class NatexNLG:
 
@@ -36,7 +38,7 @@ class NatexNLG:
         if vars is None:
             vars = {}
         original_vars = vars
-        vars = dict(vars)
+        vars = deepcopy(vars)
         if macros is not None:
             for k, v in self._macros.items():
                 if k not in macros:
@@ -55,7 +57,7 @@ class NatexNLG:
             print('    {:15} {}'.format('Original', self._expression))
         generation = self._compiler.compile(ngrams, vars, macros, debugging)
         if self.is_complete(generation):
-            original_vars.update(vars)
+            update_var_table(original_vars, vars)
             return generation
         else:
             return None

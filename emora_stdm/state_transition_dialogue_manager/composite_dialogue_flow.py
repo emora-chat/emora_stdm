@@ -75,6 +75,8 @@ class CompositeDialogueFlow:
                 visited = visited - {next_state}
             if isinstance(next_state, tuple):
                 self.set_control(*next_state)
+            else:
+                next_state = (self.controller_name(), next_state)
             responses.append(response)
             if next_state in visited or not self.state_settings(*self.state()).system_multi_hop:
                 self.controller().set_speaker(DialogueFlow.Speaker.USER)

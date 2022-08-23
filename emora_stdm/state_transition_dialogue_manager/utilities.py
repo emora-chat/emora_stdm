@@ -73,7 +73,6 @@ class HashableDict(ConfigurationDict):
         self._altered.clear()
 
 
-
 class HashableSet(set):
     def __hash__(self):
         value = 0
@@ -82,6 +81,7 @@ class HashableSet(set):
         return value
     def __eq__(self, other):
         return set.__eq__(self, other)
+
 
 class AlterationTrackingDict(dict):
     def __init__(self, other=None):

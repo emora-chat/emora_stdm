@@ -75,10 +75,10 @@ def cdf(df1, df2):
 
 def test_stack_state_tracking_1(df1):
     df1.system_turn()
-    df1.user_turn('one')
+    df1.user_turn('one', debugging=True)
     assert df1.vars()['__stack_return'] == 'sys1'
     df1.system_turn()
-    df1.user_turn('something')
+    df1.user_turn('something', debugging=True)
     assert df1.vars()['__stack_return'] == 'sys4'
 
 def test_stack_state_tracking_2(df1):
