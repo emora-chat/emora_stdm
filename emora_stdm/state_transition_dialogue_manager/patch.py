@@ -37,7 +37,9 @@ def set_system_stack_state(df, transition_options):
     error_successor = df.error_successor(df.state())
     error_transition = {error_successor: df.vars()} if error_successor else {}
     if transition_options:
-        scores, natexes, transitions, varss, four, five = zip(*sorted(transition_options, reverse=True))
+        scores, natexes, transitions, varss, four, five = zip(*sorted(
+            transition_options, reverse=True, key=lambda x: x[0]
+        ))
         sources, targets, speakers = zip(*transitions)
         sorted_options = dict(zip(targets, varss))
         varss = list(varss)
