@@ -67,7 +67,6 @@ macros = {
     'EQ': Equal(),
     'GATE': Gate(df),
     'CLR': Clear(),
-    'NER': NamedEntity(),
     'LEM': Lemma(),
     'AGREE': Agree(),
     'DISAGREE': Disagree(),

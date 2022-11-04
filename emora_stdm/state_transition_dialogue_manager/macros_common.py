@@ -10,18 +10,9 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from spacy.pipeline import EntityRecognizer
 import traceback
-import spacy
 import sys
 import random
-try:
-    nlp = spacy.load("en_core_web_md")
-except Exception as e:
-    traceback.print_exc()
-    print('Error loading Spacy', file=sys.stderr)
-    print('To resolve, please run the following command:', file=sys.stderr)
-    print('python -m spacy download en_core_web_md', file=sys.stderr)
 import ssl
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -41,6 +32,10 @@ try:
     nltk.find('vader_lexicon')
 except Exception:
     nltk.download('vader_lexicon')
+try:
+    nltk.find('omw-1.4')
+except Exception:
+    nltk.download('omw-1.4')
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
 from nltk.corpus import wordnet
@@ -501,28 +496,6 @@ class Sentiment(Macro):
         else:
             return results['pos'] > results['neu'] or results['neg'] > results['neu']
 
-
-class NamedEntity(Macro):
-    """
-    NER tags: PERSON, NORP, FAC, ORG, GPE, LOC, PRODUCT, EVENT, WORK_OF_ART, LAW, LANGUAGE,
-              DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
-        https://spacy.io/api/annotation
-    """
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        doc = nlp(ngrams.text())
-        entities = set()
-        for ent in doc.ents:
-            if not args or ent.label_.lower() in {x.lower() for x in args}:
-                entities.add(ent.text)
-        return entities
-
-class PartOfSpeech(Macro):
-    def __init__(self):
-        pass
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        doc = nlp(ngrams.text())
-        return {token.text for token in doc if token.pos_.lower() in {x.lower() for x in args}}
-
 class Lemma(Macro):
     """
     get the set of expressions matching the entire descendent subtree
@@ -616,51 +589,6 @@ class VirtualTransitions(Macro):
                     self.dialogue_flow.dynamic_transitions().append(
                         (natex, (source, target, speaker), score))
         return False
-
-
-class Intent(Macro):
-
-    def _similarity(self, user_utterance, dev_utterance):
-        return user_utterance.similarity(dev_utterance)
-
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        for i, arg in enumerate(args):
-            if isinstance(arg, str) and arg.isnumeric():
-                threshold = float(arg)
-                del args[i]
-                break
-        else:
-            threshold = 0.0
-        user = nlp(ngrams.text())
-        dev = [nlp(arg) for arg in args]
-        similarity = max([self._similarity(user, x) for x in dev])
-        vars['__score__'] = similarity
-        if similarity < threshold:
-            return False
-        else:
-            return True
-
-
-class ScoreBySimilarity(Macro):
-
-    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
-        for i, arg in enumerate(args):
-            if isinstance(arg, str) and arg.isnumeric():
-                threshold = float(arg)
-                del args[i]
-                break
-        else:
-            threshold = 0.0
-        variable = args[0]
-        if variable[0] == '$': variable = variable[1:]
-        match = nlp(', '.join(args[1:]))
-        value = nlp(vars[variable])
-        similarity = Intent._similarity(None, match, value)
-        vars['__score__'] = similarity
-        if similarity < threshold:
-            return False
-        else:
-            return True
 
 class Default(Macro):
 
@@ -1066,14 +994,10 @@ _conjunction_macro = CheckVarsConjunction()
 macros_common_dict = {
     'RW': Rewrite(),
     'CONTRACTIONS': ExpandContractions(),
-    'SBS': ScoreBySimilarity(),
     'TARGET': Target(),
     'DEFAULT': Default(),
-    'INT': Intent(),
     'UNSET': Unset(),
     'CLR': Clear(),
-    'NER': NamedEntity(),
-    'POS': PartOfSpeech(),
     'LEM': Lemma(),
     'SCORE': Score(),
     'TOKLIMIT': TokLimit(),

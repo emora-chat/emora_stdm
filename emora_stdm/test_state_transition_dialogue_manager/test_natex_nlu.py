@@ -1,3 +1,6 @@
+import sys
+print(sys.path)
+
 import json
 import pytest
 from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
