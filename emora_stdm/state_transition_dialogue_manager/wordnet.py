@@ -2,8 +2,8 @@ import sys
 from time import time
 import nltk
 try:
-    nltk.data.find('wordnet')
-except:
+    nltk.data.find('corpora/wordnet.zip')
+except LookupError:
     nltk.download('wordnet')
 
 from nltk.corpus import wordnet as wn

@@ -163,24 +163,22 @@ Let's fix that by adding some Natural Language Understanding (NLU).
 
 ### Natural Language Understanding
 
-Emora STDM supports many approaches to NLU, but let's start off with a simple approach: intent classification.
+Emora STDM supports many approaches to NLU, but let's start off with a simple approach: keyword matching.
 
 ```python3
-'#INT(Hi! How are you?)'
+'[{weather, forecast, outside}]'
 ```
-This string defines an intent that will match user input that is similar to the phrase "Hi! How are you?".
-The `#INT()` syntax is a Natex macro that invokes a pre-built intent classifer.
-The `Hi! How are you?` phrase is used by this intent classifier to evaluate user input.
+This string defines keywords that will match any user input, as long as the input contains one of the words "weather", "forecast", or "outside".
 
-Let's add some intents to speaker B in our transition dictionary, and make sure we have responses to both:
+Let's add some keyword matching to speaker B in our transition dictionary, and make sure we have responses to both:
 ```python3
 transitions = {
     'state': 'start',
     '"Hello!"': {
-        '#INT(Hi! How are you?)': {
-            '"Good! Bye bye!"': 'end'
+        '[{bye, goodbye}]': {
+            '"Bye bye!"': 'end'
         },
-        '#INT(Tell me about the weather.)': {
+        '[{weather, forecast, outside}]': {
             '"It is sunny!"': 'end'
         }
     }
@@ -194,27 +192,22 @@ the bot will classify the user input differently, and thus have a different resp
 If you run the system, the bot will appropriately distinguish between you asking the bot how it's doing and asking about the weather:
 ```
 S: Hello!
-U: Hey, how do you feel today?
-S: Good! Bye bye!
+U: Bye.
+S: Bye bye!
 ```
 ```
 S: Hello!
-U: Is it cloudy outside?
+U: What is the weather like?
 S: It is sunny!
 ```
 
-Another (very) simple approach to NLU is to match keywords. 
-Instead of using a Natex of the form `#INT(similar phrase)` to classify user input, 
-we can use a Natex of the form `[{key phrase A, key phrase B, ...}]`. 
-A transition of this form will match any user input containing one of the specified key phrases. 
-Let's extend our example, asking the user "How are you?" if they ask the bot and classifying
-their response using key phrase matching.
+Let's make the conversation even longer:
 
 ```python3
 {
   'state': 'start',
   '"Hello."': {
-      '#INT(Hi! How are you?, How are you doing?)': {
+      '[how, you]': {
           '"Good. How are you?"': {
               '[{good, great, okay}]': {            # !!! key phrase matching!
                   '"That\'s great! Bye!"': 'end'
@@ -224,7 +217,7 @@ their response using key phrase matching.
               }
           }
       },
-      '#INT(Tell me the weather.)': {
+      '[{weather, forecast, outside}]': {
           '"It is sunny out!"': {
               'error': {
                   '"Bye!"': 'end'
@@ -270,20 +263,20 @@ To add an error transition, just use the string `"error"` to mark the user trans
 {
   'state': 'start',
   '"Hello."': {
-      '#INT(Hi! How are you?, How are you doing?)': {
+      '[how, you]': {
           '"Good. How are you?"': {
-              '[{good, great, okay}]': {            
-                  '"That\'s great!" Bye!': 'end'
+              '[{good, great, okay}]': {            # !!! key phrase matching!
+                  '"That\'s great! Bye!"': 'end'
               },
-              '[{bad, horrible, awful}]': {         
+              '[{bad, horrible, awful}]': {         # !!! key phrase matching!
                   '"Oh no! Bye!"': 'end'
               },
-              'error': {                                 # !!! matches ANY user input!
-                  '"I do not understand! Bye!"': 'end'
+              'error': {
+                  '"I see. Bye!"': 'end'
               }
           }
       },
-      '#INT(Tell me the weather.)': {
+      '[{weather, forecast, outside}]': {
           '"It is sunny out!"': {
               'error': {
                   '"Bye!"': 'end'
@@ -294,7 +287,7 @@ To add an error transition, just use the string `"error"` to mark the user trans
 }
 ```
 
-With the error transition in place, no matter what the user says, the chatbot will have a reply.
+With the error transition in place, no matter what the user says in response to the bot's question, the chatbot will have a reply.
 
 
 To learn about adding more advanced NLU to your chatbot, 
@@ -320,9 +313,14 @@ We can do so by simply connecting back to `"start"` using the colon `:` notation
 transitions = {
     'state': 'start',
     '"Hello!"': {
-        '#INT(Tell me the weather.)': {
+        '[{weather, forecast, outside}]': {
             '"It is sunny out!"': {
                 'error': 'start'         # !!! Link back to the start state!
+            }
+        },
+        'error': {
+            '"Interesting."': {
+                'error': 'start'
             }
         }
     }
@@ -339,7 +337,7 @@ S: It is sunny out!
 U: Okay.                 <-- Transitions back to "start" state!
 S: Hello!
 U: Didn't you already say hi?
-S: It is sunny out!
+S: Interesting.
 ...
 ```
 
@@ -353,7 +351,7 @@ just put `'state': '<state name>'` at the point of the conversation you want to 
 {
   'state': 'start',
   '"Hello."': {
-      '#INT(Hi! How are you?, How are you doing?)': {
+      'error': {
           '"Good. How are you?"': {
               'state': 'asking-user-mood',    # !!! Named state
 
@@ -369,9 +367,8 @@ just put `'state': '<state name>'` at the point of the conversation you want to 
               }
           }
       },
-      '#INT(Tell me the weather.)': {
+      '[{weather, forecast, outside}]': {
           'state': 'weather-subconvo',       # !!! Named state
-
           '"It is sunny out!"': {
               'error': {
                   '"Bye!"': 'end'
@@ -387,7 +384,7 @@ This is similar to how `'error'` is a string identifying a special type of trans
 
 In the above example, the state `'asking-user-mood'` is the end state of the transition `'"Good. How are you?"'`
 and it is the start state of transitions `'[{good, great, okay}]'`, `'{[bad, horrible, awful]}'`, and the `'error'` transition. 
-Similarly, `'weather-subconvo'` is the state entered after taking the user transition `'#INT(Tell me the weather.)'`.
+Similarly, `'weather-subconvo'` is the state entered after taking the user transition `'[{weather, forecast, outside}]'`.
 
 Let's now use one of our newly named states to extend the interaction by linking to it:
 
@@ -395,12 +392,10 @@ Let's now use one of our newly named states to extend the interaction by linking
 {
   'state': 'start',
   '"Hello."': {
-      '#INT(Hi! How are you?, How are you doing?)': {
+      'error': {
           '"Good. How are you?"': {
               'state': 'asking-user-mood',
-
               '[{good, great, okay}]': {    
-        
                   '"That\'s great! ' 
                   'Know what\'s good about today?"': {
                         'error': 'weather-subconvo'     # !!! Link to weather-subconvo
@@ -414,9 +409,8 @@ Let's now use one of our newly named states to extend the interaction by linking
               }
           }
       },
-      '#INT(Tell me the weather.)': {
+      '[{weather, forecast, outside}]': {
           'state': 'weather-subconvo',                 # !!! weather-subconvo
-
           '"It is sunny out!"': {
               'error': {
                   '"Bye!"': 'end'

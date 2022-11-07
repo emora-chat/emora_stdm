@@ -9,7 +9,6 @@ from emora_stdm.state_transition_dialogue_manager.natex_nlu import NatexNLU
 # from emora_stdm.state_transition_dialogue_manager.natex_common import *
 from typing import Union, Set, List, Dict, Callable, Tuple, NoReturn, Any
 import nltk
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import traceback
 import sys
 import random
@@ -21,24 +20,29 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 try:
-    nltk.data.find('wordnet')
-except Exception:
+    nltk.data.find('corpora/wordnet.zip')
+except LookupError:
     nltk.download('wordnet')
 try:
-    nltk.find('averaged_perceptron_tagger')
-except Exception:
+    nltk.find('taggers/averaged_perceptron_tagger.zip')
+except LookupError:
     nltk.download('averaged_perceptron_tagger')
 try:
-    nltk.find('vader_lexicon')
-except Exception:
+    nltk.find('sentiment/vader_lexicon.zip')
+except LookupError:
     nltk.download('vader_lexicon')
 try:
-    nltk.find('omw-1.4')
-except Exception:
-    nltk.download('omw-1.4')
+    nltk.find('corpora/omw-1.4.zip')
+except LookupError:
+    nltk.download('corpora/omw-1.4')
+
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet
+from nltk import pos_tag
+
 from emora_stdm.state_transition_dialogue_manager.wordnet import \
     related_synsets, wordnet_knowledge_base, lemmas_of
-from nltk.corpus import wordnet
 import regex
 import re
 
@@ -56,7 +60,7 @@ class ONTE(Macro):
     """
     def __init__(self, kb):
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         node_set = set(_process_args_set(args, vars))
@@ -79,7 +83,7 @@ class ONTN(Macro):
     """
     def __init__(self, kb):
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         node_set = set(_process_args_set(args, vars))
@@ -114,7 +118,7 @@ class ONTUL(Macro):
 class ONT_NEG(Macro):
     def __init__(self, kb):
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
 
     def run(self, ngrams, vars, args):
@@ -153,7 +157,7 @@ class KBE(Macro):
     """
     def __init__(self, kb):
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         args = _process_args_set(args, vars)
@@ -172,7 +176,7 @@ class KBE(Macro):
 class EXP(Macro):
     def __init__(self, kb):
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         args = _process_args_set(args, vars)
@@ -193,7 +197,7 @@ class WN(Macro):
         if kb is None:
             kb = wordnet_knowledge_base
         self.kb = kb
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
 
     def run(self, ngrams: Union[Ngrams, None], vars: Dict[str, Any], args: List[Any]):
@@ -364,7 +368,7 @@ class IsPlural(Macro):
         arg = args[0]
         if isinstance(arg, str) and arg[0] == '$':
             arg = vars[arg[1:]]
-        pos = nltk.pos_tag(arg.split())[-1][1]
+        pos = pos_tag(arg.split())[-1][1]
         if pos == 'NNS':
             return True
         return False
@@ -502,7 +506,7 @@ class Lemma(Macro):
     underneath a given set of ontology nodes (usually 1)
     """
     def __init__(self):
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
+        self.lemmatizer = WordNetLemmatizer()
         self.lemmatizer.lemmatize('initialize')
     def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
         if ngrams:
