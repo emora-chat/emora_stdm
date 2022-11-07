@@ -19,7 +19,6 @@ setuptools.setup(
          "nltk",
          "importlib_resources",
          "pytz",
-         "spacy",
          "dill",
          "pathos"
      ],
