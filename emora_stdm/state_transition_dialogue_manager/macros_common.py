@@ -12,6 +12,7 @@ import nltk
 import traceback
 import sys
 import random
+import contractions
 import ssl
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -52,6 +53,18 @@ def _process_args_set(args, vars):
         if isinstance(e, str) and '$' == e[0]:
             args[i] = vars[e[1:]]
     return args
+
+
+class Normalize(Macro):
+    def run(self, ngrams, vars, args):
+        text = ngrams.text()
+        vars['__raw_user_utterance__'] = text
+        text = contractions.fix(text)  # expand contractions and some abbreviations like tbh
+        text = ''.join([c.lower() for c in text if c.isalnum() or c == ' '])  # make lowercase, strip all punctuation
+        text = text.replace("cannot", "can not")  # expand contractions
+        vars['__user_utterance__'] = text.strip()  # get rid of pesky extra spaces
+        return True
+
 
 class ONTE(Macro):
     """
@@ -1018,7 +1031,8 @@ macros_common_dict = {
     'IN': Contains(),
     'RAND': RandomSet(),
     'COPYGR': CopyGoalReturn(),
-    'REPEAT': Repeat()
+    'REPEAT': Repeat(),
+    'NORMALIZE': Normalize(),
 }
 
 

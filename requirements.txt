@@ -6,3 +6,5 @@ nltk
 importlib_resources
 pathos
 dill
+contractions
+num2words
