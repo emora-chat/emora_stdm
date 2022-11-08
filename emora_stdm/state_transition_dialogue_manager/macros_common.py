@@ -569,7 +569,7 @@ class Transition(Macro):
         else:
             natex = NatexNLU('/.*/', macros=self.dialogue_flow._macros)
         target = args[0]
-        vars['__converged__'] = 'True'
+        # vars['__converged__'] = 'True'
         self.dialogue_flow.dynamic_transitions().append(
             (natex,
              (self.dialogue_flow.state(), target, self.dialogue_flow.speaker()),

@@ -142,7 +142,7 @@ class DialogueFlow:
         if macros:
             self._macros.update(macros)
         self._rules = UpdateRules(vars=self._vars, macros=self._macros)
-        self._rules.add('#NORMALIZE')
+        self._rules.add('#NORMALIZE', score=float('inf'))
         self.add_state(end_state)
         self._vars['__user_utterance__'] = None
 
