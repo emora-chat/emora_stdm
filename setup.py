@@ -20,7 +20,9 @@ setuptools.setup(
          "importlib_resources",
          "pytz",
          "dill",
-         "pathos"
+         "pathos",
+         "contractions",
+         "num2words",
      ],
      classifiers=[
          "Programming Language :: Python :: 3",
