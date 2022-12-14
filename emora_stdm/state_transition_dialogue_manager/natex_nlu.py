@@ -37,7 +37,7 @@ class NatexNLU:
         original_vars = vars
         vars = deepcopy(original_vars)
         if ngrams is None:
-            ngrams = Ngrams(natural_language)
+            ngrams = Ngrams(natural_language, n=4)
         self.compile(ngrams, vars, macros, debugging)
         match = regex.fullmatch(self._regex, natural_language)
         self._regex = None

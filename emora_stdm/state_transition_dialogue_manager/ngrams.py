@@ -2,10 +2,10 @@
 
 class Ngrams(set):
 
-    def __init__(self, text, n=None):
+    def __init__(self, text, n=5):
         self.update(text, n)
 
-    def update(self, text, n=None):
+    def update(self, text, n=5):
         set.__init__(self)
         if '_END_' == text[-5:]:
             text = text[:-5]
@@ -38,3 +38,10 @@ class Ngrams(set):
 
     def __getitem__(self, item):
         return self.n(item)
+
+
+if __name__ == '__main__':
+    text = 'I like to eat sandwiches and drink coffee.'
+    ngrams = Ngrams(text, 5)
+    for ngram in sorted(ngrams, key=lambda x: len(x.split()), reverse=True):
+        print(ngram)

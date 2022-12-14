@@ -563,7 +563,7 @@ class DialogueFlow:
         while self._transitions:
             natex, transition, score = self._transitions.pop()
             transition_items.append((natex, transition, score))
-        ngrams = Ngrams(natural_language, n=10)
+        ngrams = Ngrams(natural_language, n=4)
         for natex, transition, score in transition_items:
             self._potential_transition = transition
             if not self.is_module() and isinstance(transition[1], tuple):

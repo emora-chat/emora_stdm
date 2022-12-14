@@ -241,7 +241,27 @@ def test_ontology():
     df.user_turn("hello there", debugging=False)
     assert df.state() == States.E
 
+def test_regex_as_natex_capture_groups():
+    natex = NatexNLU('/i like (hiking|fishing|running) in the (?<t>morning|afternoon|evening)/')
+    match = natex.match('i like hiking in the morning')
+    assert match.groups()[0] == 'hiking'
+    assert match.groups()[1] == 'morning'
+    assert match.groupdict()['t'] == 'morning'
 
+def test_regex_in_natex_capture_groups():
+    natex = NatexNLU('$p={i, you} /like (hiking|fishing|running) in the (?<t>morning|afternoon|evening)/')
+    match = natex.match('i like hiking in the morning')
+    assert match.groups()[0] == 'i'
+    assert match.groups()[1] == 'hiking'
+    assert match.groups()[2] == 'morning'
+    assert match.groupdict()['p'] == 'i'
+    assert match.groupdict()['t'] == 'morning'
+
+def test_regex_in_natex_capture_groups_var_table():
+    var_table = {}
+    natex = NatexNLU('$p={i, you} /like (hiking|fishing|running) in the (?<t>morning|afternoon|evening)/')
+    natex.match('i like hiking in the morning', vars=var_table)
+    assert var_table == {'p': 'i', 't': 'morning'}
 
 
 ################################### INTEGRATION TESTS ####################################
