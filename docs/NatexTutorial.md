@@ -126,12 +126,11 @@ but would not match if `f="bad"`
 
 ### Macro call
 ```
-'[i, live, #NER(location)]'
+'[i, have, #LEM(dog)]'
 ```
 using `#M(a1, a2, ...)` in a Natex calls function `M` with arguments `a1, a2, ...`.
 The return value of the function is used to evaluate what substrings match the call term.
-For example, if a macro `NER` is defined to match substrings returned from a named entity
-recognition model, the above natex would match inputs like "I live in Italy" or "Right now I live in Atlanta".
+For example, if a macro `LEM` is defined to match substrings returned from a lemmatizer, the above natex would match inputs like "i have a dog" or "i have two dogs".
 See the section below for more information on defining and using macros.
 
 # Macros
@@ -243,42 +242,33 @@ where `number_of_repetitions` is provided by the second item of the `args` list.
 Although this example is highly contrived, it demonstrates how arbitrary logic is made
 interoperable with pattern matching with the natex compiler.
 
-Below is an example of the built-in `#NER` macro that uses SpaCy's NER, to illustrate how an NLP model can be
+Below is an example of the built-in `#LEM` macro that uses NLTK's lemmatizer to illustrate how NLP tools can be
 incorportated into pattern matching.
 
 ```python
-class NamedEntity(Macro):
-    def run(self, ngrams, vars, args):
-        doc = nlp(ngrams.text())
-        entities = set()
-        for ent in doc.ents:
-            if not args or ent.label_.lower() in {x.lower() for x in args}:
-                entities.add(ent.text)
-        return entities
+class Lemma(Macro):
+    """
+    get the set of expressions matching the entire descendent subtree
+    underneath a given set of ontology nodes (usually 1)
+    """
+    def __init__(self):
+        self.lemmatizer = WordNetLemmatizer()
+        self.lemmatizer.lemmatize('initialize')
+    def run(self, ngrams: Ngrams, vars: Dict[str, Any], args: List[Any]):
+        if ngrams:
+            lemma_map = defaultdict(set)
+            for gram in ngrams:
+                for pos in 'a', 'r', 'v', 'n':
+                    lemma = self.lemmatizer.lemmatize(gram, pos=pos)
+                    lemma_map[lemma].add(gram)
+            matches = lemma_map.keys() & args
+            return set().union(*[lemma_map[match] for match in matches])
 
-natex = NatexNLU('[#NER(person), my, friend]', macros={'NER': NamedEntity()})
-assert natex.match('Lionel is my friend')
+natex = NatexNLU('[i, have, #LEM(dog)]', macros={'LEM': Lemma()})
+assert natex.match('i have two dogs')
 ```
 
 # Built-In Macros
-
-### `#NER(ner_tag)`
-runs SpaCy Named Entity Recognizer to tag the user utterance, and returns a set representing
-all named entities present in the user utterance. Optionally, a ner_tag from the below set
-of tags can be provided to filter by entity type.
-
-
-PERSON, NORP, FAC, ORG, GPE, LOC, PRODUCT, EVENT, WORK_OF_ART, LAW, LANGUAGE,
-DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
-
-https://spacy.io/api/annotation
-
-### `#INT(sentence one, sentence two, ...)`
-matches user input using a simple intent classifier based on the _maximum_ GloVe embedding similarity
-between the user input and the natural language arguments
-
-### `#POS(tag)`
-matches a token with a particular part of speech tag `tag`, using SpaCy's POS tagger
 
 ### `#LEM(rootform)`
 matches any surface form of the provided `rootform` word using nltk lemmatizer.
