@@ -21,6 +21,20 @@ def test_rigid_sequence():
     assert natex.match('quick fox brown dog')
     assert not natex.match('the quick fox brown dog')
 
+def test_rigid_sequence_implicit():
+    implicit = NatexNLU('-not terrible')
+    explicit = NatexNLU('[!-no longer, terrible]')
+    implicit_matches = {
+        "it is terrible": True,
+        "it is not terrible": False,
+        "it is not good but terrible": True,
+    }
+    explicit_matches = {
+        "it is terrible": True,
+        "it is not terrible": False,
+        "it is not good but terrible": False,
+    }
+
 def test_disjunction():
     natex = NatexNLU('{quick, fox, brown, dog}')
     assert natex.match('fox', debugging=False)
