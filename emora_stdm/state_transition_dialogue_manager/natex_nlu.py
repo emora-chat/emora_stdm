@@ -134,6 +134,8 @@ class NatexNLU:
             self._macros = None
             self._assignments = set()
             self._debugging = False
+            self._negation_list = []  # not being used at the moment
+
 
         def parse(self):
             try:
@@ -180,10 +182,25 @@ class NatexNLU:
                     strings.append('')
             return strings
 
+        # fixing:
+        # assert not natex.match('CS courses are fun.', debugging= True) ->
+        # assert natex.match('CS courses are fun.', debugging= True)
+        # complete, more testing needed to fully verify
         def flexible_sequence(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
-            tree.children[0] =  r'.*?\b' + r'\b.*?\b'.join(self.to_strings(args)) + r'\b.*?\b'
+            # original one-liner
+            # tree.children[0] = r'.*?\b' + r'\b.*?\b'.join(self.to_strings(args)) + r'\b.*?\b'
+            final_string = r'.*?\b'
+            # expanding the one-liner
+            for n, x in enumerate(self.to_strings(args)):
+                if n + 1 != len(self.to_strings(args)):
+                    final_string += x + r'\b.*?\b'  # add original padding inbetween
+                else:
+                    final_string += x + r'([,\.\!\?\'\"]+ \b.*?\b)|\b.*?\b'
+                    # for the last term, either allow ending with punctuation,
+                    # or punctuation with more words after split by space
+            tree.children[0] = final_string
             if self._debugging: print('    {:15} {}'.format('Flex. sequence', self._current_compilation(self._tree)))
 
         def rigid_sequence(self, tree):
@@ -201,6 +218,22 @@ class NatexNLU:
         def disjunction(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
+            # attempting to fix using negation inside disjunction
+            # {-x, -y}
+            # final_string = ''
+            # for n, x in enumerate(self.to_strings(args)):
+            #     mid_str = r'(?:{})'.format(x)
+            #     final_string += mid_str
+            #     if x in self._negation_list:
+            #         if n+1 != len(self.to_strings(args)):
+            #             final_string += r'\b&\b'
+            #     else:
+            #         if n+1 != len(self.to_strings(args)):
+            #             final_string += r'\b|\b'
+            # tree.children[0] = r'(?:\b{}\b)'.format(final_string)
+
+            # upon further discussion, there is no need to fix this method of using negation with disjunction
+            # reverting to original line
             tree.children[0] = r'(?:\b{}\b)'.format(r'\b|\b'.join(
                 [r'(?:{})'.format(x) for x in self.to_strings(args)]))
             if self._debugging: print('    {:15} {}'.format('Disjunction', self._current_compilation(self._tree)))
@@ -211,12 +244,14 @@ class NatexNLU:
             tree.children[0] = r'(?:\b{}\b)?'.format(self.to_strings(args)[0])
             if self._debugging: print('    {:15} {}'.format('Optional', self._current_compilation(self._tree)))
 
+        # consider getting rid of this
         def kleene_star(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
             tree.children[0] = r'(?:\b{}\b)?(?:\b\W*{}\b)*'.format(self.to_strings(args)[0], self.to_strings(args)[0])
             if self._debugging: print('    {:15} {}'.format('Kleene *', self._current_compilation(self._tree)))
 
+        # consider getting rid of this
         def kleene_plus(self, tree):
             args = [x.children[0] for x in tree.children]
             tree.data = 'compiled'
@@ -228,7 +263,9 @@ class NatexNLU:
             tree.data = 'compiled'
             (arg,) = self.to_strings(args)
             tree.children[0] = r'(?!.*\b{}\b.*)'.format(arg) + '.*?'
-            if self._debugging: print('    {:15} {}'.format('Negation', self._current_compilation(self._tree)))
+            self._negation_list.append(tree.children[0]) # tracking how negation was used during compilation
+            if self._debugging:
+                print('    {:15} {}'.format('Negation', self._current_compilation(self._tree)))
 
         def regex(self, tree):
             args = [x.children[0] for x in tree.children]
