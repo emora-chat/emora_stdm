@@ -276,6 +276,9 @@ matches any surface form of the provided `rootform` word using nltk lemmatizer.
 ### `#TARGET(state)`
 forces the Dialogue Graph to jump to a specific state
 
+### `#UNX()`
+an alternative to using `'error'` transitions that prepends a short acknowledgement phrase ("yeah"/"sure"/... in response to statements, "I don't know" in response to questions.) to the system response.
+
 ### `#GATE(var1, var2, ...)`
 records the values of the provided variables, and returns `True` if that set of variable:value
 pairs has not yet been recorded while taking the transition. If the transition is evaluated
@@ -287,17 +290,9 @@ regardless of variable values.
 Optionally, an argument can be written of the form `variable:value`. 
 This notation requires `variable` to be set to `value` for the macro to return `True`.
 
-### `#ONTE(ontology_node_1, ontology_node_2, ...)` 
+### `#ONT(ontology_node_1, ontology_node_2, ...)` 
 gets all expressions of all nodes that are ontology descendents of the nodes provided as arguments,
 and returns them as a set of strings.
-
-### `#KBQ(node, relation1, relation2, ...)`
-defines a knowledge base traversal starting at `node`,
-and traversing relations labeled `relation1`, then `relation2`, and so on. All nodes that can be reached
-by the specified relation path from `node` are returned as a set of strings.
-
-### `#EXP(node)`
-returns the set of all expressions associated with a node.
 
 ### `#NOT(term1, term2, ...)`
 returns `False` if any term string matches any ngram of the user utterance, 
