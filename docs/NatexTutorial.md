@@ -149,8 +149,7 @@ class MyMacro(Macro):
 
 When a natex attempts to match a call term like `#MyMacro(...)`, 
 `.run` will be passed the following arguments:
-* `ngrams`: a set of strings representing every ngram of the string being matched by the natex.
-  The full original string input can be accessed by calling `ngrams.text()`.
+* `ngrams`: a set of strings representing every ngram of the string being matched by the natex. The string the natex is matching can be accessed by calling `ngrams.text()` and the full original string input can be accessed by calling `ngrams.raw_text()`.
 * `vars`: a dictionary of <string: object> pairs. This corresponds to the variable dictionary 
   maintained by a `DialogueFlow` object during a conversation.
 * `args`: a list of strings representing arguments specified in the natex's macro call term.
