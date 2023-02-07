@@ -17,7 +17,7 @@ system.load_transitions({'state': 'start', 'error': {'` `': {'score': -1, 'state
 system.load_update_rules({
     '[news]': '`Coronavirus, argh!` (1)',
     '[{movie, movies}]': '`Avengers is a good one.` (1)',
-    '/.*/': '`I\'m not sure I understand.` (1)',
+    '/.*/': '`I\'match not sure I understand.` (1)',
 })
 
 system.run()
@@ -57,7 +57,7 @@ using parentheses notation at the end of the precondition:
 
  ```python
 {
-    '/.*/ (0.1)': '`I\'m not sure I understand.` (1)',
+    '/.*/ (0.1)': '`I\'match not sure I understand.` (1)',
     '[news]': '`Coronavirus, argh!` (1)',
     '[{movie, movies} (2.0)]': '`Avengers is a good one.` (1)'
 }
@@ -93,7 +93,7 @@ system.load_transitions({
 system.load_update_rules({
     '[news]': '`Coronavirus, argh!` (4.0)',
     '[{movie, movies}]': '`Avengers is a good one.` (4.0)',
-    '/.*/ (0.1)': '`I\'m not sure I understand.` (2.0)',
+    '/.*/ (0.1)': '`I\'match not sure I understand.` (2.0)',
 })
 ```
 
@@ -127,7 +127,7 @@ We can construct a set of logical implications that reason about the user's age,
     '[my, {husband, wife, kids}]': '#SET($is_adult=True)',
     '{[i, work]}': '#SET($is_adult=True)',
     '#IF($is_adult=True)': '`How is you job going?` (2.0)',
-    '/.*/ (0.1)': '`I\'m not sure I understand.` (1)',
+    '/.*/ (0.1)': '`I\'match not sure I understand.` (1)',
 }
 ```
 

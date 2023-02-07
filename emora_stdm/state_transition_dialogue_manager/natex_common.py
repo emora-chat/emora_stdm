@@ -108,14 +108,14 @@ class Unexpected(Macro):
             return False
         elif is_question:
             if '_explained_stupidity_' in vars and vars['_explained_stupidity_'] == 'True':
-                options = {'I\'m not sure.', 'I don\'t know.', 'I\'m not sure about that.', ''} - {
+                options = {'I\'match not sure.', 'I don\'t know.', 'I\'match not sure about that.', ''} - {
                     vars['__previous_unx_response__']}
                 question_response = random.choice(list(options))
                 vars['__previous_unx_answer__'] = question_response
                 vars['__response_prefix__'] = question_response
             else:
                 vars['_explained_stupidity_'] = 'True'
-                vars['__response_prefix__'] = 'I\'m not sure.'
+                vars['__response_prefix__'] = 'I\'match not sure.'
         elif len(ngrams.text().split()) < 3 and len(args) == 0:
             vars['__response_prefix__'] = ''
             return True

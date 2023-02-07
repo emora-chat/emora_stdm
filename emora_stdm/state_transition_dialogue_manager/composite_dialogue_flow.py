@@ -93,6 +93,7 @@ class CompositeDialogueFlow:
         :param debugging:
         :return: None
         """
+        self.controller().vars()['__raw_user_utterance__'] = natural_language
         self.controller().vars()['__user_utterance__'] = natural_language
         try:
             self.controller().apply_update_rules(natural_language, debugging=debugging)

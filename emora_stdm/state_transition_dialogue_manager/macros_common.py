@@ -58,7 +58,6 @@ def _process_args_set(args, vars):
 class Normalize(Macro):
     def run(self, ngrams, vars, args):
         text = ngrams.text()
-        vars['__raw_user_utterance__'] = text
         text = contractions.fix(text)  # expand contractions and some abbreviations like tbh
         text = ''.join([c.lower() for c in text if c.isalnum() or c == ' '])  # make lowercase, strip all punctuation
         text = text.replace("cannot", "can not")  # expand contractions
@@ -994,7 +993,7 @@ class Repeat(Macro):
         if '__selected_response__' in vars and len(vars['__selected_response__']) > 0:
             return 'Sure. What I said was, ' + vars['__selected_response__']
         else:
-            return 'Sorry, I\'m not sure how to repeat what I said.'
+            return 'Sorry, I\'match not sure how to repeat what I said.'
 
 class CopyGoalReturn(Macro):
 

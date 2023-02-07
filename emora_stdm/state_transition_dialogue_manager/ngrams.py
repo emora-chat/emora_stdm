@@ -2,11 +2,15 @@
 
 class Ngrams(set):
 
-    def __init__(self, text, n=5):
+    def __init__(self, text, n=5, raw_text=None):
+        set.__init__(self)
+        self._raw_text = raw_text or text
+        self._text = text
+        self._n = []
+        self._string = ''
         self.update(text, n)
 
     def update(self, text, n=5):
-        set.__init__(self)
         if '_END_' == text[-5:]:
             text = text[:-5]
         self._text = text
@@ -26,6 +30,9 @@ class Ngrams(set):
 
     def text(self):
         return self._text
+
+    def raw_text(self):
+        return self._raw_text
 
     def string(self):
         return self._string

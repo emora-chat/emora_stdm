@@ -23,7 +23,7 @@ def test_rigid_sequence():
 
 def test_rigid_sequence_implicit():
     implicit = NatexNLU('-not terrible')
-    explicit = NatexNLU('[!-no longer, terrible]')
+    explicit = NatexNLU('[!-not, terrible]')
     implicit_matches = {
         "it is terrible": True,
         "it is not terrible": False,
@@ -240,14 +240,14 @@ def test_ontology():
     df.set_error_successor(States.D, States.E)
     df.add_user_transition(States.A, States.B, "[#ONT(month)]")
     df.add_system_transition(States.B, States.C, "B to C")
-    df.add_user_transition(States.C, States.D, "[$m=#ONT(month), $s=#ONT(season)]")
+    df.add_user_transition(States.C, States.D, "[$match=#ONT(month), $s=#ONT(season)]")
 
     df.user_turn("january")
     assert df.state() == States.B
     assert df.system_turn() == "B to C"
     df.user_turn("october is in the fall season")
     assert df.state() == States.D
-    assert df._vars["m"] == "october"
+    assert df._vars["match"] == "october"
     assert df._vars["s"] == "fall"
 
     df.set_state(States.A)

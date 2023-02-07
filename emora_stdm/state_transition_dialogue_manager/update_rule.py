@@ -43,12 +43,12 @@ class UpdateRule:
             return natex_string[:i], float(natex_string[i + len(' ('):-1])
         return natex_string, None
 
-    def satisfied(self, user_input, vars, debugging=False):
-        return self.precondition.match(user_input, vars=vars, debugging=debugging)
+    def satisfied(self, user_input, vars, ngrams=None, debugging=False):
+        return self.precondition.match(user_input, vars=vars, ngrams=ngrams, debugging=debugging)
 
-    def apply(self, vars, debugging=False):
+    def apply(self, ngrams, vars, debugging=False):
         if self.postcondition is not None:
-            return self.postcondition.generate(vars=vars, debugging=debugging)
+            return self.postcondition.generate(ngrams=ngrams, vars=vars, debugging=debugging)
         else:
             return ''
 

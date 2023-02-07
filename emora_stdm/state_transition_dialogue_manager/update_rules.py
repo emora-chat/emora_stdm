@@ -2,6 +2,7 @@
 from emora_stdm.state_transition_dialogue_manager.update_rule import UpdateRule
 from collections import defaultdict
 from emora_stdm.state_transition_dialogue_manager.utilities import HashableDict
+from emora_stdm.state_transition_dialogue_manager.ngrams import Ngrams
 from copy import deepcopy
 
 from emora_stdm.state_transition_dialogue_manager.patch import update_var_table
@@ -42,6 +43,7 @@ class UpdateRules:
 
     def update_step(self, user_input, debugging=False):
         self.vars['__converged__'] = 'False'
+        ngrams = Ngrams(user_input, n=4, raw_text=self.vars.get('__raw_user_utterance__'))
         for i, rule in enumerate(self.untapped):
             star_repeat = rule.is_repeating
             repeating = True
@@ -61,7 +63,7 @@ class UpdateRules:
                         print('Rule triggered: ', rule.precondition, '==>', rule.postcondition)
                     if rule.postcondition_score is None:
                         try:
-                            rule.apply(vars, debugging=debugging)
+                            rule.apply(ngrams, vars, debugging=debugging)
                         except Exception as e:
                             print('Failed information state update application')
                             print('  ', rule)

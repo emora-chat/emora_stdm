@@ -21,8 +21,7 @@ from emora_stdm.state_transition_dialogue_manager.utilities import random_max, g
 from emora_stdm.state_transition_dialogue_manager.utilities import \
     json_serialize_flexible, json_deserialize_flexible
 from time import time
-import dill
-from pathos.multiprocessing import ProcessingPool as Pool
+
 from copy import deepcopy
 
 from emora_stdm.state_transition_dialogue_manager.patch import update_var_table, set_system_stack_state, JMP, RET, RPT, MANAGE_STACK
@@ -73,7 +72,8 @@ class DialogueFlow:
 
     def __init__(self, initial_state: Union[Enum, str, tuple], initial_speaker = Speaker.SYSTEM,
                  macros: Dict[str, Macro] =None, kb: Union[KnowledgeBase, str, List[str]] =None,
-                 default_system_state=None, end_state='__end__', all_multi_hop=True, wordnet=False):
+                 default_system_state=None, end_state='__end__', all_multi_hop=True, wordnet=False,
+                 transitions=None):
         self._global_nlu_transitions = []
         self._graph = GraphDatabase()
         self._initial_state = State(initial_state)
@@ -145,6 +145,9 @@ class DialogueFlow:
         self._rules.add('#NORMALIZE', score=float('inf'))
         self.add_state(end_state)
         self._vars['__user_utterance__'] = None
+        if transitions is not None:
+            transitions.setdefault('state', self._initial_state)
+            self.load_transitions(transitions, speaker=self._initial_speaker)
 
 
     # TOP LEVEL: SYSTEM-LEVEL USE CASES
@@ -200,6 +203,7 @@ class DialogueFlow:
         """
         t1 = time()
         self.vars()['__user_utterance__'] = natural_language
+        self.vars()['__raw_user_utterance__'] = natural_language
         self._transitions.clear()
         self.apply_update_rules(natural_language, debugging)
         visited = {self.state()}
@@ -563,7 +567,7 @@ class DialogueFlow:
         while self._transitions:
             natex, transition, score = self._transitions.pop()
             transition_items.append((natex, transition, score))
-        ngrams = Ngrams(natural_language, n=4)
+        ngrams = Ngrams(natural_language, n=4, raw_text=self.vars().get('__raw_user_utterance__'))
         for natex, transition, score in transition_items:
             self._potential_transition = transition
             if not self.is_module() and isinstance(transition[1], tuple):

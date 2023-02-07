@@ -21,7 +21,7 @@ system.load_transitions({
 system.load_update_rules({
     '[news]': '`Coronavirus, argh!` (4.0)',
     '[{movie, movies}]': '`Avengers is a good one.` (4.0)',
-    '/.*/ (0.1)': '`I\'m not sure I understand.` (2.0)',
+    '/.*/ (0.1)': '`I\'match not sure I understand.` (2.0)',
 })
 
 if __name__ == '__main__':

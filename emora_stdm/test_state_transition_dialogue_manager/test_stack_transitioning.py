@@ -76,7 +76,7 @@ def cdf(activity, theater, movie):
     cdf = CompositeDialogueFlow('start', 'start', 'end')
     cdf.component('SYSTEM').local_transitions({
         'state': 'start',
-        "`Hi I'm Emora.`": 'activity:start'
+        "`Hi I'match Emora.`": 'activity:start'
     })
     cdf.add_component(activity, 'activity')
     cdf.add_component(theater, 'theater')
@@ -130,7 +130,7 @@ def cdf_explicit_jump_point(activity, theater_explicit_jump_point, movie):
     cdf = CompositeDialogueFlow('start', 'start', 'end')
     cdf.component('SYSTEM').local_transitions({
         'state': 'start',
-        "`Hi I'm Emora.`": 'activity:start'
+        "`Hi I'match Emora.`": 'activity:start'
     })
     cdf.add_component(activity, 'activity')
     cdf.add_component(theater_explicit_jump_point, 'theater')

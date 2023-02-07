@@ -17,7 +17,7 @@ class ChatFlow(DialogueFlow):
         #self.add_system_transition('ur_error_statement', 'shortcut', '#TOKLIMIT(2)', score=2.0)
         #self.add_system_transition('shortcut', 'sr', '""')
         self.add_system_transition('ur_error_question', 'sr',
-            '{"I\'m not sure about that." "That\'s a tough one." "I\'m not sure actually." "Huh, I don\'t know."}')
+            '{"I\'match not sure about that." "That\'s a tough one." "I\'match not sure actually." "Huh, I don\'t know."}')
         self.add_state('dinit', system_multi_hop=True)
         self.add_system_transition('dinit', 'sr', '')
         for json_file in json_files:
