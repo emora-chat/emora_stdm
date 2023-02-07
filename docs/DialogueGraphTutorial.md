@@ -82,13 +82,26 @@ transitions = {
 ```
 This nested dictionary will represent the content of your dialogue agent.
 It is structured similar to social media discussion threads, where responses are nested inside the utterance they respond to.
+
 The conversation specified by this dictionary looks like this:
 ```
 A: Hello!
 B: Hi!
 ```
-It's too short: let's add another turn.
 
+You can load transitions dictionaries such as this into your `DialogueFlow` object by calling `load_transitions`:
+
+```python
+chatbot.load_transitions(transitions)
+```
+
+or by passing transitions into the constructor using the `transitions` keyword parameter:
+
+```python
+chatbot = DialogueFlow('start', end_state='end', transitions=transitions)
+```
+
+Our current conversation is too short: let's add another turn.
 
 ```python3
 transitions = {
