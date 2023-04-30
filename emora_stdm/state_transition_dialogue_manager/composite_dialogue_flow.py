@@ -40,7 +40,8 @@ class CompositeDialogueFlow:
         test in interactive mode
         :return: None
         """
-        while True:
+        # Run the CompositeDialogueFlow until we reach an end state
+        while self.controller().state() != self.controller().end_state():
             if self.controller().speaker() == DialogueFlow.Speaker.SYSTEM:
                 t1 = time()
                 response = self.system_turn(debugging=debugging)
