@@ -6,6 +6,8 @@ This shows an example of using multiple components in a single dialogue system.
 Here are two separate dialogue agents:
 
 ```python
+from emora_stdm import DialogueFlow, CompositeDialogueFlow
+
 A = DialogueFlow('start')
 A.load_transitions({
     'state': 'start',
@@ -13,7 +15,7 @@ A.load_transitions({
         'error': {
             '`What\'s your favorite book?`': {
                 'error': {
-                    '`Cool!`': 'end',
+                    '`Cool!`': '__end__',
                     '`Okay.`': 'movies:movie_question'
                 }
             }
